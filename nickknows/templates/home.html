@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
+    <body>
+        <div class="navbar">
+            <a>Nick Knows</a>
+            <a href="{{url_for('home')}}">Home</a>
+            <div class="dropdown">
+                <button class="dropbtn">Interests
+                <i class="fa fa-caret-down"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="{{url_for('NFL')}}">NFL</a>
+                    <a href="{{url_for('fart')}}">Fährtbags</a>
+                </div>
+            </div>
+        </div>
+        <h1>Nick Knows</h1>
+        <div class="bubble">
+            <br>
+        </div>
+    </body>
+</html>
