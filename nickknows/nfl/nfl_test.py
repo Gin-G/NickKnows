@@ -117,7 +117,7 @@ fantasy_points
 fantasy_points_ppr
 '''
 
-print(weekly.loc[weekly['player_name'] == 'C.Akers'])
+#print(weekly.loc[weekly['player_name'] == 'C.Akers'])
 
 
 '''
@@ -151,3 +151,15 @@ Working with play by play data
 
 pbp_data = nfl.import_pbp_data([2022])
 #print(pbp_data.loc[pbp_data['game_id'] == '2022_02_ARI_LV'])
+
+'''
+Working with roster data
+'''
+roster_data = nfl.import_rosters([2022])
+#print(roster_data.loc[roster_data['team'] == 'ARI'])
+team_list = []
+teams = roster_data['team'].tolist()
+for team in teams:
+    if team not in team_list:
+        print(team)
+        team_list.append(team)

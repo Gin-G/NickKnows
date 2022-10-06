@@ -6,12 +6,67 @@
             <a>Nick Knows</a>
             <a href="{{url_for('home')}}">Home</a>
             <div class="dropdown">
-                <button class="dropbtn">Interests
+                <button class="dropbtn">Schedule
                 <i class="fa fa-caret-down"></i>
                 </button>
                 <div class="dropdown-content">
-                    <a href="{{url_for('NFL')}}">NFL</a>
-                    <a href="{{url_for('fart')}}">Fährtbags</a>
+                    <a href="{{url_for('schedule', week='1')}}">Week 1</a>
+                    <a href="{{url_for('schedule', week='2')}}">Week 2</a>
+                    <a href="{{url_for('schedule', week='3')}}">Week 3</a>
+                    <a href="{{url_for('schedule', week='4')}}">Week 4</a>
+                    <a href="{{url_for('schedule', week='5')}}">Week 5</a>
+                    <a href="{{url_for('schedule', week='6')}}">Week 6</a>
+                    <a href="{{url_for('schedule', week='7')}}">Week 7</a>
+                    <a href="{{url_for('schedule', week='8')}}">Week 8</a>
+                    <a href="{{url_for('schedule', week='9')}}">Week 9</a>
+                    <a href="{{url_for('schedule', week='10')}}">Week 10</a>
+                    <a href="{{url_for('schedule', week='11')}}">Week 11</a>
+                    <a href="{{url_for('schedule', week='12')}}">Week 12</a>
+                    <a href="{{url_for('schedule', week='13')}}">Week 13</a>
+                    <a href="{{url_for('schedule', week='14')}}">Week 14</a>
+                    <a href="{{url_for('schedule', week='15')}}">Week 15</a>
+                    <a href="{{url_for('schedule', week='16')}}">Week 16</a>
+                    <a href="{{url_for('schedule', week='17')}}">Week 17</a>
+                    <a href="{{url_for('schedule', week='18')}}">Week 18</a>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn">Rosters
+                <i class="fa fa-caret-down"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="{{url_for('roster', team='ARI')}}">Arizona Cardinals</a>
+                    <a href="{{url_for('roster', team='ATL')}}">Atlanta Falcons</a>
+                    <a href="{{url_for('roster', team='BAL')}}">Baltimore Ravens</a>
+                    <a href="{{url_for('roster', team='BUF')}}">Buffalo Bills</a>
+                    <a href="{{url_for('roster', team='CAR')}}">Carolina Panthers</a>
+                    <a href="{{url_for('roster', team='CHI')}}">Chicago Bears</a>
+                    <a href="{{url_for('roster', team='CIN')}}">Cincinnati Bengals</a>
+                    <a href="{{url_for('roster', team='CLE')}}">Cleveland Browns</a>
+                    <a href="{{url_for('roster', team='DAL')}}">Dallas Cowboys</a>
+                    <a href="{{url_for('roster', team='DEN')}}">Denver Broncos</a>
+                    <a href="{{url_for('roster', team='DET')}}">Detroit Lions</a>
+                    <a href="{{url_for('roster', team='GB')}}">Green Bay Packers</a>
+                    <a href="{{url_for('roster', team='HOU')}}">Houston Texans</a>
+                    <a href="{{url_for('roster', team='IND')}}">Indianapolis Colts</a>
+                    <a href="{{url_for('roster', team='JAX')}}">Jacksonville Jaguars</a>
+                    <a href="{{url_for('roster', team='KC')}}">Kansas City Chiefs</a>
+                    <a href="{{url_for('roster', team='LA')}}">Los Angeles Rams</a>
+                    <a href="{{url_for('roster', team='LAC')}}">Los Angeles Chargers</a>
+                    <a href="{{url_for('roster', team='LV')}}">Los Vegas Raiders</a>
+                    <a href="{{url_for('roster', team='MIA')}}">Miami Dolphins</a>
+                    <a href="{{url_for('roster', team='MIN')}}">Minnesota Vikings</a>
+                    <a href="{{url_for('roster', team='NE')}}">New England Patriots</a>
+                    <a href="{{url_for('roster', team='NO')}}">New Orleans Saints</a>
+                    <a href="{{url_for('roster', team='NYG')}}">New York Giants</a>
+                    <a href="{{url_for('roster', team='NYJ')}}">New York Jets</a>
+                    <a href="{{url_for('roster', team='PHI')}}">Philadelphia Eagles</a>
+                    <a href="{{url_for('roster', team='PIT')}}">Pittsburgh Steelers</a>
+                    <a href="{{url_for('roster', team='SEA')}}">Seattle Seahawks</a>
+                    <a href="{{url_for('roster', team='SF')}}">San Fransisco 49ers</a>
+                    <a href="{{url_for('roster', team='TB')}}">Tampa Bay Buccaners</a>
+                    <a href="{{url_for('roster', team='TEN')}}">Tennessee Titans</a>
+                    <a href="{{url_for('roster', team='WAS')}}">Washington Commanders</a>
                 </div>
             </div>
         </div>
