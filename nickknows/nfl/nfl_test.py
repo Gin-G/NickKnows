@@ -1,4 +1,5 @@
 import nfl_data_py as nfl
+
 import pandas as pd
 import numpy as np
 
@@ -7,6 +8,13 @@ Working with the schedule data
 '''
 
 schedule = nfl.import_schedules([2022])
+team = 'BUF'
+home_team_schedule = schedule.loc[schedule['home_team'] == team]
+away_team_schedule = schedule.loc[schedule['away_team'] == team]
+full_schedule = [home_team_schedule, away_team_schedule]
+full_schedule = pd.concat(full_schedule)
+full_schedule = full_schedule.dropna(subset=['away_score'])
+print(full_schedule.sort_values(by=['week']))
 
 game_id = schedule['game_id']
 season = schedule['season']
@@ -159,7 +167,12 @@ roster_data = nfl.import_rosters([2022])
 #print(roster_data.loc[roster_data['team'] == 'ARI'])
 team_list = []
 teams = roster_data['team'].tolist()
-for team in teams:
-    if team not in team_list:
-        print(team)
-        team_list.append(team)
+#for team in teams:
+#    if team not in team_list:
+#        team_list.append(team)
+
+
+"""
+Working with nflgame _ NO It's for Python 2...
+"""
+

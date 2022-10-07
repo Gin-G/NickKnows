@@ -30,7 +30,7 @@ table {
     margin: 0 auto;
     vertical-align: middle;
     width: 92%;
-    color: #000000;
+    color: #FFFFFF;
     border-collapse: collapse;
     border: 4px solid black;
 }
@@ -39,7 +39,7 @@ th, td, tr {
     text-align: center;
     margin: 0 auto;
     vertical-align: middle;
-    color: #454545;
+    color: #FFFFFF;
     padding: 2.5px;
     font-size: 10px;
 }
