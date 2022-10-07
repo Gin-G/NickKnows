@@ -187,7 +187,14 @@
                 </div>
             </div>
         </div>
-        <h1>{{ team }}</h1>
-            {{ team_roster | safe}}
+        <h1>{{ fullname }}</h1>
+            Results<br>
+            {{ team_fpa | safe }}<br>
+            Pass Stats<br>
+            {{ pass_data | safe }}<br>
+            Rush Stats<br>
+            {{ rush_data | safe }}<br>
+            Receiving Stats<br>
+            {{ rec_data | safe }}
     </body>
 </html>
