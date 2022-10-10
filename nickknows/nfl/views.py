@@ -26,7 +26,7 @@ def schedule(week):
         schedule = nfl.import_schedules([2022])
         schedule.to_csv(file_path)
     week_schedule = schedule.loc[schedule['week'] == int(week)]
-    url = str('<a href="http://127.0.0.1:5000/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['game_id'] + str('</a>')
+    url = str('<a href="http://www.nickknows.net/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['game_id'] + str('</a>')
     week_schedule['game_id'] = url
     week_schedule.rename(columns = {'game_id':'Game ID','gameday':'Date','weekday':'Weekday','gametime':'Game Time','away_team':'Away Team','away_score':'Away Score','home_team':'Home Team','home_score':'Home Score','result':'Result','total':'Total','overtime':'Overtime','away_rest':'Away Rest','home_rest':'Home Rest','away_moneyline':'Away Moneyline','home_moneyline':'Home Moneyline','spread_line':'Spread','away_spread_odds':'Away Spread Odds','home_spread_odds':'Home Spread Odds','total_line':'Total line','under_odds':'Under Odds','over_odds':'Over Odds','div_game':'Division Game','roof':'Roof','surface':'Surface','temp':'Temperature','wind':'Wind','away_qb_name':'Away QB','home_qb_name':'Home QB','away_coach':'Away Coach','home_coach':'Home Coach','referee':'Referee','stadium':'Stadium'}, inplace=True)
     week_schedule = week_schedule.style.hide(axis="index")
@@ -50,7 +50,7 @@ def roster(team,fullname):
         roster_data = nfl.import_rosters([2022])
         roster_data.to_csv(file_path)
     team_roster = roster_data.loc[roster_data['team'] == team]
-    url = str('<a href="http://127.0.0.1:5000/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
+    url = str('<a href="http://www.nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
     team_roster['player_name'] = url
     team_roster.rename(columns={'depth_chart_position':'Position','jersey_number':'Number','status':'Status','player_name':'Full Name','first_name':'First Name','last_name':'Last Name','height':'Height','weight':'Weight','football_name':'Preferred Name','rookie_year':'Rookie Year','draft_club':'Drafted By','draft_number':'Draft Number'}, inplace=True)
     team_roster = team_roster.style.hide(axis="index")
@@ -113,7 +113,7 @@ def team_schedule(team, fullname):
     else:
         schedule = nfl.import_schedules([2022])
         schedule.to_csv(file_path)
-    url = str('<a href="http://127.0.0.1:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
+    url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
     away_team_schedule = schedule.loc[schedule['away_team'] == team]
@@ -135,7 +135,7 @@ def team_results(team, fullname):
     else:
         schedule = nfl.import_schedules([2022])
         schedule.to_csv(sched_path)
-    url = str('<a href="http://127.0.0.1:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
+    url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
     away_team_schedule = schedule.loc[schedule['away_team'] == team]
@@ -158,7 +158,7 @@ def team_fpa(team, fullname):
     else:
         schedule = nfl.import_schedules([2022])
         schedule.to_csv(sched_path)
-    url = str('<a href="http://127.0.0.1:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
+    url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
     away_team_schedule = schedule.loc[schedule['away_team'] == team]
