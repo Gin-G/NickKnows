@@ -45,7 +45,7 @@ def roster(team,fullname):
             roster_data = nfl.import_rosters([2022])
             roster_data.to_csv(file_path)
         else:
-            schedule = pd.read_csv(file_path, index_col=0)
+            roster_data = pd.read_csv(file_path, index_col=0)
     else:
         roster_data = nfl.import_rosters([2022])
         roster_data.to_csv(file_path)
