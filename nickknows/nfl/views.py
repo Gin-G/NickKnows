@@ -95,10 +95,9 @@ def player_stats(name):
         weekly_data = nfl.import_weekly_data([2022])
         weekly_data.to_csv(file_path)
     player_data = weekly_data.loc[weekly_data['player_display_name'] == name]
-    player_data = player_data.style.hide(axis="index")
-    player_data = player_data.set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'})
-    player_data = player_data.set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}])
-    player_data = player_data.set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+    headshot = '<img src"' + player_data['headshot_url'] + '">'
+    player_data['headshot_url']
+    player_data = player_data.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
     return render_template('player-stats.html', player_stats = player_data.to_html(), name = name)
 
 @app.route('/NFL/Team/<team>/Schedule/<fullname>')
