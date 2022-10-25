@@ -1,8 +1,11 @@
 from glob import escape
+from turtle import position
 from flask import render_template
+from numpy import full
 from nickknows import app
 import nfl_data_py as nfl
 import pandas as pd
+import numpy as np
 from IPython.display import HTML
 import os
 import time
@@ -10,11 +13,74 @@ pd.options.mode.chained_assignment = None
 
 @app.route('/NFL')
 def NFL():
-    return render_template('nfl-home.html')
+    file_path = os.getcwd() + '/nickknows/nfl/data/pbp_data.csv'
+    if os.path.exists(file_path):
+        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
+            pbp_data = nfl.import_pbp_data([2022])
+            pbp_data.to_csv(file_path)
+        else:
+            pbp_data = pd.read_csv(file_path, index_col=0)
+    else:
+        pbp_data = nfl.import_pbp_data([2022])
+        pbp_data.to_csv(file_path)
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/rosters.csv'
+    if os.path.exists(rfile_path):
+        if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
+            roster_data = nfl.import_rosters([2022])
+            roster_data.to_csv(rfile_path)
+        else:
+            roster_data = pd.read_csv(rfile_path, index_col=0)
+    else:
+        roster_data = nfl.import_rosters([2022])
+        roster_data.to_csv(rfile_path)
+    pbp_data = pbp_data[pbp_data["season_type"] == "REG"]
+    pbp_data = pbp_data[pbp_data["two_point_attempt"] == False]
+    pbp_data_pass = pbp_data[pbp_data["play_type"] == "pass"]
+    pbp_data_rush = pbp_data[pbp_data["play_type"] == "run"]
+    pbp_data_rec = pbp_data[pbp_data["play_type"] == "pass"]
+    pbp_data_pass = pbp_data_pass.merge(roster_data[["player_id","player_name"]], left_on="passer_player_id", right_on="player_id")
+    pbp_data_rush = pbp_data_rush.merge(roster_data[["player_id","player_name"]], left_on="rusher_player_id", right_on="player_id")
+    pbp_data_rec = pbp_data_rec.merge(roster_data[["player_id","player_name"]], left_on="receiver_player_id", right_on="player_id")
+    pass_agg = pbp_data_pass.groupby(["player_name"], as_index=False).agg({"passing_yards": "sum"})
+    pass_td_agg = pbp_data_pass.groupby(["player_name"], as_index=False).agg({"pass_touchdown":"sum"})
+    rush_yds_agg = pbp_data_rush.groupby(["player_name"], as_index=False).agg({"rushing_yards": "sum"})
+    rush_td_agg = pbp_data_rush.groupby(["player_name"], as_index=False).agg({"rush_touchdown":"sum"})
+    rec_yds_agg = pbp_data_rec.groupby(["player_name"], as_index=False).agg({"receiving_yards": "sum"})
+    rec_td_agg = pbp_data_rec.groupby(["player_name"], as_index=False).agg({"pass_touchdown":"sum"})
+    pass_agg.sort_values(by=['passing_yards'], inplace=True, ascending=False)
+    pass_td_agg.sort_values(by=['pass_touchdown'], inplace=True, ascending=False)
+    rush_yds_agg.sort_values(by=['rushing_yards'], inplace=True, ascending=False)
+    rush_td_agg.sort_values(by=['rush_touchdown'], inplace=True, ascending=False)
+    rec_yds_agg.sort_values(by=['receiving_yards'], inplace=True, ascending=False)
+    rec_td_agg.sort_values(by=['pass_touchdown'], inplace=True, ascending=False)
+    pass_agg.rename(columns={'player_name':'Player Name','passing_yards':"Total Passing Yards"}, inplace=True)
+    pass_td_agg.rename(columns={'player_name':'Player Name',"pass_touchdown":"Total Passing TD's"}, inplace=True)
+    rush_yds_agg.rename(columns={'player_name':'Player Name','rushing_yards':"Total Rushing Yards"}, inplace=True)
+    rush_td_agg.rename(columns={'player_name':'Player Name',"rush_touchdown":"Total Rushing TD's"}, inplace=True)
+    rec_yds_agg.rename(columns={'player_name':'Player Name','receiving_yards':"Total Receiving Yards"}, inplace=True)
+    rec_td_agg.rename(columns={'player_name':'Player Name',"pass_touchdown":"Total Receiving TD's"}, inplace=True)
+    pass_agg = pass_agg.head(10)
+    pass_td_agg = pass_td_agg.head(10)
+    rush_yds_agg = rush_yds_agg.head(10)
+    rush_td_agg = rush_td_agg.head(10)
+    rec_yds_agg = rec_yds_agg.head(10)
+    rec_td_agg = rec_td_agg.head(10)
+    pass_agg = pass_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+    pass_td_agg = pass_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+    rush_yds_agg = rush_yds_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+    rush_td_agg = rush_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+    rec_yds_agg = rec_yds_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+    rec_td_agg = rec_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+    pass_agg = pass_agg.format(precision=0)
+    pass_td_agg = pass_td_agg.format(precision=0)
+    rush_yds_agg = rush_yds_agg.format(precision=0)
+    rush_td_agg = rush_td_agg.format(precision=0)
+    rec_yds_agg = rec_yds_agg.format(precision=0)
+    rec_td_agg = rec_td_agg.format(precision=0)
+    return render_template('nfl-home.html', pass_yards_data = pass_agg.to_html(), pass_td_data = pass_td_agg.to_html(), rush_yards_data = rush_yds_agg.to_html(), rush_td_data = rush_td_agg.to_html(), rec_yards_data = rec_yds_agg.to_html(), rec_td_data = rec_td_agg.to_html())
 
 @app.route('/NFL/schedule/<week>')
 def schedule(week):
-    print()
     file_path = os.getcwd() + '/nickknows/nfl/data/schedule.csv'
     if os.path.exists(file_path):
         if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
@@ -50,7 +116,8 @@ def roster(team,fullname):
         roster_data = nfl.import_rosters([2022])
         roster_data.to_csv(file_path)
     team_roster = roster_data.loc[roster_data['team'] == team]
-    url = str('<a href="http://www.nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
+    url = str('<a href="https://www.nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
+    #url = str('<a href="http://127.0.0.1:5000/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
     team_roster['player_name'] = url
     team_roster.rename(columns={'depth_chart_position':'Position','jersey_number':'Number','status':'Status','player_name':'Full Name','first_name':'First Name','last_name':'Last Name','height':'Height','weight':'Weight','football_name':'Preferred Name','rookie_year':'Rookie Year','draft_club':'Drafted By','draft_number':'Draft Number'}, inplace=True)
     team_roster = team_roster.style.hide(axis="index")
@@ -95,10 +162,11 @@ def player_stats(name):
         weekly_data = nfl.import_weekly_data([2022])
         weekly_data.to_csv(file_path)
     player_data = weekly_data.loc[weekly_data['player_display_name'] == name]
-    headshot = '<img src"' + player_data['headshot_url'] + '">'
-    player_data['headshot_url'] = headshot
-    player_data = player_data.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
-    return render_template('player-stats.html', player_stats = player_data.to_html(), name = name)
+    headshot = '<img src="' + player_data['headshot_url'] + '" width="360" >'
+    headshot = headshot.unique()
+    position = player_data['position'].unique()
+    player_data = player_data.style.hide(['player_id','player_name','player_display_name','position','position_group','headshot_url','season','season_type'], axis="columns").hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+    return render_template('player-stats.html', player_stats = player_data.to_html(), name = name, headshot = headshot[0], position = position[0])
 
 @app.route('/NFL/Team/<team>/Schedule/<fullname>')
 def team_schedule(team, fullname):
@@ -113,6 +181,7 @@ def team_schedule(team, fullname):
         schedule = nfl.import_schedules([2022])
         schedule.to_csv(file_path)
     url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
+    #url = str('<a href="http://127.0.0.1:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
     away_team_schedule = schedule.loc[schedule['away_team'] == team]
@@ -135,6 +204,7 @@ def team_results(team, fullname):
         schedule = nfl.import_schedules([2022])
         schedule.to_csv(sched_path)
     url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
+    #url = str('<a href="http://127.0.0.1:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
     away_team_schedule = schedule.loc[schedule['away_team'] == team]
@@ -158,6 +228,7 @@ def team_fpa(team, fullname):
         schedule = nfl.import_schedules([2022])
         schedule.to_csv(sched_path)
     url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
+    #url = str('<a href="http://127.0.0.1:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
     away_team_schedule = schedule.loc[schedule['away_team'] == team]
@@ -205,10 +276,25 @@ def team_fpa(team, fullname):
             weekly_team_data = [weekly_team_data, player_data]
             weekly_team_data = pd.concat(weekly_team_data)
     full_schedule = full_schedule.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'}).hide(['season','game_type','location','old_game_id','gsis','nfl_detail_id','pfr','pff','espn','away_qb_id','home_qb_id','stadium_id'], axis="columns")
-    pass_data = weekly_team_data.loc[weekly_team_data['attempts'] > 0]
-    rush_data = weekly_team_data.loc[weekly_team_data['carries'] > 0]
-    rec_data = weekly_team_data.loc[weekly_team_data['targets'] > 0]
+    full_schedule = full_schedule.apply(lambda full_schedule: highlight(full_schedule, "total", "total_line"), axis=None)
+    weeks = weekly_team_data['week'].unique()
+    pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
+    pass_agg = pass_data.agg({"fantasy_points_ppr": "sum"})
+    rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
+    rush_agg = rush_data.agg({"fantasy_points_ppr": "sum"})
+    rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
+    rec_agg = rec_data.agg({"fantasy_points_ppr": "sum"})
+    te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
+    te_agg = te_data.agg({"fantasy_points_ppr": "sum"})
     pass_data = pass_data.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'}).hide(['player_id','player_name','position_group','headshot_url','season','season_type','carries','rushing_yards','rushing_tds','rushing_fumbles','rushing_fumbles_lost','rushing_first_downs','rushing_epa','rushing_2pt_conversions','receptions','targets','receiving_yards','receiving_tds','receiving_fumbles','receiving_fumbles_lost','receiving_air_yards','receiving_yards_after_catch','receiving_first_downs','receiving_epa','receiving_2pt_conversions','racr','target_share','air_yards_share','wopr','special_teams_tds'], axis="columns")
     rush_data = rush_data.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'}).hide(['player_id','player_name','position_group','headshot_url','season','season_type','completions','attempts','passing_yards','passing_tds','interceptions','sacks','sack_yards','sack_fumbles','sack_fumbles_lost','passing_air_yards','passing_yards_after_catch','passing_first_downs','passing_epa','passing_2pt_conversions','pacr','dakota','receptions','targets','receiving_yards','receiving_tds','receiving_fumbles','receiving_fumbles_lost','receiving_air_yards','receiving_yards_after_catch','receiving_first_downs','receiving_epa','receiving_2pt_conversions','racr','target_share','air_yards_share','wopr','special_teams_tds'], axis="columns")
     rec_data = rec_data.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'}).hide(['player_id','player_name','position_group','headshot_url','season','season_type','completions','attempts','passing_yards','passing_tds','interceptions','sacks','sack_yards','sack_fumbles','sack_fumbles_lost','passing_air_yards','passing_yards_after_catch','passing_first_downs','passing_epa','passing_2pt_conversions','pacr','dakota','carries','rushing_yards','rushing_tds','rushing_fumbles','rushing_fumbles_lost','rushing_first_downs','rushing_epa','rushing_2pt_conversions'], axis="columns")
-    return render_template('team-fpa.html', team_fpa = full_schedule.to_html(), fullname = fullname, rush_data=rush_data.to_html(), pass_data = pass_data.to_html(), rec_data = rec_data.to_html())
+    return render_template('team-fpa.html', team_fpa = full_schedule.to_html(), fullname = fullname, rush_data=rush_data.to_html(), pass_data = pass_data.to_html(), rec_data = rec_data.to_html(), pass_agg = pass_agg['fantasy_points_ppr']/len(weeks), rush_agg = rush_agg['fantasy_points_ppr']/len(weeks), rec_agg = rec_agg['fantasy_points_ppr']/len(weeks), te_agg = te_agg['fantasy_points_ppr']/len(weeks))
+
+def highlight(df, col1, col2):
+    mask = df[col1] > df[col2]
+    omask = df[col1] < df[col2]
+    new_df = pd.DataFrame("background-color: gainsboro", index=df.index, columns=df.columns)
+    new_df[col1] = np.where(mask, "background-color: {}".format("green"), new_df[col1])
+    new_df[col1] = np.where(omask, "background-color: {}".format("red"), new_df[col1])
+    return new_df

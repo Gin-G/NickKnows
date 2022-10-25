@@ -1,192 +1,20 @@
 <!DOCTYPE html>
 <html>
     <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script>
+        $(function(){
+            $('#nfl_navbar').load('http://127.0.0.1:5000/templates/nfl_navbar.html')
+        })
+    </script>
+    <script>
+        $(function(){
+            $('#header').load('http://127.0.0.1:5000/templates/header.html')
+        })
+    </script>
     <body>
-        <div class="navbar">
-            <a>Nick Knows</a>
-            <a href="{{url_for('home')}}">Home</a>
-            <div class="dropdown">
-                <button class="dropbtn">Schedule
-                <i class="fa fa-caret-down"></i>
-                </button>
-                <div class="dropdown-content">
-                    <a href="{{url_for('schedule', week='1')}}">Week 1</a>
-                    <a href="{{url_for('schedule', week='2')}}">Week 2</a>
-                    <a href="{{url_for('schedule', week='3')}}">Week 3</a>
-                    <a href="{{url_for('schedule', week='4')}}">Week 4</a>
-                    <a href="{{url_for('schedule', week='5')}}">Week 5</a>
-                    <a href="{{url_for('schedule', week='6')}}">Week 6</a>
-                    <a href="{{url_for('schedule', week='7')}}">Week 7</a>
-                    <a href="{{url_for('schedule', week='8')}}">Week 8</a>
-                    <a href="{{url_for('schedule', week='9')}}">Week 9</a>
-                    <a href="{{url_for('schedule', week='10')}}">Week 10</a>
-                    <a href="{{url_for('schedule', week='11')}}">Week 11</a>
-                    <a href="{{url_for('schedule', week='12')}}">Week 12</a>
-                    <a href="{{url_for('schedule', week='13')}}">Week 13</a>
-                    <a href="{{url_for('schedule', week='14')}}">Week 14</a>
-                    <a href="{{url_for('schedule', week='15')}}">Week 15</a>
-                    <a href="{{url_for('schedule', week='16')}}">Week 16</a>
-                    <a href="{{url_for('schedule', week='17')}}">Week 17</a>
-                    <a href="{{url_for('schedule', week='18')}}">Week 18</a>
-                </div>
-            </div>
-            <div class="dropdown">
-                <button class="dropbtn">Rosters
-                <i class="fa fa-caret-down"></i>
-                </button>
-                <div class="dropdown-content">
-                    <a href="{{url_for('roster', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
-                    <a href="{{url_for('roster', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
-                    <a href="{{url_for('roster', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>
-                    <a href="{{url_for('roster', team='BUF', fullname='Buffalo Bills')}}">Buffalo Bills</a>
-                    <a href="{{url_for('roster', team='CAR', fullname='Carolina Panthers')}}">Carolina Panthers</a>
-                    <a href="{{url_for('roster', team='CHI', fullname='Chicago Bears')}}">Chicago Bears</a>
-                    <a href="{{url_for('roster', team='CIN', fullname='Cincinnati Bengals')}}">Cincinnati Bengals</a>
-                    <a href="{{url_for('roster', team='CLE', fullname='Cleveland Browns')}}">Cleveland Browns</a>
-                    <a href="{{url_for('roster', team='DAL', fullname='Dallas Cowboys')}}">Dallas Cowboys</a>
-                    <a href="{{url_for('roster', team='DEN', fullname='Denver Broncos')}}">Denver Broncos</a>
-                    <a href="{{url_for('roster', team='DET', fullname='Detroit Lions')}}">Detroit Lions</a>
-                    <a href="{{url_for('roster', team='GB', fullname='Green Bay Packers')}}">Green Bay Packers</a>
-                    <a href="{{url_for('roster', team='HOU', fullname='Houston Texans')}}">Houston Texans</a>
-                    <a href="{{url_for('roster', team='IND', fullname='Indianapolis Colts')}}">Indianapolis Colts</a>
-                    <a href="{{url_for('roster', team='JAX', fullname='Jacksonville Jaguars')}}">Jacksonville Jaguars</a>
-                    <a href="{{url_for('roster', team='KC', fullname='Kansas City Chiefs')}}">Kansas City Chiefs</a>
-                    <a href="{{url_for('roster', team='LA', fullname='Los Angeles Rams')}}">Los Angeles Rams</a>
-                    <a href="{{url_for('roster', team='LAC', fullname='Los Angeles Chargers')}}">Los Angeles Chargers</a>
-                    <a href="{{url_for('roster', team='LV', fullname='Los Vegas Raiders')}}">Los Vegas Raiders</a>
-                    <a href="{{url_for('roster', team='MIA', fullname='Miami Dolphins')}}">Miami Dolphins</a>
-                    <a href="{{url_for('roster', team='MIN', fullname='Minnesota Vikings')}}">Minnesota Vikings</a>
-                    <a href="{{url_for('roster', team='NE', fullname='New England Patriots')}}">New England Patriots</a>
-                    <a href="{{url_for('roster', team='NO', fullname='New Orleans Saints')}}">New Orleans Saints</a>
-                    <a href="{{url_for('roster', team='NYG', fullname='New York Giants')}}">New York Giants</a>
-                    <a href="{{url_for('roster', team='NYJ', fullname='New York Jets')}}">New York Jets</a>
-                    <a href="{{url_for('roster', team='PHI', fullname='Philadelphia Eagles')}}">Philadelphia Eagles</a>
-                    <a href="{{url_for('roster', team='PIT', fullname='Pittsburgh Steelers')}}">Pittsburgh Steelers</a>
-                    <a href="{{url_for('roster', team='SEA', fullname='Seattle Seahawks')}}">Seattle Seahawks</a>
-                    <a href="{{url_for('roster', team='SF', fullname='San Fransisco 49ers')}}">San Fransisco 49ers</a>
-                    <a href="{{url_for('roster', team='TB', fullname='Tampa Bay Buccaners')}}">Tampa Bay Buccaners</a>
-                    <a href="{{url_for('roster', team='TEN', fullname='Tennessee Titans')}}">Tennessee Titans</a>
-                    <a href="{{url_for('roster', team='WAS', fullname='Washington Commanders')}}">Washington Commanders</a>
-                </div>
-            </div>
-            <div class="dropdown">
-                <button class="dropbtn">Team Schedule
-                <i class="fa fa-caret-down"></i>
-                </button>
-                <div class="dropdown-content">
-                    <a href="{{url_for('team_schedule', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
-                    <a href="{{url_for('team_schedule', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
-                    <a href="{{url_for('team_schedule', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>
-                    <a href="{{url_for('team_schedule', team='BUF', fullname='Buffalo Bills')}}">Buffalo Bills</a>
-                    <a href="{{url_for('team_schedule', team='CAR', fullname='Carolina Panthers')}}">Carolina Panthers</a>
-                    <a href="{{url_for('team_schedule', team='CHI', fullname='Chicago Bears')}}">Chicago Bears</a>
-                    <a href="{{url_for('team_schedule', team='CIN', fullname='Cincinnati Bengals')}}">Cincinnati Bengals</a>
-                    <a href="{{url_for('team_schedule', team='CLE', fullname='Cleveland Browns')}}">Cleveland Browns</a>
-                    <a href="{{url_for('team_schedule', team='DAL', fullname='Dallas Cowboys')}}">Dallas Cowboys</a>
-                    <a href="{{url_for('team_schedule', team='DEN', fullname='Denver Broncos')}}">Denver Broncos</a>
-                    <a href="{{url_for('team_schedule', team='DET', fullname='Detroit Lions')}}">Detroit Lions</a>
-                    <a href="{{url_for('team_schedule', team='GB', fullname='Green Bay Packers')}}">Green Bay Packers</a>
-                    <a href="{{url_for('team_schedule', team='HOU', fullname='Houston Texans')}}">Houston Texans</a>
-                    <a href="{{url_for('team_schedule', team='IND', fullname='Indianapolis Colts')}}">Indianapolis Colts</a>
-                    <a href="{{url_for('team_schedule', team='JAX', fullname='Jacksonville Jaguars')}}">Jacksonville Jaguars</a>
-                    <a href="{{url_for('team_schedule', team='KC', fullname='Kansas City Chiefs')}}">Kansas City Chiefs</a>
-                    <a href="{{url_for('team_schedule', team='LA', fullname='Los Angeles Rams')}}">Los Angeles Rams</a>
-                    <a href="{{url_for('team_schedule', team='LAC', fullname='Los Angeles Chargers')}}">Los Angeles Chargers</a>
-                    <a href="{{url_for('team_schedule', team='LV', fullname='Los Vegas Raiders')}}">Los Vegas Raiders</a>
-                    <a href="{{url_for('team_schedule', team='MIA', fullname='Miami Dolphins')}}">Miami Dolphins</a>
-                    <a href="{{url_for('team_schedule', team='MIN', fullname='Minnesota Vikings')}}">Minnesota Vikings</a>
-                    <a href="{{url_for('team_schedule', team='NE', fullname='New England Patriots')}}">New England Patriots</a>
-                    <a href="{{url_for('team_schedule', team='NO', fullname='New Orleans Saints')}}">New Orleans Saints</a>
-                    <a href="{{url_for('team_schedule', team='NYG', fullname='New York Giants')}}">New York Giants</a>
-                    <a href="{{url_for('team_schedule', team='NYJ', fullname='New York Jets')}}">New York Jets</a>
-                    <a href="{{url_for('team_schedule', team='PHI', fullname='Philadelphia Eagles')}}">Philadelphia Eagles</a>
-                    <a href="{{url_for('team_schedule', team='PIT', fullname='Pittsburgh Steelers')}}">Pittsburgh Steelers</a>
-                    <a href="{{url_for('team_schedule', team='SEA', fullname='Seattle Seahawks')}}">Seattle Seahawks</a>
-                    <a href="{{url_for('team_schedule', team='SF', fullname='San Fransisco 49ers')}}">San Fransisco 49ers</a>
-                    <a href="{{url_for('team_schedule', team='TB', fullname='Tampa Bay Buccaners')}}">Tampa Bay Buccaners</a>
-                    <a href="{{url_for('team_schedule', team='TEN', fullname='Tennessee Titans')}}">Tennessee Titans</a>
-                    <a href="{{url_for('team_schedule', team='WAS', fullname='Washington Commanders')}}">Washington Commanders</a>
-                </div>
-            </div>
-            <div class="dropdown">
-                <button class="dropbtn">Team Results
-                <i class="fa fa-caret-down"></i>
-                </button>
-                <div class="dropdown-content">
-                    <a href="{{url_for('team_results', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
-                    <a href="{{url_for('team_results', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
-                    <a href="{{url_for('team_results', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>
-                    <a href="{{url_for('team_results', team='BUF', fullname='Buffalo Bills')}}">Buffalo Bills</a>
-                    <a href="{{url_for('team_results', team='CAR', fullname='Carolina Panthers')}}">Carolina Panthers</a>
-                    <a href="{{url_for('team_results', team='CHI', fullname='Chicago Bears')}}">Chicago Bears</a>
-                    <a href="{{url_for('team_results', team='CIN', fullname='Cincinnati Bengals')}}">Cincinnati Bengals</a>
-                    <a href="{{url_for('team_results', team='CLE', fullname='Cleveland Browns')}}">Cleveland Browns</a>
-                    <a href="{{url_for('team_results', team='DAL', fullname='Dallas Cowboys')}}">Dallas Cowboys</a>
-                    <a href="{{url_for('team_results', team='DEN', fullname='Denver Broncos')}}">Denver Broncos</a>
-                    <a href="{{url_for('team_results', team='DET', fullname='Detroit Lions')}}">Detroit Lions</a>
-                    <a href="{{url_for('team_results', team='GB', fullname='Green Bay Packers')}}">Green Bay Packers</a>
-                    <a href="{{url_for('team_results', team='HOU', fullname='Houston Texans')}}">Houston Texans</a>
-                    <a href="{{url_for('team_results', team='IND', fullname='Indianapolis Colts')}}">Indianapolis Colts</a>
-                    <a href="{{url_for('team_results', team='JAX', fullname='Jacksonville Jaguars')}}">Jacksonville Jaguars</a>
-                    <a href="{{url_for('team_results', team='KC', fullname='Kansas City Chiefs')}}">Kansas City Chiefs</a>
-                    <a href="{{url_for('team_results', team='LA', fullname='Los Angeles Rams')}}">Los Angeles Rams</a>
-                    <a href="{{url_for('team_results', team='LAC', fullname='Los Angeles Chargers')}}">Los Angeles Chargers</a>
-                    <a href="{{url_for('team_results', team='LV', fullname='Los Vegas Raiders')}}">Los Vegas Raiders</a>
-                    <a href="{{url_for('team_results', team='MIA', fullname='Miami Dolphins')}}">Miami Dolphins</a>
-                    <a href="{{url_for('team_results', team='MIN', fullname='Minnesota Vikings')}}">Minnesota Vikings</a>
-                    <a href="{{url_for('team_results', team='NE', fullname='New England Patriots')}}">New England Patriots</a>
-                    <a href="{{url_for('team_results', team='NO', fullname='New Orleans Saints')}}">New Orleans Saints</a>
-                    <a href="{{url_for('team_results', team='NYG', fullname='New York Giants')}}">New York Giants</a>
-                    <a href="{{url_for('team_results', team='NYJ', fullname='New York Jets')}}">New York Jets</a>
-                    <a href="{{url_for('team_results', team='PHI', fullname='Philadelphia Eagles')}}">Philadelphia Eagles</a>
-                    <a href="{{url_for('team_results', team='PIT', fullname='Pittsburgh Steelers')}}">Pittsburgh Steelers</a>
-                    <a href="{{url_for('team_results', team='SEA', fullname='Seattle Seahawks')}}">Seattle Seahawks</a>
-                    <a href="{{url_for('team_results', team='SF', fullname='San Fransisco 49ers')}}">San Fransisco 49ers</a>
-                    <a href="{{url_for('team_results', team='TB', fullname='Tampa Bay Buccaners')}}">Tampa Bay Buccaners</a>
-                    <a href="{{url_for('team_results', team='TEN', fullname='Tennessee Titans')}}">Tennessee Titans</a>
-                    <a href="{{url_for('team_results', team='WAS', fullname='Washington Commanders')}}">Washington Commanders</a>
-                </div>
-            </div>
-            <div class="dropdown">
-                <button class="dropbtn">Team FPA
-                <i class="fa fa-caret-down"></i>
-                </button>
-                <div class="dropdown-content">
-                    <a href="{{url_for('team_fpa', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
-                    <a href="{{url_for('team_fpa', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
-                    <a href="{{url_for('team_fpa', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>
-                    <a href="{{url_for('team_fpa', team='BUF', fullname='Buffalo Bills')}}">Buffalo Bills</a>
-                    <a href="{{url_for('team_fpa', team='CAR', fullname='Carolina Panthers')}}">Carolina Panthers</a>
-                    <a href="{{url_for('team_fpa', team='CHI', fullname='Chicago Bears')}}">Chicago Bears</a>
-                    <a href="{{url_for('team_fpa', team='CIN', fullname='Cincinnati Bengals')}}">Cincinnati Bengals</a>
-                    <a href="{{url_for('team_fpa', team='CLE', fullname='Cleveland Browns')}}">Cleveland Browns</a>
-                    <a href="{{url_for('team_fpa', team='DAL', fullname='Dallas Cowboys')}}">Dallas Cowboys</a>
-                    <a href="{{url_for('team_fpa', team='DEN', fullname='Denver Broncos')}}">Denver Broncos</a>
-                    <a href="{{url_for('team_fpa', team='DET', fullname='Detroit Lions')}}">Detroit Lions</a>
-                    <a href="{{url_for('team_fpa', team='GB', fullname='Green Bay Packers')}}">Green Bay Packers</a>
-                    <a href="{{url_for('team_fpa', team='HOU', fullname='Houston Texans')}}">Houston Texans</a>
-                    <a href="{{url_for('team_fpa', team='IND', fullname='Indianapolis Colts')}}">Indianapolis Colts</a>
-                    <a href="{{url_for('team_fpa', team='JAX', fullname='Jacksonville Jaguars')}}">Jacksonville Jaguars</a>
-                    <a href="{{url_for('team_fpa', team='KC', fullname='Kansas City Chiefs')}}">Kansas City Chiefs</a>
-                    <a href="{{url_for('team_fpa', team='LA', fullname='Los Angeles Rams')}}">Los Angeles Rams</a>
-                    <a href="{{url_for('team_fpa', team='LAC', fullname='Los Angeles Chargers')}}">Los Angeles Chargers</a>
-                    <a href="{{url_for('team_fpa', team='LV', fullname='Los Vegas Raiders')}}">Los Vegas Raiders</a>
-                    <a href="{{url_for('team_fpa', team='MIA', fullname='Miami Dolphins')}}">Miami Dolphins</a>
-                    <a href="{{url_for('team_fpa', team='MIN', fullname='Minnesota Vikings')}}">Minnesota Vikings</a>
-                    <a href="{{url_for('team_fpa', team='NE', fullname='New England Patriots')}}">New England Patriots</a>
-                    <a href="{{url_for('team_fpa', team='NO', fullname='New Orleans Saints')}}">New Orleans Saints</a>
-                    <a href="{{url_for('team_fpa', team='NYG', fullname='New York Giants')}}">New York Giants</a>
-                    <a href="{{url_for('team_fpa', team='NYJ', fullname='New York Jets')}}">New York Jets</a>
-                    <a href="{{url_for('team_fpa', team='PHI', fullname='Philadelphia Eagles')}}">Philadelphia Eagles</a>
-                    <a href="{{url_for('team_fpa', team='PIT', fullname='Pittsburgh Steelers')}}">Pittsburgh Steelers</a>
-                    <a href="{{url_for('team_fpa', team='SEA', fullname='Seattle Seahawks')}}">Seattle Seahawks</a>
-                    <a href="{{url_for('team_fpa', team='SF', fullname='San Fransisco 49ers')}}">San Fransisco 49ers</a>
-                    <a href="{{url_for('team_fpa', team='TB', fullname='Tampa Bay Buccaners')}}">Tampa Bay Buccaners</a>
-                    <a href="{{url_for('team_fpa', team='TEN', fullname='Tennessee Titans')}}">Tennessee Titans</a>
-                    <a href="{{url_for('team_fpa', team='WAS', fullname='Washington Commanders')}}">Washington Commanders</a>
-                </div>
-            </div>
-        </div>
+        <div id="header"></div>
+        <div id="nfl_navbar"></div>
         <h1>{{ fullname }}</h1>
             {{ team_schedule | safe }}
     </body>

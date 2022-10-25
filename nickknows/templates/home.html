@@ -1,9 +1,21 @@
 <!DOCTYPE html>
 <html>
+    <title>Home | Nick Knows</title>
+        <link rel="canonical" href="https://fahrtbags.wixsite.com/fahrtbags"/>
+        <meta property="og:title" content="Home | Nick Knows"/>
+        <meta property="og:url" content="https://www.nickknows.com"/>
+        <meta property="og:site_name" content="nickknows"/>
+        <meta property="og:type" content="website"/>
     <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script>
+        $(function(){
+            $('#header').load('http://127.0.0.1:5000/templates/header.html')
+        })
+    </script>
     <body>
+        <div id="header"></div>
         <div class="navbar">
-            <a>Nick Knows</a>
             <a href="{{url_for('home')}}">Home</a>
             <div class="dropdown">
                 <button class="dropbtn">Interests
