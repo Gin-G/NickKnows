@@ -5,11 +5,6 @@ body {
     margin: 0px auto;
 }
 
-@font-face {
-  font-family: 'Reklame Script Regular DEMO';
-  src: url('http://fonts.cdnfonts.com/css/reklame-script');
-}
-
 .bubble {
     margin: 20px auto;
     width: 95%;
@@ -55,7 +50,7 @@ h3 {
 }
 
 .headerfont {
-    font-family: 'Reklame Script Regular DEMO';
+    font-family: "Brush Script MT";
     font-size: 53px;  
     position: relative;  
     font-weight: bold;

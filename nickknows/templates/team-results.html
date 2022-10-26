@@ -4,12 +4,12 @@
     <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
     <script>
         $(function(){
-            $('#nfl_navbar').load('https://www.nickknows.net/templates/nfl_navbar.html')
+            $('#nfl_navbar').load("{{ url_for('nfl_navbar') }}")
         })
     </script>
     <script>
         $(function(){
-            $('#header').load('https://www.nickknows.net/templates/header.html')
+            $('#header').load("{{ url_for('header') }}")
         })
     </script>
     <body>
