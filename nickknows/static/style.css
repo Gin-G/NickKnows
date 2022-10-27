@@ -217,4 +217,15 @@ caption {
       top: 40%; 
       left: 2%;
     }
+
+  /* Links inside the navbar */
+    .navbar a {
+      float: left;
+      font-size: 14px;
+      color: white;
+      padding: 17px 6px;
+      text-decoration: none;
+      margin-left: 2%;
+    }
+
   }
