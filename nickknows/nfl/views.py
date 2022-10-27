@@ -271,18 +271,23 @@ def team_fpa(team, fullname):
             player_data = player_data.loc[player_data['week'] == week]
             weekly_team_data = [weekly_team_data, player_data]
             weekly_team_data = pd.concat(weekly_team_data)
-    full_schedule = full_schedule.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'}).hide(['season','game_type','location','old_game_id','gsis','nfl_detail_id','pfr','pff','espn','away_qb_id','home_qb_id','stadium_id'], axis="columns")
+    full_schedule.rename(columns={'game_id':'Play by Play','week':'Week','gameday':'Date','weekday':'Day','gametime':'Time','away_team':'Away Team','away_score':'Away Score','home_team':'Home Team','home_score':'Home Score','result':'Result','total':'Total','overtime':'OT?','away_rest':'Away Rest','home_rest':'Home Rest','away_moneyline':'Away Line Odds','home_moneyline':'Home Line Odds',	'spread_line':'Spread',	'away_spread_odds':'Away Spread Odds',	'home_spread_odds':'Home Spread Odds','total_line':'Total Line','under_odds':'Under Odds','over_odds':'Over Odds','div_game':'Div?','roof':'Roof?','surface':'Field Surface','away_qb_name':'Away QB','home_qb_name':'Home QB',	'away_coach':'Away Coach','home_coach':'Home Coach','referee':'Ref','stadium':'Stadium'}, inplace=True)
+    full_schedule = full_schedule.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'}).hide(['season','game_type','location','old_game_id','gsis','nfl_detail_id','pfr','pff','espn','away_qb_id','home_qb_id','stadium_id','temp','wind','is_home'], axis="columns")
     full_schedule = full_schedule.format(precision=1)
-    full_schedule = full_schedule.apply(lambda full_schedule: highlight(full_schedule, "total", "total_line"), axis=None)
+    full_schedule = full_schedule.apply(lambda full_schedule: highlight(full_schedule, "Total", "Total Line"), axis=None)
     weeks = weekly_team_data['week'].unique()
     pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
     pass_agg = pass_data.agg({"fantasy_points_ppr": "sum"})
+    pass_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
     rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
     rush_agg = rush_data.agg({"fantasy_points_ppr": "sum"})
+    rush_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
     rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
     rec_agg = rec_data.agg({"fantasy_points_ppr": "sum"})
+    rec_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
     te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
     te_agg = te_data.agg({"fantasy_points_ppr": "sum"})
+    te_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
     pass_data = pass_data.drop_duplicates()
     rush_data = rush_data.drop_duplicates()
     rec_data = rec_data.drop_duplicates()
