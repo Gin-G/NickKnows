@@ -273,6 +273,7 @@ def team_fpa(team, fullname):
             weekly_team_data = pd.concat(weekly_team_data)
     full_schedule = full_schedule.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'}).hide(['season','game_type','location','old_game_id','gsis','nfl_detail_id','pfr','pff','espn','away_qb_id','home_qb_id','stadium_id'], axis="columns")
     full_schedule = full_schedule.format(precision=1)
+    full_schedule = full_schedule.apply(lambda full_schedule: highlight(full_schedule, "total", "total_line"), axis=None)
     weeks = weekly_team_data['week'].unique()
     pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
     pass_agg = pass_data.agg({"fantasy_points_ppr": "sum"})

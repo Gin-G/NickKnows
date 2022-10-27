@@ -117,6 +117,7 @@ caption {
     background-color: #393f44;
     font-family: Arial;
     height: 50px;
+    width: 100%;
   }
   
   /* Links inside the navbar */
