@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
     <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
     <script>
@@ -27,8 +28,8 @@
             <h2>RB Stats</h2>
             {{ rush_data | safe }}<br>
             <h2>WR Stats</h2>
-            {{ rec_data | safe }}
+            {{ rec_data | safe }}<br>
             <h2>TE Stats</h2>
-            {{ te_data | safe }}
+            {{ te_data | safe }}<br>
     </body>
 </html>

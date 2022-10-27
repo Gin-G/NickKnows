@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
     <title>Home | Nick Knows</title>
-        <link rel="canonical" href="https://fahrtbags.wixsite.com/fahrtbags"/>
+        <link rel="canonical" href="{{ url_for('home') }}"/>
         <meta property="og:title" content="Home | Nick Knows"/>
         <meta property="og:url" content="{{ url_for('home') }}"/>
         <meta property="og:site_name" content="nickknows"/>
         <meta property="og:type" content="website"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
     <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
     <script>
