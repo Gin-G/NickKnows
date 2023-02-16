@@ -17,8 +17,11 @@
         <div id="header"></div>
         <div id="nfl_navbar"></div>
         <h1>NFL Stat Leaders</h1>
-        <form action="{{ url_for('NFLupdate') }}">
-            <input type="submit" value="Update Data" style="font-size: 20px;border-radius: 5px;">
+        <form action="{{ url_for('NFLupdatePBP') }}">
+            <input type="submit" value="Update Play by Play Data" style="font-size: 20px;border-radius: 5px;">
+        </form>
+        <form action="{{ url_for('NFLupdateRosters') }}">
+            <input type="submit" value="Update Roster Data" style="font-size: 20px;border-radius: 5px;">
         </form>
         <div class='parent'>
             <div class='child inline-block-child'>
