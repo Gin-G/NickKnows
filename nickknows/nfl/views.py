@@ -13,72 +13,75 @@ pd.options.mode.chained_assignment = None
 
 @app.route('/NFL')
 def NFL():
-    file_path = os.getcwd() + '/nickknows/nfl/data/pbp_data.csv'
-    if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
+    try:
+        file_path = os.getcwd() + '/nickknows/nfl/data/pbp_data.csv'
+        if os.path.exists(file_path):
+            if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
+                pbp_data = nfl.import_pbp_data([2022])
+                pbp_data.to_csv(file_path)
+            else:
+                pbp_data = pd.read_csv(file_path, index_col=0)
+        else:
             pbp_data = nfl.import_pbp_data([2022])
             pbp_data.to_csv(file_path)
+        rfile_path = os.getcwd() + '/nickknows/nfl/data/rosters.csv'
+        if os.path.exists(rfile_path):
+            if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
+                roster_data = nfl.import_rosters([2022])
+                roster_data.to_csv(rfile_path)
+            else:
+                roster_data = pd.read_csv(rfile_path, index_col=0)
         else:
-            pbp_data = pd.read_csv(file_path, index_col=0)
-    else:
-        pbp_data = nfl.import_pbp_data([2022])
-        pbp_data.to_csv(file_path)
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/rosters.csv'
-    if os.path.exists(rfile_path):
-        if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
             roster_data = nfl.import_rosters([2022])
             roster_data.to_csv(rfile_path)
-        else:
-            roster_data = pd.read_csv(rfile_path, index_col=0)
-    else:
-        roster_data = nfl.import_rosters([2022])
-        roster_data.to_csv(rfile_path)
-    pbp_data = pbp_data[pbp_data["season_type"] == "REG"]
-    pbp_data = pbp_data[pbp_data["two_point_attempt"] == False]
-    pbp_data_pass = pbp_data[pbp_data["play_type"] == "pass"]
-    pbp_data_rush = pbp_data[pbp_data["play_type"] == "run"]
-    pbp_data_rec = pbp_data[pbp_data["play_type"] == "pass"]
-    pbp_data_pass = pbp_data_pass.merge(roster_data[["player_id","player_name"]], left_on="passer_player_id", right_on="player_id")
-    pbp_data_rush = pbp_data_rush.merge(roster_data[["player_id","player_name"]], left_on="rusher_player_id", right_on="player_id")
-    pbp_data_rec = pbp_data_rec.merge(roster_data[["player_id","player_name"]], left_on="receiver_player_id", right_on="player_id")
-    pass_agg = pbp_data_pass.groupby(["player_name"], as_index=False).agg({"passing_yards": "sum"})
-    pass_td_agg = pbp_data_pass.groupby(["player_name"], as_index=False).agg({"pass_touchdown":"sum"})
-    rush_yds_agg = pbp_data_rush.groupby(["player_name"], as_index=False).agg({"rushing_yards": "sum"})
-    rush_td_agg = pbp_data_rush.groupby(["player_name"], as_index=False).agg({"rush_touchdown":"sum"})
-    rec_yds_agg = pbp_data_rec.groupby(["player_name"], as_index=False).agg({"receiving_yards": "sum"})
-    rec_td_agg = pbp_data_rec.groupby(["player_name"], as_index=False).agg({"pass_touchdown":"sum"})
-    pass_agg.sort_values(by=['passing_yards'], inplace=True, ascending=False)
-    pass_td_agg.sort_values(by=['pass_touchdown'], inplace=True, ascending=False)
-    rush_yds_agg.sort_values(by=['rushing_yards'], inplace=True, ascending=False)
-    rush_td_agg.sort_values(by=['rush_touchdown'], inplace=True, ascending=False)
-    rec_yds_agg.sort_values(by=['receiving_yards'], inplace=True, ascending=False)
-    rec_td_agg.sort_values(by=['pass_touchdown'], inplace=True, ascending=False)
-    pass_agg.rename(columns={'player_name':'Player Name','passing_yards':"Total Passing Yards"}, inplace=True)
-    pass_td_agg.rename(columns={'player_name':'Player Name',"pass_touchdown":"Total Passing TD's"}, inplace=True)
-    rush_yds_agg.rename(columns={'player_name':'Player Name','rushing_yards':"Total Rushing Yards"}, inplace=True)
-    rush_td_agg.rename(columns={'player_name':'Player Name',"rush_touchdown":"Total Rushing TD's"}, inplace=True)
-    rec_yds_agg.rename(columns={'player_name':'Player Name','receiving_yards':"Total Receiving Yards"}, inplace=True)
-    rec_td_agg.rename(columns={'player_name':'Player Name',"pass_touchdown":"Total Receiving TD's"}, inplace=True)
-    pass_agg = pass_agg.head(10)
-    pass_td_agg = pass_td_agg.head(10)
-    rush_yds_agg = rush_yds_agg.head(10)
-    rush_td_agg = rush_td_agg.head(10)
-    rec_yds_agg = rec_yds_agg.head(10)
-    rec_td_agg = rec_td_agg.head(10)
-    pass_agg = pass_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
-    pass_td_agg = pass_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
-    rush_yds_agg = rush_yds_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
-    rush_td_agg = rush_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
-    rec_yds_agg = rec_yds_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
-    rec_td_agg = rec_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
-    pass_agg = pass_agg.format(precision=0)
-    pass_td_agg = pass_td_agg.format(precision=0)
-    rush_yds_agg = rush_yds_agg.format(precision=0)
-    rush_td_agg = rush_td_agg.format(precision=0)
-    rec_yds_agg = rec_yds_agg.format(precision=0)
-    rec_td_agg = rec_td_agg.format(precision=0)
-    return render_template('nfl-home.html', pass_yards_data = pass_agg.to_html(), pass_td_data = pass_td_agg.to_html(), rush_yards_data = rush_yds_agg.to_html(), rush_td_data = rush_td_agg.to_html(), rec_yards_data = rec_yds_agg.to_html(), rec_td_data = rec_td_agg.to_html())
-
+        pbp_data = pbp_data[pbp_data["season_type"] == "REG"]
+        pbp_data = pbp_data[pbp_data["two_point_attempt"] == False]
+        pbp_data_pass = pbp_data[pbp_data["play_type"] == "pass"]
+        pbp_data_rush = pbp_data[pbp_data["play_type"] == "run"]
+        pbp_data_rec = pbp_data[pbp_data["play_type"] == "pass"]
+        pbp_data_pass = pbp_data_pass.merge(roster_data[["player_id","player_name"]], left_on="passer_player_id", right_on="player_id")
+        pbp_data_rush = pbp_data_rush.merge(roster_data[["player_id","player_name"]], left_on="rusher_player_id", right_on="player_id")
+        pbp_data_rec = pbp_data_rec.merge(roster_data[["player_id","player_name"]], left_on="receiver_player_id", right_on="player_id")
+        pass_agg = pbp_data_pass.groupby(["player_name"], as_index=False).agg({"passing_yards": "sum"})
+        pass_td_agg = pbp_data_pass.groupby(["player_name"], as_index=False).agg({"pass_touchdown":"sum"})
+        rush_yds_agg = pbp_data_rush.groupby(["player_name"], as_index=False).agg({"rushing_yards": "sum"})
+        rush_td_agg = pbp_data_rush.groupby(["player_name"], as_index=False).agg({"rush_touchdown":"sum"})
+        rec_yds_agg = pbp_data_rec.groupby(["player_name"], as_index=False).agg({"receiving_yards": "sum"})
+        rec_td_agg = pbp_data_rec.groupby(["player_name"], as_index=False).agg({"pass_touchdown":"sum"})
+        pass_agg.sort_values(by=['passing_yards'], inplace=True, ascending=False)
+        pass_td_agg.sort_values(by=['pass_touchdown'], inplace=True, ascending=False)
+        rush_yds_agg.sort_values(by=['rushing_yards'], inplace=True, ascending=False)
+        rush_td_agg.sort_values(by=['rush_touchdown'], inplace=True, ascending=False)
+        rec_yds_agg.sort_values(by=['receiving_yards'], inplace=True, ascending=False)
+        rec_td_agg.sort_values(by=['pass_touchdown'], inplace=True, ascending=False)
+        pass_agg.rename(columns={'player_name':'Player Name','passing_yards':"Total Passing Yards"}, inplace=True)
+        pass_td_agg.rename(columns={'player_name':'Player Name',"pass_touchdown":"Total Passing TD's"}, inplace=True)
+        rush_yds_agg.rename(columns={'player_name':'Player Name','rushing_yards':"Total Rushing Yards"}, inplace=True)
+        rush_td_agg.rename(columns={'player_name':'Player Name',"rush_touchdown":"Total Rushing TD's"}, inplace=True)
+        rec_yds_agg.rename(columns={'player_name':'Player Name','receiving_yards':"Total Receiving Yards"}, inplace=True)
+        rec_td_agg.rename(columns={'player_name':'Player Name',"pass_touchdown":"Total Receiving TD's"}, inplace=True)
+        pass_agg = pass_agg.head(10)
+        pass_td_agg = pass_td_agg.head(10)
+        rush_yds_agg = rush_yds_agg.head(10)
+        rush_td_agg = rush_td_agg.head(10)
+        rec_yds_agg = rec_yds_agg.head(10)
+        rec_td_agg = rec_td_agg.head(10)
+        pass_agg = pass_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        pass_td_agg = pass_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        rush_yds_agg = rush_yds_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        rush_td_agg = rush_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        rec_yds_agg = rec_yds_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        rec_td_agg = rec_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        pass_agg = pass_agg.format(precision=0)
+        pass_td_agg = pass_td_agg.format(precision=0)
+        rush_yds_agg = rush_yds_agg.format(precision=0)
+        rush_td_agg = rush_td_agg.format(precision=0)
+        rec_yds_agg = rec_yds_agg.format(precision=0)
+        rec_td_agg = rec_td_agg.format(precision=0)
+        return render_template('nfl-home.html', pass_yards_data = pass_agg.to_html(), pass_td_data = pass_td_agg.to_html(), rush_yards_data = rush_yds_agg.to_html(), rush_td_data = rush_td_agg.to_html(), rec_yards_data = rec_yds_agg.to_html(), rec_td_data = rec_td_agg.to_html())
+    except:
+        return render_template('nfl-home.html')
+        
 @app.route('/NFL/update')
 def NFLupdate():
     file_path = os.getcwd() + '/nickknows/nfl/data/pbp_data.csv'
