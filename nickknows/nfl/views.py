@@ -25,15 +25,7 @@ def NFLupdate():
 @app.route('/NFL/schedule/<week>')
 def schedule(week):
     file_path = os.getcwd() + '/nickknows/nfl/data/schedule.csv'
-    if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-            schedule = nfl.import_schedules([2022])
-            schedule.to_csv(file_path)
-        else:
-            schedule = pd.read_csv(file_path, index_col=0)
-    else:
-        schedule = nfl.import_schedules([2022])
-        schedule.to_csv(file_path)
+    schedule = pd.read_csv(file_path, index_col=0)
     week_schedule = schedule.loc[schedule['week'] == int(week)]
     url = str('<a href="http://www.nickknows.net/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['game_id'] + str('</a>')
     week_schedule['game_id'] = url
@@ -49,15 +41,7 @@ def schedule(week):
 @app.route('/NFL/Roster/<team>/<fullname>')
 def roster(team,fullname):
     file_path = os.getcwd() + '/nickknows/nfl/data/rosters.csv'
-    if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-            roster_data = nfl.import_rosters([2022])
-            roster_data.to_csv(file_path)
-        else:
-            roster_data = pd.read_csv(file_path, index_col=0)
-    else:
-        roster_data = nfl.import_rosters([2022])
-        roster_data.to_csv(file_path)
+    roster_data = pd.read_csv(file_path, index_col=0)
     team_roster = roster_data.loc[roster_data['team'] == team]
     url = str('<a href="https://www.nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
     team_roster['player_name'] = url
@@ -73,15 +57,7 @@ def roster(team,fullname):
 @app.route('/NFL/PbP/<game>')
 def game_pbp(game):
     file_path = os.getcwd() + '/nickknows/nfl/data/pbp_data.csv'
-    if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-            pbp_data = nfl.import_pbp_data([2022])
-            pbp_data.to_csv(file_path)
-        else:
-            pbp_data = pd.read_csv(file_path, index_col=0)
-    else:
-        pbp_data = nfl.import_pbp_data([2022])
-        pbp_data.to_csv(file_path)
+    pbp_data = pd.read_csv(file_path, index_col=0)
     game_data = pbp_data.loc[pbp_data['game_id'] == game]
     game_data.rename(columns={'posteam':'Possession','defteam':'Defense','side_of_field':'Field Side','yardline_100':'Distance from EndZone','quarter_seconds_remaining':'Seconds left in Quarter','half_seconds_remaining':'Seconds left in Half','game_seconds_remaining':'Seconds left in Game','drive':'Drive #'}, inplace=True)
     game_data = game_data.style.hide(axis="index")
@@ -94,15 +70,7 @@ def game_pbp(game):
 @app.route('/NFL/Player/<name>')
 def player_stats(name):
     file_path = os.getcwd() + '/nickknows/nfl/data/weekly_data.csv'
-    if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-            weekly_data = nfl.import_weekly_data([2022])
-            weekly_data.to_csv(file_path)
-        else:
-            weekly_data = pd.read_csv(file_path, index_col=0)
-    else:
-        weekly_data = nfl.import_weekly_data([2022])
-        weekly_data.to_csv(file_path)
+    weekly_data = pd.read_csv(file_path, index_col=0)
     player_data = weekly_data.loc[weekly_data['player_display_name'] == name]
     headshot = '<img src="' + player_data['headshot_url'] + '" width="360" >'
     headshot = headshot.unique()
@@ -113,15 +81,7 @@ def player_stats(name):
 @app.route('/NFL/Team/<team>/Schedule/<fullname>')
 def team_schedule(team, fullname):
     file_path = os.getcwd() + '/nickknows/nfl/data/schedule.csv'
-    if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-            schedule = nfl.import_schedules([2022])
-            schedule.to_csv(file_path)
-        else:
-            schedule = pd.read_csv(file_path, index_col=0)
-    else:
-        schedule = nfl.import_schedules([2022])
-        schedule.to_csv(file_path)
+    schedule = pd.read_csv(file_path, index_col=0)
     url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
@@ -135,15 +95,7 @@ def team_schedule(team, fullname):
 @app.route('/NFL/Team/<team>/Results/<fullname>')
 def team_results(team, fullname):
     sched_path = os.getcwd() + '/nickknows/nfl/data/schedule.csv'
-    if os.path.exists(sched_path):
-        if (time.time() - os.path.getmtime(sched_path)) > (7 * 24 * 60 * 60):
-            schedule = nfl.import_schedules([2022])
-            schedule.to_csv(sched_path)
-        else:
-            schedule = pd.read_csv(sched_path, index_col=0)
-    else:
-        schedule = nfl.import_schedules([2022])
-        schedule.to_csv(sched_path)
+    schedule = pd.read_csv(sched_path, index_col=0)
     url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
@@ -158,15 +110,7 @@ def team_results(team, fullname):
 @app.route('/NFL/Team/<team>/FPA/<fullname>')
 def team_fpa(team, fullname):
     sched_path = os.getcwd() + '/nickknows/nfl/data/schedule.csv'
-    if os.path.exists(sched_path):
-        if (time.time() - os.path.getmtime(sched_path)) > (7 * 24 * 60 * 60):
-            schedule = nfl.import_schedules([2022])
-            schedule.to_csv(sched_path)
-        else:
-            schedule = pd.read_csv(sched_path, index_col=0)
-    else:
-        schedule = nfl.import_schedules([2022])
-        schedule.to_csv(sched_path)
+    schedule = pd.read_csv(sched_path, index_col=0)
     url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
@@ -188,28 +132,12 @@ def team_fpa(team, fullname):
     for team in op_team:
         week = op_team.index(team) + 1
         rost_path = os.getcwd() + '/nickknows/nfl/data/rosters.csv'
-        if os.path.exists(rost_path):
-            if (time.time() - os.path.getmtime(rost_path)) > (7 * 24 * 60 * 60):
-                roster_data = nfl.import_rosters([2022])
-                roster_data.to_csv(rost_path)
-            else:
-                roster_data = pd.read_csv(rost_path, index_col=0)
-        else:
-            roster_data = nfl.import_rosters([2022])
-            roster_data.to_csv(rost_path)
+        roster_data = pd.read_csv(rost_path, index_col=0)
         team_roster = roster_data.loc[roster_data['team'] == team]
         players = team_roster['player_name'].to_list()
         for player in players:
             week_path = os.getcwd() + '/nickknows/nfl/data/weekly_data.csv'
-            if os.path.exists(week_path):
-                if (time.time() - os.path.getmtime(week_path)) > (7 * 24 * 60 * 60):
-                    weekly_data = nfl.import_weekly_data([2022])
-                    weekly_data.to_csv(week_path)
-                else:
-                    weekly_data = pd.read_csv(week_path, index_col=0)
-            else:
-                weekly_data = nfl.import_weekly_data([2022])
-                weekly_data.to_csv(week_path)
+            weekly_data = pd.read_csv(week_path, index_col=0)
             player_data = weekly_data.loc[weekly_data['player_display_name'] == player]
             player_data = player_data.loc[player_data['week'] == week]
             weekly_team_data = [weekly_team_data, player_data]
