@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+    <title>Nick Knows how to build an Arcade</title>
+        <link rel="canonical" href="{{ url_for('arcade') }}"/>
+        <meta property="og:title" content="Nick Knows  how to build an Arcade"/>
+        <meta property="og:url" content="{{ url_for('arcade') }}"/>
+        <meta property="og:site_name" content="nickknows"/>
+        <meta property="og:type" content="website"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script>
+        $(function(){
+            $('#header').load("{{ url_for('header') }}")
+        })
+        $(function(){
+            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
+        })
+    </script>
+    <body>
+        <div id="header"></div>
+        <div id="nick_nav"></div>
+        <h1>Nick Knows  how to build an Arcade</h1>
+        <div class="bubble">
+            <div class="row">
+                <div class="columns">
+                    <div class="mid-bold">
+                    <p>
+                    This is always something I wanted to try and do myself, build a full blown arcade.<br>
+                    I had an old metal framed desk, a Raspberry Pi, and looking at the two together I decided to give it a shot.<br>
+                    I did my research on the different types of operating systems available to run the arcade, <br>
+                    the buttons, joysticks, and controllers available to me in order to put everything together. <br>
+                    After investigation I decided to go with some typical American style joysticks and buttons <br>
+                    that I picked up from Paradise Arcade Shop along with a PCB for connecting it all. <br>
+                    I went with the I-PAC 4 interface for the  PCB as my favorite arcade games growing up <br>
+                    were a lot of 4 players games, The Simpsons, TMNT, and X-Men. <br>
+                    <br>
+                    Once I got all the pieces I went ahead and did a small scale proof of concept to familiarize <br>
+                    myslef with all the componants and to make sure I could get the Raspberry Pi working properly. <br>
+                    I went with RetroPie as my operating system for the Pi and it really was quite simple to install <br>
+                    and then configure to use with my PCB and add in some games/ROMs to use for testing. <br>
+                    I used a wooden box with some carboard on top to test out 1 player and my wife and I were off playing Pac Man!<br>
+                    Now that I knew everything worked it just came down to putting everything together. <br>
+                    We had an extra TV that I took all the plastic componants off and stripped down to the metal frame. <br>
+                    I build a wooden frame around the TV to make it easier to mount to the rest of the structure I was planning on building. <br>
+                    For that wooden frame I used some scrap wood I had around the house, and I knew I wanted the Arcade to look <br>
+                    rustic, something that would catch your eye at a dive bar with cheap beer. In order to accomplish that <br>
+                    I went with cedar fencing to finish the outside. It was the best bang for my buck to skin everything <br>
+                    plus it smells nice and was easy to work with. As things got built out I had originally wanted to get <br>
+                    a piece of live edge wood to do the top for the buttons. I had some old plywood laying around and <br>
+                    decided to use that instead to keep costs down. The live edge wood is something I would still like to add. <br>
+                    I used the carboard from the POC build to mark off all the button locations, and drilled out all the required holes. <br>
+                    After mounting everything it was time to start wiring it all up. I had some old rolls of ethernet cable, a lot <br>
+                    was already seperated. I liked this because I got 8 strands of different color copper to use and there were <br>
+                    a lot of strands to run. While I was cabling everything I also used a label maker to add stickers to each <br>
+                    wire so that I could reference what went where easily as well. Now that everything was wired up, it was time <br>
+                    to wrap up the build. I attached the button top and did a little finish work and we were ready to play. <br>
+                    I enjoyed building this way more than I have enjoyed playing it. It's been great at parties when friends <br>
+                    come over as 4 people can play some really fun games for free. Overall I'm really happy I finally built <br>
+                    this Arcade and that I now have it for years to come. As our kids grow I think it will get used more and more. <br>
+                    </p>
+                    </div>
+                    <p>
+                        <img src="{{url_for('static',  filename='arcade_poc.jpg')}}" style="width: 33%;height: auto;"><br>
+                        <img src="{{url_for('static',  filename='arcade_finish.jpg')}}" style="width: 33%;height: auto;">
+                    </p>
+                </div>
+            </div>
+            <img src="{{url_for('static',  filename='arcade_1.jpg')}}" style="width: 25%;height: auto;">
+            <img src="{{url_for('static',  filename='arcade_6.jpg')}}" style="width: 25%;height: auto;">
+            <img src="{{url_for('static',  filename='arcade_tvframe.jpg')}}" style="width: 25%;height: auto;">
+            <img src="{{url_for('static',  filename='arcade_2.jpg')}}" style="width: 25%;height: auto;">
+            <img src="{{url_for('static',  filename='arcade_3.jpg')}}" style="width: 25%;height: auto;">
+            <img src="{{url_for('static',  filename='arcade_4.jpg')}}" style="width: 25%;height: auto;">
+            <img src="{{url_for('static',  filename='arcade_5.jpg')}}" style="width: 25%;height: auto;">
+            <img src="{{url_for('static',  filename='arcade_7.jpg')}}" style="width: 25%;height: auto;">
+            <img src="{{url_for('static',  filename='arcade_back.jpg')}}" style="width: 25%;height: auto;">
+            <img src="{{url_for('static',  filename='arcade_wiring.jpg')}}" style="width: 25%;height: auto;"><br>
+            <img src="{{url_for('static',  filename='arcade_plans.jpg')}}" style="width: 25%;height: auto;">
+        </div>
+    </body>
+</html>

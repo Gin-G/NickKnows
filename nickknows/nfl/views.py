@@ -1,6 +1,6 @@
 from glob import escape
 from turtle import position
-from flask import render_template
+from flask import render_template, url_for, redirect
 from numpy import full
 from nickknows import app
 import nfl_data_py as nfl
@@ -79,6 +79,16 @@ def NFL():
     rec_td_agg = rec_td_agg.format(precision=0)
     return render_template('nfl-home.html', pass_yards_data = pass_agg.to_html(), pass_td_data = pass_td_agg.to_html(), rush_yards_data = rush_yds_agg.to_html(), rush_td_data = rush_td_agg.to_html(), rec_yards_data = rec_yds_agg.to_html(), rec_td_data = rec_td_agg.to_html())
 
+@app.route('/NFL/update')
+def NFLupdate():
+    file_path = os.getcwd() + '/nickknows/nfl/data/pbp_data.csv'
+    pbp_data = nfl.import_pbp_data([2022])
+    pbp_data.to_csv(file_path)
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/rosters.csv'
+    roster_data = nfl.import_rosters([2022])
+    roster_data.to_csv(rfile_path)
+    return redirect(url_for('NFL'))
+        
 @app.route('/NFL/schedule/<week>')
 def schedule(week):
     file_path = os.getcwd() + '/nickknows/nfl/data/schedule.csv'

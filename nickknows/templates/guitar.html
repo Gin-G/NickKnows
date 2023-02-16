@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <title>Nick Knows how to build an Arcade</title>
+        <link rel="canonical" href="{{ url_for('arcade') }}"/>
+        <meta property="og:title" content="Nick Knows  how to build an Arcade"/>
+        <meta property="og:url" content="{{ url_for('arcade') }}"/>
+        <meta property="og:site_name" content="nickknows"/>
+        <meta property="og:type" content="website"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script>
+        $(function(){
+            $('#header').load("{{ url_for('header') }}")
+        })
+        $(function(){
+            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
+        })
+    </script>
+    <body>
+        <div id="header"></div>
+        <div id="nick_nav"></div>
+        <h1>Nick Knows how to play Guitar</h1>
+        <div class="bubble">
+            <div class="mid-bold">
+                <br>
+                I'm a self taught guitarist that has been playing for 15 years. I was really good at the video game Guitar Hero <br>
+                and I got sick of people asking me to play to show off for others, I thought it was lame and wanted to learn the <br>
+                real thing. I grew up playing saxaphone, but the guitar was something I always wanted to learn so I bought my <br>
+                first guitar, and Ibanex Acoustic/Electric, and went to work starting to learn. I utilized as many resources as I could, <br>
+                the internet, took classes at college, and played with friends. I didn't play as much for a number of years and have <br>
+                gotten back into it hard since COVID hit and I started working from home. I played so much that I bought my first new guitar<br>
+                in years, a Teton dreadnaught that was my favorite sounding of all the others in the shops I went to. A new, fantastic sounding, <br>
+                guitar really catapulted my playing and I played more and practiced more than ever before. My daughter loves it and I love playing music. <br>
+                <p><img src="{{url_for('static',  filename='guitar.jpg')}}" style="width: 75%;height: auto;"></p>
+            </div>
+        </div>
+    </body>
+</html>

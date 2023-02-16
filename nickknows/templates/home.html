@@ -13,27 +13,47 @@
         $(function(){
             $('#header').load("{{ url_for('header') }}")
         })
+        $(function(){
+            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
+        })
     </script>
     <body>
         <div id="header"></div>
-        <div class="navbar">
-            <a href="{{url_for('home')}}">Home</a>
-            <div class="dropdown">
-                <button class="dropbtn">Interests
-                <i class="fa fa-caret-down"></i>
-                </button>
-                <div class="dropdown-content">
-                    <a href="{{url_for('NFL')}}">NFL</a>
-                    <a href="{{url_for('fart')}}">Fährtbags</a>
-                    <a href="https://www.skimoviesongs.com/">Ski Movie Songs</a>
-                </div>
-            </div>
-        </div>
+        <div id="nick_nav"></div>
         <h1>Nick Knows</h1>
         <div class="bubble">
+            <div class="mid-bold">
             This is a place for me to do some development work, test some different things,<br>
-            do cloud training, and just have a place for myself. 
+            do cloud training, and just have a place for myself. Enjoy getting to know me and <br>
+            know this site will be kept up to date as things progress and I get more content. <br>
+            </div>
             <br>
+            <div class="row">
+                <div class="columns">
+                    <h2><a href="{{url_for('arcade')}}" style="font-size: 30px;">How to build an Arcade</a></h2>
+                    <p><img src="{{url_for('static',  filename='arcade_finish.jpg')}}" style="width: 50%;height: auto;"></p>
+                    <h2><a href="{{url_for('lemans')}}" style="font-size: 30px;">How to restore a car</a><br></h2>
+                    <p><img src="{{url_for('static',  filename='lemans_trunk.jpg')}}" style="width: 75%;height: auto;"></p>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="columns">
+                    <h2><a href="{{url_for('guitar')}}" style="font-size: 30px;">How to play Guitar</a></h2>
+                    <p><img src="{{url_for('static',  filename='guitar.jpg')}}" style="width: 50%;height: auto;"></p>
+                    <h2><a href="{{url_for('skiing')}}" style="font-size: 30px;">How to Ski</a><br></h2>
+                    <p><img src="{{url_for('static',  filename='ski.jpg')}}" style="width: 75%;height: auto;"></p>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="columns">
+                    <h2><a href="{{url_for('fart')}}" style="font-size: 30px;">How to Sew</a><br></h2>
+                    <p><img src="{{url_for('static',  filename='sew.jpg')}}" style="width: 50%;height: auto;"></p>
+                    <h2><a href="{{url_for('NFL')}}" style="font-size: 30px;">The NFL</a></h2>
+                    <p><img src="{{url_for('static',  filename='football.jpg')}}" style="width: 75%;height: auto;"></p>
+                </div>
+            </div>
         </div>
     </body>
 </html>

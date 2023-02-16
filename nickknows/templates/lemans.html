@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <title>Nick Knows how to build an Arcade</title>
+        <link rel="canonical" href="{{ url_for('arcade') }}"/>
+        <meta property="og:title" content="Nick Knows  how to build an Arcade"/>
+        <meta property="og:url" content="{{ url_for('arcade') }}"/>
+        <meta property="og:site_name" content="nickknows"/>
+        <meta property="og:type" content="website"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script>
+        $(function(){
+            $('#header').load("{{ url_for('header') }}")
+        })
+        $(function(){
+            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
+        })
+    </script>
+    <body>
+        <div id="header"></div>
+        <div id="nick_nav"></div>
+        <h1>Nick Knows how to restore a car</h1>
+        <div class="bubble">
+            <div class="mid-bold">
+            This 1972 Pontiac Lemans Sport Convertible is the first car I ever owned, and was the prize for my first summer working. <br>
+            It was in rough shape when I first got it, we couldn't get it started, the top was bent, the seats were ripped, and the floor was rotted. <br>
+            With my Dad helping we were able to get it running, and running well, before we started to tackle the other issues. I started by addressing the floor. <br>
+            We removed all the interior, and I patched all the holes in the floor by getting down to clean metal around all the holes, welding in sheet metal patches, <br>
+            and then putting fiberglass on top to seal it all together. We installed a new carpet on top of the now solid floor. While the seats were out we had them <br>
+            repaired by a professional and they came out mint. The same person also put a new top on, I decided to switch from the white top that originally was on <br>
+            the car to a black top and saved a little money by going with a plastic rear window instead of glass. I was able to get my hands on 5 Rally II wheels, <br>
+            to replace the wheels and hubcaps that were currently on it. I had to prep the wheels, and painted them all, before mounting them and putting them on the car. <br>
+            At this point I started driving it to school when the weather was nice, and it was always a blast with it's 3 speed transmission on the floor. I learned how to <br>
+            drive a standard shift on this vehicle and I still love putting it through the 3 gears and letting it rumble. I did a few more things here and there to address other <br>
+            issues, but the main thing now was addressing the body work and I was not a body guy. I did not have as much patience when I was younger and ultimately I left for <br>
+            college in Colorado before I got to finish everything I wanted. I hate leaving projects unfinished and I always had my Lemans in the back of my mind over the years. <br>
+            Fast forward 15 years and I've got a house and job where I can afford to get the car shipped out to continue to work on it. There were a few mechanical issues after <br>
+            sitting for a long time, I put in a new alternator, got a new battery, changed the spark plugs, and did some carburator work to get it running well again. I was still <br>
+            able to start it right up after it was delivered and drove it around the block to our house. I got the house all setup to start doing body work, and chose to start with <br>
+            a trunk lid we had gotten from the junk yard that was in better shape than the original. Once I got it stripped down I realized there were a number of dents, likely from <br>
+            hail, and this was going to be more work than I expected. I put in the elbow grease and really worked hard to get it looking excellent. I am very happy with the finished <br>
+            lid and learned a ton in the process to utilize as I continue to all the other panels and get the car looking as nice as I always envisioned it. Stay tuned for updates.<br>
+            <br>
+            <br>
+            <img src="{{url_for('static',  filename='lemans_co.jpg')}}" style="width: 45%;height: auto;">
+            <img src="{{url_for('static',  filename='lemans_carrier.jpg')}}" style="width: 45%;height: auto;"><br>
+            <img src="{{url_for('static',  filename='lemans_oldtrunk.jpg')}}" style="width: 45%;height: auto;">
+            <img src="{{url_for('static',  filename='lemans_trunk.jpg')}}" style="width: 45%;height: auto;"><br>
+            <img src="{{url_for('static',  filename='lemans_garage.jpg')}}" style="width: 45%;height: auto;"><br>
+            </div>
+        </div>
+    </body>
+</html>
