@@ -1,6 +1,6 @@
 from glob import escape
 from turtle import position
-from flask import render_template, url_for, redirect
+from flask import render_template, url_for, redirect, flash
 from numpy import full
 from nickknows import app
 from ..celery_setup.tasks import update_data
@@ -86,6 +86,7 @@ def NFL():
 @app.route('/NFL/update')
 def NFLupdate():
     update_data.delay()
+    flash('Data is updating in the background. Refresh the page in a bit')
     return redirect(url_for('NFL'))
         
 @app.route('/NFL/schedule/<week>')

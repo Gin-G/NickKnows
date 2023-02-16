@@ -17,7 +17,14 @@
         <div id="header"></div>
         <div id="nfl_navbar"></div>
         <h1>NFL Stat Leaders</h1>
-        <form action="{{ url_for('NFLupdate') }}">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    {{ messages }}<br>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+                <form action="{{ url_for('NFLupdate') }}">
             <input type="submit" value="Update Data" style="font-size: 20px;border-radius: 5px;">
         </form>
         <div class='parent'>
