@@ -1,10 +1,12 @@
 import imp
 from flask import Flask
 from flask.templating import render_template
-from .celery_setup.celery import make_celery
+from celery import Celery
 
 app = Flask(__name__)
-celery = make_celery(app)
+app.config["CELERY_BROKER_URL"] = 'redis://localhost:6379'
+celery = Celery(app.name, broker=app.config["CELERY_BROKER_URL"])
+celery.conf.update(app.config)
 
 from nickknows.main import views
 from nickknows.nfl import views
