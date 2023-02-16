@@ -3,7 +3,7 @@ from turtle import position
 from flask import render_template, url_for, redirect, flash
 from numpy import full
 from nickknows import app
-from ..celery_setup.tasks import update_data
+from ..celery_setup.tasks import update_PBP_data, update_roster_data, update_sched_data, update_week_data
 import nfl_data_py as nfl
 import pandas as pd
 import numpy as np
@@ -18,7 +18,10 @@ def NFL():
 
 @app.route('/NFL/update')
 def NFLupdate():
-    update_data.delay()
+    update_PBP_data.delay()
+    update_roster_data.delay()
+    update_sched_data.delay()
+    update_week_data.delay()
     flash('All data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL'))
         
