@@ -19,7 +19,7 @@ def NFL():
 @app.route('/NFL/update')
 def NFLupdate():
     update_data.delay()
-    flash('Data is updating in the background. Refresh the page in a bit')
+    flash('All data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL'))
         
 @app.route('/NFL/schedule/<week>')

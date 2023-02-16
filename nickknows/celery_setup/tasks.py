@@ -11,3 +11,9 @@ def update_data():
     rfile_path = os.getcwd() + '/nickknows/nfl/data/rosters.csv'
     roster_data = nfl.import_rosters([2022])
     roster_data.to_csv(rfile_path)
+    scfile_path = os.getcwd() + '/nickknows/nfl/data/schedule.csv'
+    schedule = nfl.import_schedules([2022])
+    schedule.to_csv(scfile_path)
+    wefile_path = os.getcwd() + '/nickknows/nfl/data/weekly_data.csv'
+    weekly_data = nfl.import_weekly_data([2022])
+    weekly_data.to_csv(wefile_path)
