@@ -25,37 +25,14 @@
             {% endif %}
         {% endwith %}
                 <form action="{{ url_for('NFLupdate') }}">
-            <input type="submit" value="Update Data" style="font-size: 20px;border-radius: 5px;">
-        </form>
-        <div class='parent'>
-            <div class='child inline-block-child'>
-                <h2>Passing Yards</h2>
-                    {{pass_yards_data | safe}}
-            </div>
-            <div class='child inline-block-child'>
-                <h2>Passing TD</h2>
-                    {{pass_td_data | safe}}
-            </div>
-        </div>
-        <div class='parent'>
-            <div class='child inline-block-child'>
-                <h2>Rushing Yards</h2>
-                    {{rush_yards_data | safe}}
-            </div>
-            <div class='child inline-block-child'>
-                <h2>Rushing TD</h2>
-                    {{rush_td_data | safe}}
-            </div>
-        </div>
-        <div class='parent'>
-            <div class='child inline-block-child'>
-                <h2>Receiving Yards</h2>
-                    {{rec_yards_data | safe}}
-            </div>
-            <div class='child inline-block-child'>
-                <h2>Receiving TD</h2>
-                    {{rec_td_data | safe}}
-            </div>
+                    <input type="submit" value="Update Data" style="font-size: 20px;border-radius: 5px;">
+                </form>
+        <div class="big-bold">
+            Use this site to browse NFL data for the 2022 season. <br>
+            The update button will make sure all data is present. <br>
+            I had tried to get top 10 information on this page, but the dataset got too large. <br>
+            This is running on GCP on an e2-micro instance and does not have enough RAM. <br>
+            I am using pandas to read csv files and it's causing oom kills now. <br>
         </div>
     </body>
 </html>

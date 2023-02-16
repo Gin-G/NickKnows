@@ -18,23 +18,23 @@ def NFL():
         file_path = os.getcwd() + '/nickknows/nfl/data/pbp_data.csv'
         if os.path.exists(file_path):
             if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-                pbp_data = nfl.import_pbp_data([2022])
-                pbp_data.to_csv(file_path)
+                update_data.delay()
+                flash('Data is updating in the background. Refresh the page in a bit')
             else:
                 pbp_data = pd.read_csv(file_path, index_col=0)
         else:
-            pbp_data = nfl.import_pbp_data([2022])
-            pbp_data.to_csv(file_path)
+            update_data.delay()
+            flash('Data is updating in the background. Refresh the page in a bit')
         rfile_path = os.getcwd() + '/nickknows/nfl/data/rosters.csv'
         if os.path.exists(rfile_path):
             if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
-                roster_data = nfl.import_rosters([2022])
-                roster_data.to_csv(rfile_path)
+                update_data.delay()
+                flash('Data is updating in the background. Refresh the page in a bit')
             else:
                 roster_data = pd.read_csv(rfile_path, index_col=0)
         else:
-            roster_data = nfl.import_rosters([2022])
-            roster_data.to_csv(rfile_path)
+            update_data.delay()
+            flash('Data is updating in the background. Refresh the page in a bit')
         pbp_data = pbp_data[pbp_data["season_type"] == "REG"]
         pbp_data = pbp_data[pbp_data["two_point_attempt"] == False]
         pbp_data_pass = pbp_data[pbp_data["play_type"] == "pass"]
