@@ -3,7 +3,7 @@ from turtle import position
 from flask import render_template, url_for, redirect
 from numpy import full
 from nickknows import app
-from celery_setup.tasks import update_data
+from ..celery_setup.tasks import update_data
 import nfl_data_py as nfl
 import pandas as pd
 import numpy as np
