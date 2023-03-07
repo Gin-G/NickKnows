@@ -208,28 +208,6 @@ caption {
     left: 31%;
   }
 
-  @media (max-width: 767px) {
-    .header-image {
-      float:left;
-      width:318px;
-      height:90px;
-      position: relative; 
-      top: 40%; 
-      left: 2%;
-    }
-
-  /* Links inside the navbar */
-    .navbar a {
-      float: left;
-      font-size: 14px;
-      color: white;
-      padding: 17px 6px;
-      text-decoration: none;
-      margin-left: 2%;
-    }
-
-  }
-
 .row {
   display: flex;
   flex-wrap: wrap;
