@@ -18,7 +18,6 @@ click==8.0.3
 click-didyoumean==0.3.0
 click-plugins==1.1.1
 click-repl==0.2.0
-cloud-init==22.3.4
 colorama==0.4.4
 command-not-found==0.3
 ConfigArgParse==1.5.3
