@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <title>Nick Knows how to parse a job description</title>
+        <link rel="canonical" href="{{ url_for('job_parse') }}"/>
+        <meta property="og:title" content="Nick Knows how to parse a job description"/>
+        <meta property="og:url" content="{{ url_for('job_parse') }}"/>
+        <meta property="og:site_name" content="nickknows"/>
+        <meta property="og:type" content="website"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script>
+        $(function(){
+            $('#header').load("{{ url_for('header') }}")
+        })
+        $(function(){
+            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
+        })
+    </script>
+    <body>
+        <div id="header"></div>
+        <div id="nick_nav"></div>
+        <h1>Job Description Parser</h1>
+            <div class="mid-bold">
+            <p>
+                Paste in a job description below and hit submit to get a count of the words used the most
+            </p>
+                <form action="/job_parse/count">
+                    <textarea rows="5" cols="45" name="job_desc" placeholder="Paste job description"></textarea><br>
+                    <input type="submit" value="Generate count">
+                </form>
+            </div>
+    </body>
+</html>

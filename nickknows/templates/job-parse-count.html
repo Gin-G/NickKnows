@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <title>Nick Knows how to parse a job description</title>
+        <link rel="canonical" href="{{ url_for('job_parse') }}"/>
+        <meta property="og:title" content="Nick Knows how to parse a job description"/>
+        <meta property="og:url" content="{{ url_for('job_parse') }}"/>
+        <meta property="og:site_name" content="nickknows"/>
+        <meta property="og:type" content="website"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script>
+        $(function(){
+            $('#header').load("{{ url_for('header') }}")
+        })
+        $(function(){
+            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
+        })
+    </script>
+    <body>
+        <div id="header"></div>
+        <div id="nick_nav"></div>
+        <h1>Job Description Word Count</h1>
+            <form action="/job_parse/resume">
+                <input type="hidden" value="{{ job_count }}" name="job_count">
+                <input type="submit" value="Resume Comparison">
+            </form>
+            <div class="mid-bold">
+            <p>
+                {% for key, value in job_count.items() %}
+                    {{ key }} : {{ value }}<br>
+                {% endfor %}
+            </p>
+            </div>
+    </body>
+</html>
