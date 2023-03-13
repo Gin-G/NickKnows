@@ -21,7 +21,7 @@
         <div id="header"></div>
         <div id="nick_nav"></div>
         <h1>Job Description Resume Comparison</h1>
-            <form action="/job_parse/resume-comp">
+            <form action="/job_parse/resume" method="post">
                 <input type="hidden" value="{{ job_count }}" name="job_count">
                 <textarea rows="5" cols="45" name="resume" placeholder="Paste Resume"></textarea><br>
                 <input type="submit" value="Compare">
