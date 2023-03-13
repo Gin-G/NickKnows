@@ -88,15 +88,14 @@ def job_parse_resume():
         resume_words = []
         job_words = []
         missing_words = []
+        miss_word_count = []
         omit_words = ['and', 'to', 'of', 'in', 'the', 'with', 'or', 'and/or', 'i.e.', 'etc.', 'as', 'by', 'for', 'on', 'not', 'but', 'is', 'be', 'us']
         job_count = request.form.get('job_count')
-        job_count = job_count.replace("':",' ')
-        job_count = job_count.replace('":',' ')
-        job_count = job_count.replace(", '",' ')
-        job_count = job_count.replace(', "',' ')
-        job_count = job_count.replace("{'",'')
-        job_count = job_count.replace("}",'')
-        job_count = job_count.split(' ')
+        job_count = job_count.replace("{'",'{"')
+        job_count = job_count.replace(", '",', "')
+        job_count = job_count.replace("':",'":')
+        job_count = job_count.replace("’","'")
+        job_count = json.loads(job_count)
         for word in job_count:
             if len(word) <= 1:
                 pass
@@ -122,4 +121,9 @@ def job_parse_resume():
         for items in missing_words:
             if items in resume_words:
                 missing_words.remove(items)
-        return render_template('resume-comp.html', missing_words = missing_words)
+        for final in missing_words:
+            try:
+                miss_word_count.append(final + ' : ' + str(job_count[final]))
+            except IndexError:
+                pass
+        return render_template('resume-comp.html', missing_words = miss_word_count)
