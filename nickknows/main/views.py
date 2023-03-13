@@ -73,15 +73,18 @@ def job_parse():
         sorted_words = dict(sorted_words)
         return render_template('job-parse-count.html', job_count = sorted_words)
 
-@app.route('/job_parse/resume', methods=['GET','POST'])
-def job_parse_resume():
-    if request.method == 'GET':
-        job_count = request.args.get('job_count')
+@app.route('/job_parse/post_resume', methods=['POST'])
+def job_post_resume():
+    if request.method == 'POST':
+        job_count = request.form.get('job_count')
         job_count = job_count.replace("'",'"')
         job_count = job_count.replace("’","'")
         job_count = json.loads(job_count)
         return render_template('resume-compare.html', job_count = job_count)
-    elif request.method == 'POST':
+
+@app.route('/job_parse/resume', methods=['GET','POST'])
+def job_parse_resume():
+    if request.method == 'POST':
         resume_words = []
         job_words = []
         missing_words = []
