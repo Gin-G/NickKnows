@@ -34,6 +34,10 @@ def guitar():
 def skiing():
     return render_template('skiing.html')
 
+@app.route('/values')
+def values():
+    return render_template('values.html')
+
 @app.route('/job_parse', methods=['GET','POST'])
 def job_parse():
     if request.method == 'GET':
