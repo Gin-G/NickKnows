@@ -93,7 +93,6 @@ stack-data==0.6.0
 tk==0.1.0
 traitlets==5.5.0
 Twisted==22.1.0
-ubuntu-advantage-tools==27.11.2
 ufw==0.36.1
 unattended-upgrades==0.1
 urllib3==1.26.5
