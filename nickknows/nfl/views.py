@@ -12,6 +12,8 @@ import os
 import time
 pd.options.mode.chained_assignment = None
 
+year = 2023
+
 @app.route('/NFL')
 def NFL():
     return render_template('nfl-home.html')
@@ -27,7 +29,7 @@ def NFLupdate():
         
 @app.route('/NFL/schedule/<week>')
 def schedule(week):
-    file_path = os.getcwd() + '/nickknows/nfl/data/schedule.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
     week_schedule = schedule.loc[schedule['week'] == int(week)]
     url = str('<a href="http://www.nickknows.net/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['game_id'] + str('</a>')
@@ -43,7 +45,7 @@ def schedule(week):
 
 @app.route('/NFL/Roster/<team>/<fullname>')
 def roster(team,fullname):
-    file_path = os.getcwd() + '/nickknows/nfl/data/rosters.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     roster_data = pd.read_csv(file_path, index_col=0)
     team_roster = roster_data.loc[roster_data['team'] == team]
     url = str('<a href="https://www.nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
@@ -59,7 +61,7 @@ def roster(team,fullname):
 
 @app.route('/NFL/PbP/<game>')
 def game_pbp(game):
-    file_path = os.getcwd() + '/nickknows/nfl/data/pbp_data.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
     pbp_data = pd.read_csv(file_path, index_col=0)
     game_data = pbp_data.loc[pbp_data['game_id'] == game]
     game_data.rename(columns={'posteam':'Possession','defteam':'Defense','side_of_field':'Field Side','yardline_100':'Distance from EndZone','quarter_seconds_remaining':'Seconds left in Quarter','half_seconds_remaining':'Seconds left in Half','game_seconds_remaining':'Seconds left in Game','drive':'Drive #'}, inplace=True)
@@ -72,7 +74,7 @@ def game_pbp(game):
 
 @app.route('/NFL/Player/<name>')
 def player_stats(name):
-    file_path = os.getcwd() + '/nickknows/nfl/data/weekly_data.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
     weekly_data = pd.read_csv(file_path, index_col=0)
     player_data = weekly_data.loc[weekly_data['player_display_name'] == name]
     headshot = '<img src="' + player_data['headshot_url'] + '" width="360" >'
@@ -83,7 +85,7 @@ def player_stats(name):
 
 @app.route('/NFL/Team/<team>/Schedule/<fullname>')
 def team_schedule(team, fullname):
-    file_path = os.getcwd() + '/nickknows/nfl/data/schedule.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
     url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
@@ -97,7 +99,7 @@ def team_schedule(team, fullname):
 
 @app.route('/NFL/Team/<team>/Results/<fullname>')
 def team_results(team, fullname):
-    sched_path = os.getcwd() + '/nickknows/nfl/data/schedule.csv'
+    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
     schedule = pd.read_csv(sched_path, index_col=0)
     url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
@@ -112,7 +114,7 @@ def team_results(team, fullname):
 
 @app.route('/NFL/Team/<team>/FPA/<fullname>')
 def team_fpa(team, fullname):
-    sched_path = os.getcwd() + '/nickknows/nfl/data/schedule.csv'
+    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
     schedule = pd.read_csv(sched_path, index_col=0)
     url = str('<a href="http://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['game_id'] + str('</a>')
     schedule['game_id'] = url
@@ -134,12 +136,12 @@ def team_fpa(team, fullname):
     weekly_team_data = pd.DataFrame()
     for team in op_team:
         week = op_team.index(team) + 1
-        rost_path = os.getcwd() + '/nickknows/nfl/data/rosters.csv'
+        rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
         roster_data = pd.read_csv(rost_path, index_col=0)
         team_roster = roster_data.loc[roster_data['team'] == team]
         players = team_roster['player_name'].to_list()
         for player in players:
-            week_path = os.getcwd() + '/nickknows/nfl/data/weekly_data.csv'
+            week_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
             weekly_data = pd.read_csv(week_path, index_col=0)
             player_data = weekly_data.loc[weekly_data['player_display_name'] == player]
             player_data = player_data.loc[player_data['week'] == week]
