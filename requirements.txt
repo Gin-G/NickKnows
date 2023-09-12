@@ -4,3 +4,4 @@ IPython
 nfl_data_py
 numpy
 python-snappy
+redis
