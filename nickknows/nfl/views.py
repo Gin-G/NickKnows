@@ -3,10 +3,11 @@ from turtle import position
 from flask import render_template, url_for, redirect, flash
 from numpy import full
 from nickknows import app
-from ..celery_setup.tasks import update_PBP_data, update_roster_data, update_sched_data, update_week_data
+from ..celery_setup.tasks import update_PBP_data, update_roster_data, update_sched_data, update_week_data, update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10
 import nfl_data_py as nfl
 import pandas as pd
 import numpy as np
+import dask.dataframe as dd
 from IPython.display import HTML
 import os
 import time
@@ -16,7 +17,61 @@ year = 2023
 
 @app.route('/NFL')
 def NFL():
-    return render_template('nfl-home.html')
+    try:
+        file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+        if os.path.exists(file_path):
+            if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
+                update_PBP_data.delay()
+                flash('Data is updating in the background. Refresh the page in a bit')
+            else:
+                pbp_data = pd.read_csv(file_path, index_col=0)
+        else:
+            update_PBP_data.delay()
+            flash('Data is updating in the background. Refresh the page in a bit')
+        rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+        if os.path.exists(rfile_path):
+            if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
+                update_roster_data.delay()
+                flash('Data is updating in the background. Refresh the page in a bit')
+            else:
+                roster_data = pd.read_csv(rfile_path, index_col=0)
+        else:
+            update_roster_data.delay()
+            flash('Data is updating in the background. Refresh the page in a bit')
+        qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_yards_top10_data.csv'
+        qbtd10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_tds_top10_data.csv'
+        rbyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_yds_top10_data.csv' 
+        rbtds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_tds_top10_data.csv' 
+        recyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_yds_top10_data.csv' 
+        rectds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_tds_top10_data.csv' 
+        pass_agg = pd.read_csv(qb10file_path)
+        pass_td_agg = pd.read_csv(qbtd10file_path)
+        rush_yds_agg = pd.read_csv(rbyds10)
+        rush_td_agg = pd.read_csv(rbtds10)
+        rec_yds_agg = pd.read_csv(recyds10)
+        rec_td_agg = pd.read_csv(rectds10)
+        pass_agg.drop(columns=pass_agg.columns[0], axis=1,  inplace=True)
+        pass_td_agg.drop(columns=pass_td_agg.columns[0], axis=1,  inplace=True)
+        rush_yds_agg.drop(columns=rush_yds_agg.columns[0], axis=1,  inplace=True)
+        rush_td_agg.drop(columns=rush_td_agg.columns[0], axis=1,  inplace=True)
+        rec_yds_agg.drop(columns=rec_yds_agg.columns[0], axis=1,  inplace=True)
+        rec_td_agg.drop(columns=rec_td_agg.columns[0], axis=1,  inplace=True)
+        pass_agg = pass_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        pass_td_agg = pass_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        rush_yds_agg = rush_yds_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        rush_td_agg = rush_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        rec_yds_agg = rec_yds_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        rec_td_agg = rec_td_agg.style.hide(axis="index").set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'}).set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color:black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}]).set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
+        pass_agg = pass_agg.format(precision=0)
+        pass_td_agg = pass_td_agg.format(precision=0)
+        rush_yds_agg = rush_yds_agg.format(precision=0)
+        rush_td_agg = rush_td_agg.format(precision=0)
+        rec_yds_agg = rec_yds_agg.format(precision=0)
+        rec_td_agg = rec_td_agg.format(precision=0)
+        return render_template('nfl-home.html', pass_yards_data = pass_agg.to_html(), pass_td_data = pass_td_agg.to_html(), rush_yards_data = rush_yds_agg.to_html(), rush_td_data = rush_td_agg.to_html(), rec_yards_data = rec_yds_agg.to_html(), rec_td_data = rec_td_agg.to_html())
+    except Exception as e:
+        flash(e)
+        return render_template('nfl-home.html')
 
 @app.route('/NFL/update')
 def NFLupdate():
@@ -24,6 +79,12 @@ def NFLupdate():
     update_roster_data.delay()
     update_sched_data.delay()
     update_week_data.delay()
+    update_qb_yards_top10.delay()
+    update_qb_tds_top10.delay()
+    update_rb_yards_top10.delay()
+    update_rb_tds_top10.delay()
+    update_rec_yds_top10.delay()
+    update_rec_tds_top10.delay()
     flash('All data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL'))
         
@@ -32,15 +93,17 @@ def schedule(week):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
     week_schedule = schedule.loc[schedule['week'] == int(week)]
-    url = str('<a href="http://www.nickknows.net/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['game_id'] + str('</a>')
+    url = str('<a href="http://localhost:5000/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + str('</a>')
     week_schedule['game_id'] = url
-    week_schedule.rename(columns = {'game_id':'Game ID','gameday':'Date','weekday':'Weekday','gametime':'Game Time','away_team':'Away Team','away_score':'Away Score','home_team':'Home Team','home_score':'Home Score','result':'Result','total':'Total','overtime':'Overtime','away_rest':'Away Rest','home_rest':'Home Rest','away_moneyline':'Away Moneyline','home_moneyline':'Home Moneyline','spread_line':'Spread','away_spread_odds':'Away Spread Odds','home_spread_odds':'Home Spread Odds','total_line':'Total line','under_odds':'Under Odds','over_odds':'Over Odds','div_game':'Division Game','roof':'Roof','surface':'Surface','temp':'Temperature','wind':'Wind','away_qb_name':'Away QB','home_qb_name':'Home QB','away_coach':'Away Coach','home_coach':'Home Coach','referee':'Referee','stadium':'Stadium'}, inplace=True)
+    week_schedule.rename(columns = {'game_id':'Game','away_team':'Away Team','away_score':'Away Score','home_team':'Home Team','home_score':'Home Score','result':'Result','total':'Total','overtime':'Overtime','away_rest':'Away Rest','home_rest':'Home Rest','away_moneyline':'Away Moneyline','home_moneyline':'Home Moneyline','spread_line':'Spread','away_spread_odds':'Away Spread Odds','home_spread_odds':'Home Spread Odds','total_line':'Total Line','under_odds':'Under Odds','over_odds':'Over Odds','div_game':'Division Game','roof':'Roof','away_qb_name':'Away QB','home_qb_name':'Home QB','stadium':'Stadium'}, inplace=True)
     week_schedule = week_schedule.style.hide(axis="index")
     week_schedule = week_schedule.set_table_attributes({'border-collapse' : 'collapse','border-spacing' : '0px'})
     week_schedule = week_schedule.set_table_styles([{'selector': 'th', 'props' : 'background-color : gainsboro; color :black; border: 2px solid black;padding : 2.5px;margin : 0 auto; font-size : 12px'}])
     week_schedule = week_schedule.set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
-    week_schedule = week_schedule.hide(['season','game_type','week','location','old_game_id','gsis','nfl_detail_id','pfr','pff','espn','away_qb_id','home_qb_id','stadium_id'], axis="columns")
+    week_schedule = week_schedule.hide(['gameday','weekday','gametime','season','game_type','ftn','week','location','old_game_id','gsis','nfl_detail_id','surface','temp','wind','pfr','pff','espn','away_qb_id','home_qb_id','away_coach','home_coach','referee','stadium_id'], axis="columns")
     week_schedule = week_schedule.format(precision=2)
+    week_schedule.apply(lambda week_schedule: highlight(week_schedule, "Result", "Spread"), axis=None).apply(lambda week_schedule: highlight(week_schedule, "Total", "Total Line"), axis=None)
+    #week_schedule.apply(lambda week_schedule: highlight(week_schedule, "Result", "Spread"), axis=None)
     return render_template('weekly.html', week_schedule = HTML(week_schedule.to_html(render_links=True,escape=False)), week = week)
 
 @app.route('/NFL/Roster/<team>/<fullname>')
@@ -48,7 +111,7 @@ def roster(team,fullname):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     roster_data = pd.read_csv(file_path, index_col=0)
     team_roster = roster_data.loc[roster_data['team'] == team]
-    url = str('<a href="https://www.nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
+    url = str('<a href="http://localhost:5000/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
     team_roster['player_name'] = url
     team_roster.rename(columns={'depth_chart_position':'Position','jersey_number':'Number','status':'Status','player_name':'Full Name','first_name':'First Name','last_name':'Last Name','height':'Height','weight':'Weight','football_name':'Preferred Name','rookie_year':'Rookie Year','draft_club':'Drafted By','draft_number':'Draft Number'}, inplace=True)
     team_roster = team_roster.style.hide(axis="index")

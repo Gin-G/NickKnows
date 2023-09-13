@@ -20,30 +20,36 @@
     <body>
         <div id="header"></div>
         <div id="nick_nav"></div>
-        <h1>Nick Knows</h1>
-            <div class="mid-bold">
-                <p>
-            This is a place for me to do some development work, test some different things,
-            do cloud training, and just have a place for myself. Enjoy getting to know me and
-            know this site will be kept up to date as things progress and I get more content.
-                </p>
+            <br>
+            <div class="row">
+                <div class="column">
+                    <a href="{{url_for('skiing')}}"><img src="{{url_for('static',  filename='ski.jpg')}}" style="width:100%"></a>
+                </div>
+                <div class="column">
+                    <a href="{{url_for('arcade')}}"><img src="{{url_for('static',  filename='arcade_finish.jpg')}}" style="width:100%"></a>
+                </div>
             </div>
+            <div class="row">
             <br>
-                    <h2><a href="{{url_for('skiing')}}" style="font-size: 30px;">How to Ski</a><br></h2>
-                    <p><img src="{{url_for('static',  filename='ski.jpg')}}" style="width: 50%;height: auto;"></p>    
-                    <h2><a href="{{url_for('arcade')}}" style="font-size: 30px;">How to build an Arcade</a></h2>
-                    <p><img src="{{url_for('static',  filename='arcade_finish.jpg')}}" style="width: 50%;height: auto;"></p>
-            <br>
-                    <h2><a href="{{url_for('guitar')}}" style="font-size: 30px;">How to play Guitar</a></h2>
-                    <p><img src="{{url_for('static',  filename='guitar.jpg')}}" style="width: 50%;height: auto;"></p>
-                    <h2><a href="{{url_for('lemans')}}" style="font-size: 30px;">How to restore a car</a><br></h2>
-                    <p><img src="{{url_for('static',  filename='lemans_trunk.jpg')}}" style="width: 50%;height: auto;"></p>   
-                    <h2><a href="{{url_for('values')}}" style="font-size: 30px;">Values</a></h2>
-                    <p><img src="{{url_for('static',  filename='koda_samson.jpeg')}}" style="width: 50%;height: auto;"></p>
-            <br>
-                    <h2><a href="{{url_for('fart')}}" style="font-size: 30px;">How to Sew</a><br></h2>
-                    <p><img src="{{url_for('static',  filename='sew.jpg')}}" style="width: 50%;height: auto;"></p>
-                    <h2><a href="{{url_for('NFL')}}" style="font-size: 30px;">The NFL</a></h2>
-                    <p><img src="{{url_for('static',  filename='football.jpg')}}" style="width: 50%;height: auto;"></p>
+                <div class="column">
+                    <a href="{{url_for('guitar')}}"><img src="{{url_for('static',  filename='guitar.jpg')}}" style="width: 100%;"></a>
+                </div>
+                <div class="column">
+                    <a href="{{url_for('lemans')}}"><img src="{{url_for('static',  filename='lemans_trunk.jpg')}}" style="width: 100%;"></a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="column">  
+                    <a href="{{url_for('values')}}"><img src="{{url_for('static',  filename='koda_samson.jpeg')}}" style="width: 100%;"></a>
+                </div>
+                <div class="column">
+                    <a href="{{url_for('fart')}}"><img src="{{url_for('static',  filename='sew.jpg')}}" style="width: 100%;"></a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="column">
+                    <a href="{{url_for('NFL')}}"><img src="{{url_for('static',  filename='football.jpg')}}" style="width: 100%;"></a>
+                </div>
+            </div>
     </body>
 </html>

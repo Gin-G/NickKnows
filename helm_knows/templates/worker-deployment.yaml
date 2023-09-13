@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.webapp.name }}-worker
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.webapp.name }}-worker
+    group: {{ .Values.webapp.group }}
+    component: worker
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.webapp.name }}-worker
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.webapp.name }}-worker
+    spec:
+      containers:
+      - name: {{ .Values.webapp.name }}-worker
+        image: {{ .Values.webapp.container.image }}
+        imagePullPolicy: {{ .Values.webapp.container.imagePullPolicy }}
+        args:
+            - celery
+            - -A
+            - nickknows.celery
+            - worker
+    

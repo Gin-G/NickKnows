@@ -1,12 +1,13 @@
 import nfl_data_py as nfl
-
+import os
 import pandas as pd
 import numpy as np
+import dask.dataframe as dd
 
 '''
 Working with the schedule data
 '''
-
+'''
 schedule = nfl.import_schedules([2022])
 team = 'BUF'
 home_team_schedule = schedule.loc[schedule['home_team'] == team]
@@ -63,12 +64,19 @@ stadium_id = schedule['stadium_id']
 stadium = schedule['stadium']
 
 #print(schedule.loc[schedule['week'] == 2])
-
+'''
 """
 Working with weekly data
 """
 
 weekly = nfl.import_weekly_data([2022])
+print(type(weekly))
+
+year = 2023
+
+file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+pbp_data = nfl.import_pbp_data([year])
+pbp_data.to_csv(file_path)
 
 '''
 ### All weekly columns
@@ -131,7 +139,7 @@ fantasy_points_ppr
 '''
 Working with snap counts
 '''
-
+'''
 snap_counts = nfl.import_snap_counts([2022])
 
 game_id = snap_counts['game_id']
@@ -152,21 +160,21 @@ st_snaps = snap_counts['st_snaps']
 st_pct = snap_counts['st_pct']
 
 #print(snap_counts.loc[snap_counts['week'] == 2])
-
+'''
 '''
 Working with play by play data
 '''
 
-pbp_data = nfl.import_pbp_data([2022])
+#pbp_data = nfl.import_pbp_data([2022])
 #print(pbp_data.loc[pbp_data['game_id'] == '2022_02_ARI_LV'])
 
 '''
 Working with roster data
 '''
-roster_data = nfl.import_rosters([2022])
+#roster_data = nfl.import_rosters([2022])
 #print(roster_data.loc[roster_data['team'] == 'ARI'])
-team_list = []
-teams = roster_data['team'].tolist()
+#team_list = []
+#teams = roster_data['team'].tolist()
 #for team in teams:
 #    if team not in team_list:
 #        team_list.append(team)

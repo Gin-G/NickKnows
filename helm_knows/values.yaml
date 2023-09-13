@@ -1,0 +1,12 @@
+webapp:
+  name: nickknows
+  group: nickknows
+  replicaCount: 1
+  container: 
+    image: ncote/nickknows:latest
+    imagePullPolicy: Always
+    port: 5000
+    memory: 1G
+    cpu: 2
+worker:
+  replicaCount: 2
