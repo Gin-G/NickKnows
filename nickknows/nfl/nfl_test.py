@@ -69,14 +69,18 @@ stadium = schedule['stadium']
 Working with weekly data
 """
 
-weekly = nfl.import_weekly_data([2022])
-print(type(weekly))
+weekly = nfl.import_weekly_data([2023],['player_display_name','targets','target_share'])
+weekly['target_share'] = weekly['target_share'] * 100
+weekly.sort_values(by=['targets'], inplace=True, ascending=False)
+print(weekly.head(10))
+weekly.sort_values(by=['target_share'], inplace=True, ascending=False)
+print(weekly.head(10))
 
 year = 2023
 
-file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
-pbp_data = nfl.import_pbp_data([year])
-pbp_data.to_csv(file_path)
+#file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+#pbp_data = nfl.import_pbp_data([year])
+#pbp_data.to_csv(file_path)
 
 '''
 ### All weekly columns
