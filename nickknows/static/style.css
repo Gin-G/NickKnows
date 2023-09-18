@@ -84,11 +84,21 @@ table {
   text-align: center;
   vertical-align: middle;
   max-width: 100%;
+  overflow: auto;
+}
+
+.player-table {
+  vertical-align: middle;
 }
 
 table thead tr {
   background-color: #393f44;
   color: #FFFFFF;
+}
+
+table thead th {
+  border-right: 1px solid #FFFFFF;
+  padding: 3px;
 }
 
 table tbody tr {
@@ -98,6 +108,7 @@ table tbody tr {
 
 table td {
   width: fit-content;
+  border-right: 1px solid #dddddd;
   padding: 3px 12px;
 }
 
