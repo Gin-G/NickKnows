@@ -228,3 +228,114 @@ def update_rec_tds_top10():
     rec_td_agg.rename(columns={'player_name':'Player Name',"pass_touchdown":"Total Receiving TD's"}, inplace=True)
     rec_td_agg = rec_td_agg.head(10)
     rec_td_agg.to_csv(rectds10)
+
+@celery.task()
+def update_team_stats(team):
+    # Open Schedule data
+    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
+    schedule = pd.read_csv(sched_path, index_col=0)
+    team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
+    if os.path.exists(team_dir):
+        pass
+    else:
+        os.mkdir(os.getcwd() + '/nickknows/nfl/data/' + team + '/')
+    team_stats = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_stats.csv' 
+    team_schedule = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv' 
+    #Replace game_id with a link that has Away vs. Home instead
+    url = str('<a href="http://localhost:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
+    #url = str('<a href="https://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
+    schedule['game_id'] = url
+    #Create a full schedule for the team selected
+    home_team_schedule = schedule.loc[schedule['home_team'] == team]
+    away_team_schedule = schedule.loc[schedule['away_team'] == team]
+    full_schedule = [home_team_schedule, away_team_schedule]
+    full_schedule = pd.concat(full_schedule)
+    #Drop any games that haven't been played
+    full_schedule = full_schedule.dropna(subset=['away_score'])
+    full_schedule = full_schedule.sort_values(by=['week'])
+    ishome = full_schedule['home_team'].str.contains(team)
+    full_schedule['is_home'] = ishome
+    op_team1 = full_schedule.loc[full_schedule['is_home'] == True, ['away_team', 'week']]
+    op_team2 = full_schedule.loc[full_schedule['is_home'] == False, ['home_team', 'week']]
+    op_team = [op_team1, op_team2]
+    op_team = pd.concat(op_team)
+    op_team["op_team"] = op_team['away_team'].fillna('') + op_team['home_team'].fillna('')
+    op_team = op_team.sort_values(by=['week'])
+    op_team.to_csv(team_schedule)
+    op_team = op_team["op_team"].to_list()
+    weekly_team_data = pd.DataFrame()
+    for team in op_team:
+        week = op_team.index(team) + 1
+        rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+        roster_data = pd.read_csv(rost_path, index_col=0)
+        team_roster = roster_data.loc[roster_data['team'] == team]
+        players = team_roster['player_name'].to_list()
+        for player in players:
+            week_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
+            weekly_data = pd.read_csv(week_path, index_col=0)
+            player_data = weekly_data.loc[weekly_data['player_display_name'] == player]
+            player_data = player_data.loc[player_data['week'] == week]
+            weekly_team_data = [weekly_team_data, player_data]
+            weekly_team_data = pd.concat(weekly_team_data)
+    weekly_team_data.to_csv(team_stats)
+
+@celery.task()
+def update_team_schedule(team):
+    # Open Schedule data
+    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
+    team_sched_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv'
+    team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
+    if os.path.exists(team_dir):
+        pass
+    else:
+        os.mkdir(os.getcwd() + '/nickknows/nfl/data/' + team + '/')
+    schedule = pd.read_csv(sched_path, index_col=0)
+    #Replace game_id with a link that has Away vs. Home instead
+    url = str('<a href="http://localhost:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
+    #url = str('<a href="https://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
+    schedule['game_id'] = url
+    #Create a full schedule for the team selected
+    home_team_schedule = schedule.loc[schedule['home_team'] == team]
+    away_team_schedule = schedule.loc[schedule['away_team'] == team]
+    full_schedule = [home_team_schedule, away_team_schedule]
+    full_schedule = pd.concat(full_schedule)
+    #Drop any games that haven't been played
+    full_schedule = full_schedule.dropna(subset=['away_score'])
+    full_schedule = full_schedule.sort_values(by=['week'])
+    full_schedule.to_csv(team_sched_path)
+    update_weekly_team_data.delay(team)
+    
+@celery.task()
+def update_weekly_team_data(team):
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv'
+    data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_data.csv'
+    team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
+    if os.path.exists(team_dir):
+        pass
+    else:
+        os.mkdir(os.getcwd() + '/nickknows/nfl/data/' + team + '/')
+    full_schedule = pd.read_csv(file_path, index_col=0)
+    ishome = full_schedule['home_team'].str.contains(team)
+    full_schedule['is_home'] = ishome
+    op_team1 = full_schedule.loc[full_schedule['is_home'] == True, ['away_team', 'week']]
+    op_team2 = full_schedule.loc[full_schedule['is_home'] == False, ['home_team', 'week']]
+    op_team = [op_team1, op_team2]
+    op_team = pd.concat(op_team)
+    op_team["op_team"] = op_team['away_team'].fillna('') + op_team['home_team'].fillna('')
+    op_team = op_team.sort_values(by=['week'])
+    op_team = op_team["op_team"].to_list()
+    weekly_team_data = pd.DataFrame()
+    for team in op_team:
+        week = op_team.index(team) + 1
+        rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+        roster_data = pd.read_csv(rost_path, index_col=0)
+        team_roster = roster_data.loc[roster_data['team'] == team]
+        players = team_roster['player_name'].to_list()
+        for player in players:
+            week_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
+            weekly_data = pd.read_csv(week_path, index_col=0)
+            player_data = weekly_data.loc[weekly_data['player_display_name'] == player]
+            player_data = player_data.loc[player_data['week'] == week]
+            weekly_team_data = [weekly_team_data, player_data]
+            weekly_team_data = pd.concat(weekly_team_data)
+    weekly_team_data.to_csv(data_file_path)
