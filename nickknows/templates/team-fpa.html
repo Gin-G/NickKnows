@@ -21,6 +21,22 @@
             <h3>Against RB = {{ rush_agg|round(2, 'common') }} pts/week</h3>
             <h3>Against WR = {{ rec_agg|round(2, 'common') }} pts/week</h3>
             <h3>Against TE = {{ te_agg|round(2, 'common') }} pts/week</h3>
+            <div class='row'>
+                <div class='nfl-column'>
+                    <img src="{{ url_for('static', filename= team + '_QB_FPA.png')  }}">
+                </div>
+                <div class='nfl-column'>
+                    <img src="{{ url_for('static', filename= team + '_RB_FPA.png')  }}">
+                </div>
+            </div>
+            <div class='row'>
+                <div class='nfl-column'>
+                    <img src="{{ url_for('static', filename= team + '_WR_FPA.png')  }}">
+                </div>
+                <div class='nfl-column'>
+                    <img src="{{ url_for('static', filename= team + '_TE_FPA.png')  }}">
+                </div>
+            </div>
             <h2>Results</h2>
             {{ team_fpa | safe }}<br>
             <h2>QB Stats</h2>

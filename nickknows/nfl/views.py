@@ -8,6 +8,7 @@ import nfl_data_py as nfl
 import pandas as pd
 import numpy as np
 import dask.dataframe as dd
+import matplotlib.pyplot as plt
 from IPython.display import HTML
 import os
 import time
@@ -23,54 +24,120 @@ def NFL():
         if os.path.exists(file_path):
             if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
                 update_PBP_data.delay()
-                flash('Data is updating in the background. Refresh the page in a bit')
+                flash('Play by play data is updating in the background. Refresh the page in a bit')
             else:
                 pbp_data = pd.read_csv(file_path, index_col=0)
         else:
             update_PBP_data.delay()
-            flash('Data is updating in the background. Refresh the page in a bit')
+            flash('Play by play data is updating in the background. Refresh the page in a bit')
         rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
         if os.path.exists(rfile_path):
             if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
                 update_roster_data.delay()
-                flash('Data is updating in the background. Refresh the page in a bit')
+                flash('Roster data is updating in the background. Refresh the page in a bit')
             else:
                 roster_data = pd.read_csv(rfile_path, index_col=0)
         else:
             update_roster_data.delay()
-            flash('Data is updating in the background. Refresh the page in a bit')
+            flash('Roster data is updating in the background. Refresh the page in a bit')
         qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_yards_top10_data.csv'
+        if os.path.exists(qb10file_path):
+            if (time.time() - os.path.getmtime(qb10file_path)) > (7 * 24 * 60 * 60):
+                update_qb_yards_top10.delay()
+                flash('QB data is updating in the background. Refresh the page in a bit')
+            else:
+                pass_agg = pd.read_csv(qb10file_path, index_col=0)
+        else:
+            update_qb_yards_top10.delay()
+            flash('QB data is updating in the background. Refresh the page in a bit')
         qbtd10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_tds_top10_data.csv'
+        if os.path.exists(qbtd10file_path):
+            if (time.time() - os.path.getmtime(qbtd10file_path)) > (7 * 24 * 60 * 60):
+                update_qb_tds_top10.delay()
+                flash('QB TD data is updating in the background. Refresh the page in a bit')
+            else:
+                pass_td_agg = pd.read_csv(qbtd10file_path, index_col=0)
+        else:
+            update_qb_tds_top10.delay()
+            flash('QB TD data is updating in the background. Refresh the page in a bit')
         rbyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_yds_top10_data.csv' 
-        rbtds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_tds_top10_data.csv' 
-        recyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_yds_top10_data.csv' 
-        rectds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_tds_top10_data.csv' 
-        pass_agg = pd.read_csv(qb10file_path)
-        pass_td_agg = pd.read_csv(qbtd10file_path)
-        rush_yds_agg = pd.read_csv(rbyds10)
-        rush_td_agg = pd.read_csv(rbtds10)
-        rec_yds_agg = pd.read_csv(recyds10)
-        rec_td_agg = pd.read_csv(rectds10)
-        pass_agg.drop(columns=pass_agg.columns[0], axis=1,  inplace=True)
-        pass_td_agg.drop(columns=pass_td_agg.columns[0], axis=1,  inplace=True)
-        rush_yds_agg.drop(columns=rush_yds_agg.columns[0], axis=1,  inplace=True)
-        rush_td_agg.drop(columns=rush_td_agg.columns[0], axis=1,  inplace=True)
-        rec_yds_agg.drop(columns=rec_yds_agg.columns[0], axis=1,  inplace=True)
-        rec_td_agg.drop(columns=rec_td_agg.columns[0], axis=1,  inplace=True)
-        pass_agg = pass_agg.style.hide(axis="index")
-        pass_td_agg = pass_td_agg.style.hide(axis="index")
-        rush_yds_agg = rush_yds_agg.style.hide(axis="index")
-        rush_td_agg = rush_td_agg.style.hide(axis="index")
-        rec_yds_agg = rec_yds_agg.style.hide(axis="index")
-        rec_td_agg = rec_td_agg.style.hide(axis="index")
-        pass_agg = pass_agg.format(precision=0)
-        pass_td_agg = pass_td_agg.format(precision=0)
-        rush_yds_agg = rush_yds_agg.format(precision=0)
-        rush_td_agg = rush_td_agg.format(precision=0)
-        rec_yds_agg = rec_yds_agg.format(precision=0)
-        rec_td_agg = rec_td_agg.format(precision=0)
-        return render_template('nfl-home.html', pass_yards_data = pass_agg.to_html(classes="table"), pass_td_data = pass_td_agg.to_html(), rush_yards_data = rush_yds_agg.to_html(), rush_td_data = rush_td_agg.to_html(), rec_yards_data = rec_yds_agg.to_html(), rec_td_data = rec_td_agg.to_html())
+        if os.path.exists(rbyds10):
+            if (time.time() - os.path.getmtime(rbyds10)) > (7 * 24 * 60 * 60):
+                update_rb_yards_top10.delay()
+                flash('RB data is updating in the background. Refresh the page in a bit')
+            else:
+                rush_yds_agg = pd.read_csv(rbyds10, index_col=0)
+        else:
+            update_rb_yards_top10.delay()
+            flash('RB data is updating in the background. Refresh the page in a bit')
+        rbtds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_tds_top10_data.csv'  
+        if os.path.exists(rbtds10):
+            if (time.time() - os.path.getmtime(rbtds10)) > (7 * 24 * 60 * 60):
+                update_rb_tds_top10.delay()
+                flash('RB TD data is updating in the background. Refresh the page in a bit')
+            else:
+                rush_td_agg = pd.read_csv(rbtds10, index_col=0)
+        else:
+            update_rb_tds_top10.delay()
+            flash('RB TD data is updating in the background. Refresh the page in a bit')
+        recyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_yds_top10_data.csv'   
+        if os.path.exists(recyds10):
+            if (time.time() - os.path.getmtime(recyds10)) > (7 * 24 * 60 * 60):
+                update_rec_yds_top10.delay()
+                flash('Rec data is updating in the background. Refresh the page in a bit')
+            else:
+                rec_yds_agg = pd.read_csv(recyds10, index_col=0)
+        else:
+            update_rec_yds_top10.delay()
+            flash('Rec data is updating in the background. Refresh the page in a bit')
+        rectds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_tds_top10_data.csv'   
+        if os.path.exists(rectds10):
+            if (time.time() - os.path.getmtime(rectds10)) > (7 * 24 * 60 * 60):
+                update_rec_tds_top10.delay()
+                flash('Rec TD data is updating in the background. Refresh the page in a bit')
+            else:
+                rec_td_agg = pd.read_csv(rectds10, index_col=0)
+        else:
+            update_rec_tds_top10.delay()
+            flash('Rec TD data is updating in the background. Refresh the page in a bit')
+        try:
+            pass_agg = pass_agg.style.hide(axis="index")
+            pass_td_agg = pass_td_agg.style.hide(axis="index")
+            rush_yds_agg = rush_yds_agg.style.hide(axis="index")
+            rush_td_agg = rush_td_agg.style.hide(axis="index")
+            rec_yds_agg = rec_yds_agg.style.hide(axis="index")
+            rec_td_agg = rec_td_agg.style.hide(axis="index")
+            pass_agg = pass_agg.format(precision=0)
+            pass_td_agg = pass_td_agg.format(precision=0)
+            rush_yds_agg = rush_yds_agg.format(precision=0)
+            rush_td_agg = rush_td_agg.format(precision=0)
+            rec_yds_agg = rec_yds_agg.format(precision=0)
+            rec_td_agg = rec_td_agg.format(precision=0)
+            return render_template('nfl-home.html', pass_yards_data = pass_agg.to_html(classes="table"), pass_td_data = pass_td_agg.to_html(), rush_yards_data = rush_yds_agg.to_html(), rush_td_data = rush_td_agg.to_html(), rec_yards_data = rec_yds_agg.to_html(), rec_td_data = rec_td_agg.to_html())
+        except Exception as e:
+            update_PBP_data.delay()
+            update_roster_data.delay()
+            update_sched_data.delay()
+            update_week_data.delay()
+            update_qb_yards_top10.delay()
+            update_qb_tds_top10.delay()
+            update_rb_yards_top10.delay()
+            update_rb_tds_top10.delay()
+            update_rec_yds_top10.delay()
+            update_rec_tds_top10.delay()
+            flash(e)
+            return render_template('nfl-home.html')
     except Exception as e:
+        update_PBP_data.delay()
+        update_roster_data.delay()
+        update_sched_data.delay()
+        update_week_data.delay()
+        update_qb_yards_top10.delay()
+        update_qb_tds_top10.delay()
+        update_rb_yards_top10.delay()
+        update_rb_tds_top10.delay()
+        update_rec_yds_top10.delay()
+        update_rec_tds_top10.delay()
         flash(e)
         return render_template('nfl-home.html')
 
@@ -239,10 +306,47 @@ def team_fpa(team, fullname):
     te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
     te_agg = te_data.agg({"fantasy_points_ppr": "sum"})
     te_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
+    fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_FPA.csv'
+    try:
+        fpa_data = pd.read_csv(fpa_path, index_col=0)
+        team_stats = fpa_data.loc[fpa_data['Team Name'] == team]
+        print(len(team_stats))
+        if len(team_stats) == 0:
+            pass_agg_csv = pass_agg['fantasy_points_ppr']/len(weeks) 
+            rush_agg_csv = rush_agg['fantasy_points_ppr']/len(weeks)
+            rec_agg_csv = rec_agg['fantasy_points_ppr']/len(weeks) 
+            te_agg_csv = te_agg['fantasy_points_ppr']/len(weeks)
+            data = [team,pass_agg_csv,rush_agg_csv,rec_agg_csv,te_agg_csv]
+            df = pd.DataFrame([data])
+            df.to_csv(fpa_path, mode='a', header=False)
+    except:
+        pass_agg_csv = pass_agg['fantasy_points_ppr']/len(weeks) 
+        rush_agg_csv = rush_agg['fantasy_points_ppr']/len(weeks)
+        rec_agg_csv = rec_agg['fantasy_points_ppr']/len(weeks) 
+        te_agg_csv = te_agg['fantasy_points_ppr']/len(weeks)
+        data = [team,pass_agg_csv,rush_agg_csv,rec_agg_csv,te_agg_csv]
+        df = pd.DataFrame([data], columns=['Team Name','QB','RB','WR','TE'])
+        df.to_csv(fpa_path)
     pass_data = pass_data.drop_duplicates()
     rush_data = rush_data.drop_duplicates()
     rec_data = rec_data.drop_duplicates()
     te_data = te_data.drop_duplicates()
+    pass_data_img = pass_data[['player_display_name','fantasy_points_ppr']]
+    pass_data_img.plot.bar(x='player_display_name', xlabel='')
+    plt.tight_layout()
+    plt.savefig('nickknows/static/' + team + '_' + 'QB_FPA.png')
+    rush_data_img = rush_data[['player_display_name','fantasy_points_ppr']]
+    rush_data_img.plot.bar(x='player_display_name', xlabel='')
+    plt.tight_layout()
+    plt.savefig('nickknows/static/' + team + '_' + 'RB_FPA.png')
+    rec_data_img = rec_data[['player_display_name','fantasy_points_ppr']]
+    rec_data_img.plot.bar(x='player_display_name', xlabel='')
+    plt.tight_layout()
+    plt.savefig('nickknows/static/' + team + '_' + 'WR_FPA.png')
+    te_data_img = te_data[['player_display_name','fantasy_points_ppr']]
+    te_data_img.plot.bar(x='player_display_name', xlabel='')
+    plt.tight_layout()
+    plt.savefig('nickknows/static/' + team + '_' + 'TE_FPA.png')
     pass_data.rename(columns={'player_display_name':'Name','position':'Position','recent_team':'Team','week':'Week','completions':'Completions','attempts':'Attempts','passing_yards':"Pass Yds",'passing_tds':"Pass TDs",'interceptions':"INTs",'sacks':"Sacks",'sack_yards':"Sack Yards",'sack_fumbles':"Sack Fumbles",'sack_fumbles_lost':'Sack Fumbles Lost','passing_air_yards':'Pass Air Yards','passing_yards_after_catch':'Pass YAC','passing_first_downs':'Passing 1st Downs','passing_epa':'Pass EPA','passing_2pt_conversions':'Pass 2pt','pacr':'PACR','fantasy_points':'STD Points','fantasy_points_ppr':'PPR Points'}, inplace=True)
     rush_data.rename(columns={'player_display_name':'Name','position':'Position','recent_team':'Team','week':'Week','carries':'Carries','rushing_yards':'Rush Yards','rushing_tds':'Rush TDs','rushing_fumbles':'Rush Fumbles','rushing_fumbles_lost':'Rush Fumbles Lost','rushing_first_downs':'Rush 1st Downs','rushing_epa':'Rush EPA','rushing_2pt_conversions':'Rush 2pt',	'receptions':'Receptions',	'targets':'Targets','receiving_yards':'Receiving Yards','receiving_tds':'Receiving TDs','receiving_fumbles':'Receiving Fumbles','receiving_fumbles_lost':'Receiving Fumbles Lost','receiving_air_yards':'Receiving Air Yards','receiving_yards_after_catch':'Receiving YAC','receiving_first_downs':'Receiving 1st Downs','receiving_2pt_conversions':'Receiving 2pt','target_share':'Target Share','fantasy_points':'STD Points','fantasy_points_ppr':'PPR Points'}, inplace=True)
     rec_data.rename(columns={'player_display_name':'Name','position':'Position','recent_team':'Team','week':'Week','receptions':'Receptions','targets':'Targets','receiving_yards':'Receiving Yards','receiving_tds':'Receiving TDs','receiving_fumbles':'Receiving Fumbles','receiving_fumbles_lost':'Receiving Fumbles Lost','receiving_air_yards':'Receiving Air Yards','receiving_yards_after_catch':'Receiving YAC','receiving_first_downs':'Receiving 1st Downs','receiving_2pt_conversions':'Receiving 2pt','target_share':'Target Share','fantasy_points':'STD Points','fantasy_points_ppr':'PPR Points','receiving_epa':'Receiving EPA','racr':'RACR','air_yards_share':'% Air Yards','wopr':'WOPR','special_teams_tds':'Special Teams TD'}, inplace=True)
@@ -255,7 +359,7 @@ def team_fpa(team, fullname):
     rush_data = rush_data.format(subset=['Rush Yards','Rush Fumbles','Rush Fumbles Lost','Rush 1st Downs','Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs'],precision=0, na_rep="-").format(subset=['Rush EPA','Target Share','STD Points','PPR Points'],precision=2, na_rep="-")
     rec_data = rec_data.format(subset=['Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs','Special Teams TD'],precision=0, na_rep="-").format(subset=['Receiving EPA','Target Share','STD Points','PPR Points','RACR','% Air Yards','WOPR'],precision=2, na_rep="-")
     te_data = te_data.format(subset=['Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs','Special Teams TD'],precision=0, na_rep="-").format(subset=['Receiving EPA','Target Share','STD Points','PPR Points','RACR','% Air Yards','WOPR'],precision=2, na_rep="-")
-    return render_template('team-fpa.html', team_fpa = full_schedule.to_html(classes="table"), fullname = fullname, rush_data=rush_data.to_html(classes="table"), pass_data = pass_data.to_html(classes="table"), rec_data = rec_data.to_html(classes="table"), te_data = te_data.to_html(classes="table"), pass_agg = pass_agg['fantasy_points_ppr']/len(weeks), rush_agg = rush_agg['fantasy_points_ppr']/len(weeks), rec_agg = rec_agg['fantasy_points_ppr']/len(weeks), te_agg = te_agg['fantasy_points_ppr']/len(weeks))
+    return render_template('team-fpa.html', team=team, team_fpa = full_schedule.to_html(classes="table"), fullname = fullname, rush_data=rush_data.to_html(classes="table"), pass_data = pass_data.to_html(classes="table"), rec_data = rec_data.to_html(classes="table"), te_data = te_data.to_html(classes="table"), pass_agg = pass_agg['fantasy_points_ppr']/len(weeks), rush_agg = rush_agg['fantasy_points_ppr']/len(weeks), rec_agg = rec_agg['fantasy_points_ppr']/len(weeks), te_agg = te_agg['fantasy_points_ppr']/len(weeks))
 
 def total_highlight(df, col1, col2):
     mask = df[col1] > df[col2]
@@ -276,3 +380,21 @@ def neg_spread_highlight(df, col1, col2):
     new_df[col1] = np.where(omask, "background-color: {}".format("red"), new_df[col1])
     new_df[col1] = np.where(emask, "background-color: {}".format("yellow"), new_df[col1])
     return new_df
+
+
+@app.route('/NFL/FPA')
+def fpa():
+    fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_FPA.csv'
+    try:
+        fpa_data = pd.read_csv(fpa_path, index_col=0)
+        fpa_data.sort_values(by=['Team Name'], inplace=True)
+        cols = list(fpa_data.columns.values)
+        cols.pop(0)
+        fpa_data.set_index('Team Name').plot.bar(subplots=True, figsize=(8, 16), sharex=False)
+        plt.tight_layout()
+        plt.savefig('nickknows/static/FPA.png')
+        fpa_data = fpa_data.style.hide(axis="index").format(precision=2)
+        return render_template('fpa.html', fpa_data = fpa_data.to_html(classes='table'),)
+    except Exception as e:
+        flash(e)
+        return render_template('nfl-home.html')
