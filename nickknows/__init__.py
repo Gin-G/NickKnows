@@ -1,4 +1,3 @@
-import imp
 from flask import Flask
 from flask.templating import render_template
 from celery import Celery
