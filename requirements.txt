@@ -6,3 +6,4 @@ numpy
 python-snappy
 redis
 tk
+matplotlib
