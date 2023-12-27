@@ -7,7 +7,6 @@ from ..celery_setup.tasks import update_PBP_data, update_roster_data, update_sch
 import nfl_data_py as nfl
 import pandas as pd
 import numpy as np
-import dask.dataframe as dd
 import matplotlib.pyplot as plt
 from IPython.display import HTML
 import os
