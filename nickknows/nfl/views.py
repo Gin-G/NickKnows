@@ -160,7 +160,7 @@ def schedule(week):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
     week_schedule = schedule.loc[schedule['week'] == int(week)]
-    url = str('<a href="http://localhost:5000/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + str('</a>')
+    url = str('<a href="http://nickknows.net/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + str('</a>')
     week_schedule['game_id'] = url
     week_schedule.loc[week_schedule["overtime"] == 0, "overtime"] = "No"
     week_schedule.loc[week_schedule["overtime"] == 1, "overtime"] = "Yes"
@@ -178,7 +178,7 @@ def roster(team,fullname):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     roster_data = pd.read_csv(file_path, index_col=0)
     team_roster = roster_data.loc[roster_data['team'] == team]
-    url = str('<a href="http://localhost:5000/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
+    url = str('<a href="http://nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
     team_roster['player_name'] = url
     team_roster.rename(columns={'depth_chart_position':'Position','jersey_number':'Number','status':'Status','player_name':'Full Name','first_name':'First Name','last_name':'Last Name','height':'Height','weight':'Weight','football_name':'Preferred Name','rookie_year':'Rookie Year','draft_club':'Drafted By','draft_number':'Draft Number'}, inplace=True)
     team_roster.sort_values(by=['Number'], inplace=True)
@@ -228,7 +228,7 @@ def player_stats(name):
 def team_schedule(team, fullname):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
-    url = str('<a href="http://localhost:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
+    url = str('<a href="http://nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
     schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
     away_team_schedule = schedule.loc[schedule['away_team'] == team]
