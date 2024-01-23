@@ -4,6 +4,7 @@ from flask import render_template, url_for, redirect, flash
 from numpy import full
 from nickknows import app
 from ..celery_setup.tasks import update_PBP_data, update_roster_data, update_sched_data, update_week_data, update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10, update_team_schedule, update_weekly_team_data
+from celery import chain
 import nfl_data_py as nfl
 import pandas as pd
 import numpy as np
@@ -142,16 +143,7 @@ def NFL():
 
 @app.route('/NFL/update')
 def NFLupdate():
-    update_PBP_data.delay()
-    update_roster_data.delay()
-    update_sched_data.delay()
-    update_week_data.delay()
-    update_qb_yards_top10.delay()
-    update_qb_tds_top10.delay()
-    update_rb_yards_top10.delay()
-    update_rb_tds_top10.delay()
-    update_rec_yds_top10.delay()
-    update_rec_tds_top10.delay()
+    chain(update_PBP_data, update_roster_data, update_sched_data, update_week_data, update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10)
     flash('All data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL'))
         
