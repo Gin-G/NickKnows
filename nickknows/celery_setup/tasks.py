@@ -36,21 +36,13 @@ def update_qb_yards_top10():
     qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_yards_top10_data.csv'
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
     if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-            update_PBP_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
-            pbp_data = pd.read_csv(file_path, index_col=0)
+        pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
-        if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
-            update_roster_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
-            roster_data = pd.read_csv(rfile_path, index_col=0)
+        roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
         update_roster_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
@@ -69,20 +61,12 @@ def update_qb_tds_top10():
     qbtd10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_tds_top10_data.csv'
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
     if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-            update_PBP_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
             pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
-        if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
-            update_roster_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
             roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
         update_roster_data.delay()
@@ -102,21 +86,13 @@ def update_rb_yards_top10():
     rbyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_yds_top10_data.csv' 
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
     if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-            update_PBP_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
-            pbp_data = pd.read_csv(file_path, index_col=0)
+        pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
-        if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
-            update_roster_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
-            roster_data = pd.read_csv(rfile_path, index_col=0)
+        roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
         update_roster_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
@@ -135,21 +111,13 @@ def update_rb_tds_top10():
     rbtds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_tds_top10_data.csv' 
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
     if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-            update_PBP_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
-            pbp_data = pd.read_csv(file_path, index_col=0)
+        pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
-        if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
-            update_roster_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
-            roster_data = pd.read_csv(rfile_path, index_col=0)
+        roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
         update_roster_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
@@ -168,21 +136,13 @@ def update_rec_yds_top10():
     recyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_yds_top10_data.csv' 
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
     if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-            update_PBP_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
-            pbp_data = pd.read_csv(file_path, index_col=0)
+        pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
-        if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
-            update_roster_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
-            roster_data = pd.read_csv(rfile_path, index_col=0)
+        roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
         update_roster_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
@@ -201,21 +161,13 @@ def update_rec_tds_top10():
     rectds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_tds_top10_data.csv' 
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
     if os.path.exists(file_path):
-        if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
-            update_PBP_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
-            pbp_data = pd.read_csv(file_path, index_col=0)
+        pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
-        if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
-            update_roster_data.delay()
-            #flash('Data is updating in the background. Refresh the page in a bit')
-        else:
-            roster_data = pd.read_csv(rfile_path, index_col=0)
+        roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
         update_roster_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
