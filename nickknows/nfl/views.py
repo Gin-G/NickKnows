@@ -158,7 +158,17 @@ def NFLupdate():
     update_rec_tds_top10.delay()
     flash('All data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL'))
-        
+
+@app.route('/NFL/FPA/update')
+def FPAupdate():
+    teams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
+    for team in teams:
+        update_team_schedule.delay(team)
+        update_weekly_team_data.delay(team)
+    flash('All data is updating in the background. Changes should be reflected on the pages shortly')
+    return redirect(url_for('NFL'))
+
+
 @app.route('/NFL/schedule/<week>')
 def schedule(week):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
