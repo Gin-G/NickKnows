@@ -1,10 +1,12 @@
 from celery import Celery
 
+REDIS_ENV = 'localhost'
+
 def make_celery(app=None):
     celery = Celery(
         app.import_name,
-        backend="redis://redis:6379/0",
-        broker="redis://redis:6379/1"
+        backend="redis://" + REDIS_ENV + ":6379/0",
+        broker="redis://" + REDIS_ENV + ":6379/1"
     )
     celery.conf.update(app.config)
 

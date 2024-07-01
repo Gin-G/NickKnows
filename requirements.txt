@@ -1,7 +1,7 @@
 celery
 flask
 IPython
-nfl_data_py
+nfl_data_py==0.3.0
 numpy
 python-snappy
 redis
