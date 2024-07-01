@@ -3,9 +3,9 @@ webapp:
   group: nickknows
   replicaCount: 1
   container: 
-    image: ncote/nickknows:latest
+    image: docker.io/ncging/nickknows:2024-07-01.10
     imagePullPolicy: Always
-    port: 5000
+    port: 8000
     memory: 1G
     cpu: 2
 worker:
