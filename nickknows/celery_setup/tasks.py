@@ -9,9 +9,10 @@ year = 2023
 
 @celery.task()
 def update_PBP_data():
+    # PBP data is broken currently - NC 2024-07-22
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
-    pbp_data = nfl.import_pbp_data([year])
-    pbp_data.to_csv(file_path)
+    #pbp_data = nfl.import_pbp_data([year])
+    #pbp_data.to_csv(file_path)
 
 @celery.task()
 def update_roster_data():

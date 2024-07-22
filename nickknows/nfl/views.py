@@ -20,6 +20,8 @@ year = 2023
 @app.route('/NFL')
 def NFL():
     try:
+        '''
+        PBP data function is broken - NC 2024-07-22
         file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
         if os.path.exists(file_path):
             if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
@@ -30,17 +32,15 @@ def NFL():
         else:
             update_PBP_data.delay()
             flash('Play by play data is updating in the background. Refresh the page in a bit')
+        '''
         rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
         if os.path.exists(rfile_path):
-            if (time.time() - os.path.getmtime(rfile_path)) > (7 * 24 * 60 * 60):
-                update_roster_data.delay()
-                flash('Roster data is updating in the background. Refresh the page in a bit')
-            else:
-                roster_data = pd.read_csv(rfile_path, index_col=0)
+            roster_data = pd.read_csv(rfile_path, index_col=0)
         else:
             update_roster_data.delay()
             flash('Roster data is updating in the background. Refresh the page in a bit')
-        qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_yards_top10_data.csv'
+        '''
+        PBP data function is broken - NC 2024-07-22qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_yards_top10_data.csv'
         if os.path.exists(qb10file_path):
             if (time.time() - os.path.getmtime(qb10file_path)) > (7 * 24 * 60 * 60):
                 update_qb_yards_top10.delay()
@@ -115,7 +115,8 @@ def NFL():
             rec_td_agg = rec_td_agg.format(precision=0)
             return render_template('nfl-home.html', pass_yards_data = pass_agg.to_html(classes="table"), pass_td_data = pass_td_agg.to_html(), rush_yards_data = rush_yds_agg.to_html(), rush_td_data = rush_td_agg.to_html(), rec_yards_data = rec_yds_agg.to_html(), rec_td_data = rec_td_agg.to_html())
         except Exception as e:
-            update_PBP_data.delay()
+            # PBP data function is broken - NC 2024-07-22
+            # update_PBP_data.delay()
             update_roster_data.delay()
             update_sched_data.delay()
             update_week_data.delay()
@@ -127,25 +128,30 @@ def NFL():
             update_rec_yds_top10.delay()
             update_rec_tds_top10.delay()
             flash(e)
-            return render_template('nfl-home.html')
-    except Exception as e:
-        update_PBP_data.delay()
+        '''
         update_roster_data.delay()
         update_sched_data.delay()
         update_week_data.delay()
-        time.sleep(30)
-        update_qb_yards_top10.delay()
-        update_qb_tds_top10.delay()
-        update_rb_yards_top10.delay()
-        update_rb_tds_top10.delay()
-        update_rec_yds_top10.delay()
-        update_rec_tds_top10.delay()
+        return render_template('nfl-home.html')
+    except Exception as e:
+        # PBP data function is broken - NC 2024-07-22
+        # update_PBP_data.delay()
+        update_roster_data.delay()
+        update_sched_data.delay()
+        update_week_data.delay()
+        #update_qb_yards_top10.delay()
+        #update_qb_tds_top10.delay()
+        #update_rb_yards_top10.delay()
+        #update_rb_tds_top10.delay()
+        #update_rec_yds_top10.delay()
+        #update_rec_tds_top10.delay()
         flash(e)
         return render_template('nfl-home.html')
 
 @app.route('/NFL/update')
 def NFLupdate():
-    update_PBP_data.delay()
+    # PBP data function is broken - NC 2024-07-22
+    # update_PBP_data.delay()
     update_roster_data.delay()
     update_sched_data.delay()
     update_week_data.delay()
@@ -174,8 +180,9 @@ def schedule(week):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
     week_schedule = schedule.loc[schedule['week'] == int(week)]
-    url = str('<a href="http://nickknows.net/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + str('</a>')
-    week_schedule['game_id'] = url
+    # PBP data function is broken - NC 2024-07-22
+    # url = str('<a href="http://nickknows.net/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + str('</a>')
+    # week_schedule['game_id'] = url
     week_schedule.loc[week_schedule["overtime"] == 0, "overtime"] = "No"
     week_schedule.loc[week_schedule["overtime"] == 1, "overtime"] = "Yes"
     week_schedule.loc[week_schedule["div_game"] == 0, "div_game"] = "No"
@@ -200,7 +207,8 @@ def roster(team,fullname):
     team_roster = team_roster.hide(['season','team','position','birth_date','college','player_id','espn_id','sportradar_id','yahoo_id','rotowire_id','pff_id','pfr_id',	'fantasy_data_id','sleeper_id',	'years_exp','headshot_url',	'ngs_position','week','game_type','status_description_abbr','esb_id','gsis_it_id','smart_id','entry_year'], axis="columns")
     team_roster = team_roster.format(precision=0, na_rep="Undrafted")
     return render_template('rosters.html', team_roster = team_roster.to_html(classes="table"), team = fullname)
-
+'''
+PBP data function is broken - NC 2024-07-22
 @app.route('/NFL/PbP/<game>')
 def game_pbp(game):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
@@ -213,6 +221,7 @@ def game_pbp(game):
     game_data = game_data.set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
     game_data = game_data.hide(['play_id','game_id','old_game_id','home_team','away_team','season_type','week','game_date','posteam_type','game_half','quarter_end','sp','qtr','goal_to_go','ydsnet','qb_kneel','qb_spike','qb_scramble'], axis="columns")
     return render_template('pbp.html', game_data = game_data.to_html(), game = game)
+'''
 
 @app.route('/NFL/Player/<name>')
 def player_stats(name):
@@ -242,8 +251,9 @@ def player_stats(name):
 def team_schedule(team, fullname):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
-    url = str('<a href="http://nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
-    schedule['game_id'] = url
+    # PBP data is broken - NC 20204-07-22
+    # url = str('<a href="http://nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
+    # schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
     away_team_schedule = schedule.loc[schedule['away_team'] == team]
     full_schedule = [home_team_schedule, away_team_schedule]
