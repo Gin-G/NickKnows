@@ -298,7 +298,7 @@ def team_fpa(team, fullname):
     data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_data.csv'
     #my_data_path = Path(data_file_path)
     #if my_data_path.is_file():
-        weekly_team_data = pd.read_csv(my_data_path, index_col=0)
+    weekly_team_data = pd.read_csv(my_data_path, index_col=0)
     #else:
     #    update_weekly_team_data.delay(team)
     #    flash("The weekly team data wasn't present. It's updating now. Please try again.")
