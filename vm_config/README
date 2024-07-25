@@ -1,0 +1,37 @@
+# Setup
+
+git clone https://github.com/Gin-G/NickKnows.git
+
+sudo apt install python3
+
+sudo apt install python3-pip
+
+pip install -r requirement.txt
+
+## Nginx setup 
+sudo apt install nginx
+
+Copy nginx.conf contents in to /etc/nginx/nginx.conf
+    Basically the server {} section needs to be added so certbot can do the rest
+
+sudo apt -y install firewalld
+
+sudo firewall-cmd --permanent --zone=public --add-service=http 
+
+sudo firewall-cmd --permanent --zone=public --add-service=https 
+
+sudo firewall-cmd reload
+
+sudo apt install certbot python3-certbot-nginx
+
+cert-bot can be run with the following:
+
+`sudo certbot --nginx -d nickknows.net -d www.nickknows.net`
+
+sudo apt-get install python3-tk
+
+sudo apt-get install redis-server
+
+sudo apt install gunicorn
+
+gunicorn --daemon --bind 0.0.0.0:8000 wsgi:app

@@ -1,5 +1,17 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-YMZBTB7JST');
+    </script>
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
     <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
@@ -19,4 +31,5 @@
         <h1>{{ fullname }}</h1>
             {{ team_schedule | safe }}
     </body>
+    </head>
 </html>

@@ -34,11 +34,7 @@ def NFL():
             flash('Play by play data is updating in the background. Refresh the page in a bit')
         '''
         rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
-        if os.path.exists(rfile_path):
-            roster_data = pd.read_csv(rfile_path, index_col=0)
-        else:
-            update_roster_data.delay()
-            flash('Roster data is updating in the background. Refresh the page in a bit')
+        roster_data = pd.read_csv(rfile_path, index_col=0)
         '''
         PBP data function is broken - NC 2024-07-22qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_yards_top10_data.csv'
         if os.path.exists(qb10file_path):
@@ -129,16 +125,13 @@ def NFL():
             update_rec_tds_top10.delay()
             flash(e)
         '''
-        update_roster_data.delay()
-        update_sched_data.delay()
-        update_week_data.delay()
         return render_template('nfl-home.html')
     except Exception as e:
         # PBP data function is broken - NC 2024-07-22
         # update_PBP_data.delay()
-        update_roster_data.delay()
-        update_sched_data.delay()
-        update_week_data.delay()
+        # update_roster_data.delay()
+        # update_sched_data.delay()
+        # update_week_data.delay()
         #update_qb_yards_top10.delay()
         #update_qb_tds_top10.delay()
         #update_rb_yards_top10.delay()
@@ -152,26 +145,26 @@ def NFL():
 def NFLupdate():
     # PBP data function is broken - NC 2024-07-22
     # update_PBP_data.delay()
-    update_roster_data.delay()
-    update_sched_data.delay()
-    update_week_data.delay()
-    time.sleep(30)
-    update_qb_yards_top10.delay()
-    update_qb_tds_top10.delay()
-    update_rb_yards_top10.delay()
-    update_rb_tds_top10.delay()
-    update_rec_yds_top10.delay()
-    update_rec_tds_top10.delay()
+    # update_roster_data.delay()
+    # update_sched_data.delay()
+    # update_week_data.delay()
+    # time.sleep(30)
+    # update_qb_yards_top10.delay()
+    # update_qb_tds_top10.delay()
+    # update_rb_yards_top10.delay()
+    # update_rb_tds_top10.delay()
+    # update_rec_yds_top10.delay()
+    # update_rec_tds_top10.delay()
     flash('All data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL'))
 
 @app.route('/NFL/FPA/update')
 def FPAupdate():
-    teams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
-    for team in teams:
-        update_team_schedule.delay(team)
-        update_weekly_team_data.delay(team)
-    flash('All data is updating in the background. Changes should be reflected on the pages shortly')
+    #teams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
+    #for team in teams:
+    #    update_team_schedule.delay(team)
+    #    update_weekly_team_data.delay(team)
+    #flash('All data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL'))
 
 
@@ -273,13 +266,14 @@ def team_schedule(team, fullname):
 @app.route('/NFL/Team/<team>/Results/<fullname>')
 def team_results(team, fullname):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv'
-    my_file = Path(file_path)
-    if my_file.is_file():
-        full_schedule = pd.read_csv(file_path, index_col=0)
-    else:
-        update_team_schedule.delay(team)
-        flash("The teams data wasn't present. It's updating now. Please try again.")
-        return redirect(url_for('NFL'))
+    #my_file = Path(file_path)
+    #if my_file.is_file():
+    #    full_schedule = pd.read_csv(file_path, index_col=0)
+    #else:
+    #    update_team_schedule.delay(team)
+    #    flash("The teams data wasn't present. It's updating now. Please try again.")
+    #    return redirect(url_for('NFL'))
+    full_schedule = pd.read_csv(file_path, index_col=0)
     full_schedule.loc[full_schedule["overtime"] == 0, "overtime"] = "No"
     full_schedule.loc[full_schedule["overtime"] == 1, "overtime"] = "Yes"
     full_schedule.loc[full_schedule["div_game"] == 0, "div_game"] = "No"
@@ -293,21 +287,23 @@ def team_results(team, fullname):
 @app.route('/NFL/Team/<team>/FPA/<fullname>')
 def team_fpa(team, fullname):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv'
-    my_file = Path(file_path)
-    if my_file.is_file():
-        full_schedule = pd.read_csv(file_path, index_col=0)
-    else:
-        update_team_schedule.delay(team)
-        flash("The teams data wasn't present. It's updating now. Please try again.")
-        return redirect(url_for('NFL'))
+    #my_file = Path(file_path)
+    #if my_file.is_file():
+    #    full_schedule = pd.read_csv(file_path, index_col=0)
+    #else:
+    #    update_team_schedule.delay(team)
+    #    flash("The teams data wasn't present. It's updating now. Please try again.")
+    #    return redirect(url_for('NFL'))
+    full_schedule = pd.read_csv(file_path, index_col=0)
     data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_data.csv'
-    my_data_path = Path(data_file_path)
-    if my_data_path.is_file():
+    #my_data_path = Path(data_file_path)
+    #if my_data_path.is_file():
         weekly_team_data = pd.read_csv(my_data_path, index_col=0)
-    else:
-        update_weekly_team_data.delay(team)
-        flash("The weekly team data wasn't present. It's updating now. Please try again.")
-        return redirect(url_for('NFL'))
+    #else:
+    #    update_weekly_team_data.delay(team)
+    #    flash("The weekly team data wasn't present. It's updating now. Please try again.")
+    #    return redirect(url_for('NFL'))
+    weekly_team_data = pd.read_csv(my_data_path, index_col=0)
     full_schedule.loc[full_schedule["overtime"] == 0, "overtime"] = "No"
     full_schedule.loc[full_schedule["overtime"] == 1, "overtime"] = "Yes"
     full_schedule.loc[full_schedule["div_game"] == 0, "div_game"] = "No"
