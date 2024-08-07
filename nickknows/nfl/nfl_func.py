@@ -2,10 +2,19 @@ import nfl_data_py as nfl
 import pandas as pd
 import xarray as xr
 
-def get_all_players(year):
+def get_all_player_ids(year):
     player_list = []
     weekly_data = get_weekly_data(year)
     players = weekly_data['player_id'].tolist()
+    for player in players:
+        if player not in player_list:
+            player_list.append(player)
+    return player_list
+
+def get_all_player_names(year):
+    player_list = []
+    weekly_data = get_weekly_data(year)
+    players = weekly_data['player_display_name'].tolist()
     for player in players:
         if player not in player_list:
             player_list.append(player)
@@ -74,5 +83,3 @@ def get_ftn_data(year):
 def get_snap_counts(year):
     snap_counts = nfl.import_snap_counts([year])
     return snap_counts
-
-print(get_all_players(2023))
