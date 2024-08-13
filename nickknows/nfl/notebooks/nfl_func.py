@@ -27,8 +27,15 @@ def get_game_pbp_data(game_id):
     return game_pbp_data
 
 def get_pbp_data(year):
-    pbp_data = nfl.import_pbp_data([year]).to_dataframe()
+    if isinstance(year, list):
+        pbp_data = nfl.import_pbp_data(year)
+    else:
+        pbp_data = nfl.import_pbp_data([year])
     return pbp_data
+
+def get_players():
+    player = nfl.import_players()
+    return player
 
 def get_playerid_weekly_data(player_id, year):
     weekly_data = get_weekly_data(year)
@@ -44,6 +51,10 @@ def get_schedule(year):
     # Variable to link to other data is game_id
     schedule = nfl.import_schedules([year])
     return schedule
+
+def get_seasonal_data(year):
+    seasonal_data = nfl.import_seasonal_data([year])
+    return seasonal_data
 
 def get_team_list(year):
     team_list = []
@@ -64,11 +75,14 @@ def get_team_schedule(team, year):
 
 def get_weekly_data(year):
     # Group player data by player_id
-    weekly_data = nfl.import_weekly_data([year])
+    if isinstance(year, list):
+        weekly_data = nfl.import_weekly_data(year)
+    else:
+        weekly_data = nfl.import_weekly_data([year])
     return weekly_data
 
-def get_roster_data(year):
-    roster_data = nfl.import_weekly_rosters([year])
+def get_roster_data(year, columns=None):
+    roster_data = nfl.import_rosters([year], columns)
     return roster_data
 
 def get_team_roster_data(team, year):
