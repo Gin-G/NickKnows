@@ -1,0 +1,36 @@
+name: Nick Knows Flask CI/CD
+
+on: push
+
+jobs:
+  build-image-update-helm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code repository
+        uses: actions/checkout@v4
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Get the current date for an image tag
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d.%H')" >> $GITHUB_OUTPUT
+      - name: Build and push Nick Knows Flask image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ncging/nickknows:latest
+            ncging/nickknows:${{ steps.date.outputs.date }}
+      - name: Update Helm chart with new image
+        run: |
+          sed -i "/nickknows/ c\    image: docker.io/ncging/nickknows:${{ steps.date.outputs.date }}" helm-knows/values.yaml
+      - name: Push changes to GitHub
+        run: |
+          git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git config --global user.name "$GITHUB_ACTOR"
+          git commit -a -m "Image build and push successful, updated Helm chart to use new image"
+          git push
