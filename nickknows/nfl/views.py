@@ -1,6 +1,6 @@
 from glob import escape
 from turtle import position
-from flask import render_template, url_for, redirect, flash
+from flask import render_template, url_for, redirect, flash, request
 from numpy import full
 from nickknows import app
 from ..celery_setup.tasks import update_PBP_data, update_roster_data, update_sched_data, update_week_data, update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10, update_team_schedule, update_weekly_team_data
@@ -15,14 +15,14 @@ import time
 from pathlib import Path
 pd.options.mode.chained_assignment = None
 
-year = 2023
+AVAILABLE_YEARS = list(range(2020, 2025)) 
 
 @app.route('/NFL')
 def NFL():
+    selected_year = request.args.get('year', max(AVAILABLE_YEARS))  # Default to the latest year
     try:
-        '''
-        PBP data function is broken - NC 2024-07-22
-        file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+        #PBP data function is broken - NC 2024-07-22
+        file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
         if os.path.exists(file_path):
             if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
                 update_PBP_data.delay()
@@ -32,11 +32,10 @@ def NFL():
         else:
             update_PBP_data.delay()
             flash('Play by play data is updating in the background. Refresh the page in a bit')
-        '''
-        rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+        rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
         roster_data = pd.read_csv(rfile_path, index_col=0)
-        '''
-        PBP data function is broken - NC 2024-07-22qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_yards_top10_data.csv'
+        #PBP data function is broken - NC 2024-07-22
+        qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_qb_yards_top10_data.csv'
         if os.path.exists(qb10file_path):
             if (time.time() - os.path.getmtime(qb10file_path)) > (7 * 24 * 60 * 60):
                 update_qb_yards_top10.delay()
@@ -46,7 +45,7 @@ def NFL():
         else:
             update_qb_yards_top10.delay()
             flash('QB data is updating in the background. Refresh the page in a bit')
-        qbtd10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_tds_top10_data.csv'
+        qbtd10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_qb_tds_top10_data.csv'
         if os.path.exists(qbtd10file_path):
             if (time.time() - os.path.getmtime(qbtd10file_path)) > (7 * 24 * 60 * 60):
                 update_qb_tds_top10.delay()
@@ -56,7 +55,7 @@ def NFL():
         else:
             update_qb_tds_top10.delay()
             flash('QB TD data is updating in the background. Refresh the page in a bit')
-        rbyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_yds_top10_data.csv' 
+        rbyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rb_yds_top10_data.csv' 
         if os.path.exists(rbyds10):
             if (time.time() - os.path.getmtime(rbyds10)) > (7 * 24 * 60 * 60):
                 update_rb_yards_top10.delay()
@@ -66,7 +65,7 @@ def NFL():
         else:
             update_rb_yards_top10.delay()
             flash('RB data is updating in the background. Refresh the page in a bit')
-        rbtds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_tds_top10_data.csv'  
+        rbtds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rb_tds_top10_data.csv'  
         if os.path.exists(rbtds10):
             if (time.time() - os.path.getmtime(rbtds10)) > (7 * 24 * 60 * 60):
                 update_rb_tds_top10.delay()
@@ -76,7 +75,7 @@ def NFL():
         else:
             update_rb_tds_top10.delay()
             flash('RB TD data is updating in the background. Refresh the page in a bit')
-        recyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_yds_top10_data.csv'   
+        recyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rec_yds_top10_data.csv'   
         if os.path.exists(recyds10):
             if (time.time() - os.path.getmtime(recyds10)) > (7 * 24 * 60 * 60):
                 update_rec_yds_top10.delay()
@@ -86,7 +85,7 @@ def NFL():
         else:
             update_rec_yds_top10.delay()
             flash('Rec data is updating in the background. Refresh the page in a bit')
-        rectds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_tds_top10_data.csv'   
+        rectds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rec_tds_top10_data.csv'   
         if os.path.exists(rectds10):
             if (time.time() - os.path.getmtime(rectds10)) > (7 * 24 * 60 * 60):
                 update_rec_tds_top10.delay()
@@ -109,7 +108,7 @@ def NFL():
             rush_td_agg = rush_td_agg.format(precision=0)
             rec_yds_agg = rec_yds_agg.format(precision=0)
             rec_td_agg = rec_td_agg.format(precision=0)
-            return render_template('nfl-home.html', pass_yards_data = pass_agg.to_html(classes="table"), pass_td_data = pass_td_agg.to_html(), rush_yards_data = rush_yds_agg.to_html(), rush_td_data = rush_td_agg.to_html(), rec_yards_data = rec_yds_agg.to_html(), rec_td_data = rec_td_agg.to_html())
+            return render_template('nfl-home.html', pass_yards_data = pass_agg.to_html(classes="table"), pass_td_data = pass_td_agg.to_html(), rush_yards_data = rush_yds_agg.to_html(), rush_td_data = rush_td_agg.to_html(), rec_yards_data = rec_yds_agg.to_html(), rec_td_data = rec_td_agg.to_html(), years=AVAILABLE_YEARS, selected_year=selected_year)
         except Exception as e:
             # PBP data function is broken - NC 2024-07-22
             # update_PBP_data.delay()
@@ -124,58 +123,58 @@ def NFL():
             update_rec_yds_top10.delay()
             update_rec_tds_top10.delay()
             flash(e)
-        '''
-        return render_template('nfl-home.html')
+        return render_template('nfl-home.html', years=AVAILABLE_YEARS, selected_year=selected_year)
     except Exception as e:
         # PBP data function is broken - NC 2024-07-22
-        # update_PBP_data.delay()
-        # update_roster_data.delay()
-        # update_sched_data.delay()
-        # update_week_data.delay()
-        #update_qb_yards_top10.delay()
-        #update_qb_tds_top10.delay()
-        #update_rb_yards_top10.delay()
-        #update_rb_tds_top10.delay()
-        #update_rec_yds_top10.delay()
-        #update_rec_tds_top10.delay()
+        update_PBP_data.delay()
+        update_roster_data.delay()
+        update_sched_data.delay()
+        update_week_data.delay()
+        update_qb_yards_top10.delay()
+        update_qb_tds_top10.delay()
+        update_rb_yards_top10.delay()
+        update_rb_tds_top10.delay()
+        update_rec_yds_top10.delay()
+        update_rec_tds_top10.delay()
         flash(e)
-        return render_template('nfl-home.html')
+        return render_template('nfl-home.html', years=AVAILABLE_YEARS, selected_year=selected_year)
 
 @app.route('/NFL/update')
 def NFLupdate():
     # PBP data function is broken - NC 2024-07-22
-    # update_PBP_data.delay()
-    # update_roster_data.delay()
-    # update_sched_data.delay()
-    # update_week_data.delay()
-    # time.sleep(30)
-    # update_qb_yards_top10.delay()
-    # update_qb_tds_top10.delay()
-    # update_rb_yards_top10.delay()
-    # update_rb_tds_top10.delay()
-    # update_rec_yds_top10.delay()
-    # update_rec_tds_top10.delay()
+    update_PBP_data.delay()
+    update_roster_data.delay()
+    update_sched_data.delay()
+    update_week_data.delay()
+    time.sleep(30)
+    update_qb_yards_top10.delay()
+    update_qb_tds_top10.delay()
+    update_rb_yards_top10.delay()
+    update_rb_tds_top10.delay()
+    update_rec_yds_top10.delay()
+    update_rec_tds_top10.delay()
     flash('All data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL'))
 
 @app.route('/NFL/FPA/update')
 def FPAupdate():
-    #teams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
-    #for team in teams:
-    #    update_team_schedule.delay(team)
-    #    update_weekly_team_data.delay(team)
-    #flash('All data is updating in the background. Changes should be reflected on the pages shortly')
+    teams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
+    for team in teams:
+        update_team_schedule.delay(team)
+        update_weekly_team_data.delay(team)
+    flash('All data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL'))
 
 
 @app.route('/NFL/schedule/<week>')
 def schedule(week):
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
+    selected_year = request.args.get('year', max(AVAILABLE_YEARS))
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
     week_schedule = schedule.loc[schedule['week'] == int(week)]
     # PBP data function is broken - NC 2024-07-22
-    # url = str('<a href="http://nickknows.net/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + str('</a>')
-    # week_schedule['game_id'] = url
+    url = str('<a href="http://nickknows.net/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + str('</a>')
+    week_schedule['game_id'] = url
     week_schedule.loc[week_schedule["overtime"] == 0, "overtime"] = "No"
     week_schedule.loc[week_schedule["overtime"] == 1, "overtime"] = "Yes"
     week_schedule.loc[week_schedule["div_game"] == 0, "div_game"] = "No"
@@ -185,11 +184,12 @@ def schedule(week):
     week_schedule = week_schedule.hide(['roof','gameday','weekday','gametime','season','game_type','ftn','week','location','old_game_id','gsis','nfl_detail_id','surface','temp','wind','pfr','pff','espn','away_qb_id','home_qb_id','away_coach','home_coach','referee','stadium_id'], axis="columns")
     week_schedule = week_schedule.format(subset=['Away Score','Home Score','Result','Total','Away Moneyline','Home Moneyline','Away Spread Odds','Home Spread Odds','Under Odds','Over Odds'],precision=0).format(subset=['Spread','Total Line'],precision=1)
     week_schedule.apply(lambda week_schedule: total_highlight(week_schedule, "Total", "Total Line"), axis=None)
-    return render_template('weekly.html', week_schedule = HTML(week_schedule.to_html(render_links=True,escape=False,classes="table")), week = week)
+    return render_template('weekly.html', week_schedule = HTML(week_schedule.to_html(render_links=True,escape=False,classes="table")), week = week, years=AVAILABLE_YEARS, selected_year=selected_year)
 
 @app.route('/NFL/Roster/<team>/<fullname>')
 def roster(team,fullname):
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+    selected_year = request.args.get('year', max(AVAILABLE_YEARS))  # Default to the latest year
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
     roster_data = pd.read_csv(file_path, index_col=0)
     team_roster = roster_data.loc[roster_data['team'] == team]
     url = str('<a href="http://nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
@@ -200,11 +200,12 @@ def roster(team,fullname):
     team_roster = team_roster.hide(['season','team','position','birth_date','college','player_id','espn_id','sportradar_id','yahoo_id','rotowire_id','pff_id','pfr_id',	'fantasy_data_id','sleeper_id',	'years_exp','headshot_url',	'ngs_position','week','game_type','status_description_abbr','esb_id','gsis_it_id','smart_id','entry_year'], axis="columns")
     team_roster = team_roster.format(precision=0, na_rep="Undrafted")
     return render_template('rosters.html', team_roster = team_roster.to_html(classes="table"), team = fullname)
-'''
-PBP data function is broken - NC 2024-07-22
+
+#PBP data function is broken - NC 2024-07-22
 @app.route('/NFL/PbP/<game>')
 def game_pbp(game):
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    selected_year = request.args.get('year', max(AVAILABLE_YEARS))  # Default to the latest year
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
     pbp_data = pd.read_csv(file_path, index_col=0)
     game_data = pbp_data.loc[pbp_data['game_id'] == game]
     game_data.rename(columns={'posteam':'Possession','defteam':'Defense','side_of_field':'Field Side','yardline_100':'Distance from EndZone','quarter_seconds_remaining':'Seconds left in Quarter','half_seconds_remaining':'Seconds left in Half','game_seconds_remaining':'Seconds left in Game','drive':'Drive #'}, inplace=True)
@@ -214,12 +215,13 @@ def game_pbp(game):
     game_data = game_data.set_properties(**{'background-color' : 'gainsboro', 'color' :'black', 'border': '2px solid black','padding' : '2.5px','margin' : '0 auto', 'font-size' : '12px'})
     game_data = game_data.hide(['play_id','game_id','old_game_id','home_team','away_team','season_type','week','game_date','posteam_type','game_half','quarter_end','sp','qtr','goal_to_go','ydsnet','qb_kneel','qb_spike','qb_scramble'], axis="columns")
     return render_template('pbp.html', game_data = game_data.to_html(), game = game)
-'''
+
 
 @app.route('/NFL/Player/<name>')
 def player_stats(name):
+    selected_year = request.args.get('year', max(AVAILABLE_YEARS))  # Default to the latest year
     try:
-        file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
+        file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_weekly_data.csv'
         weekly_data = pd.read_csv(file_path, index_col=0)
         player_data = weekly_data.loc[weekly_data['player_display_name'] == name]
         headshot = '<img src="' + player_data['headshot_url'] + '" width="360" >'
@@ -232,7 +234,7 @@ def player_stats(name):
         player_data = player_data.format(subset=['Pass Yards','INTs','Sacks','Sack Yards','Air Yards','Sacks','Sack Yards','Air Yards','YAC','Pass 1sts','Rush Yards','Lost Sack','Rush Fumbles','Lost Rush','Rush 1sts','Rec Yards','Rec Fumble','Lost Rec','Rec Air Yards','Rec YAC','Rec 1sts','Special Teams TDs'],precision=0).format(subset=['Pass EPA','PACR','Rush EPA','Rec EPA','STD Points','PPR Points','RACR','WOPR','Target Share','Air Yds Share'],precision=2)
         return render_template('player-stats.html', player_stats = player_data.to_html(classes="table"), name = name, headshot = headshot[0], position = position[0])
     except IndexError:
-        file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+        file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
         weekly_data = pd.read_csv(file_path, index_col=0)
         player_data = weekly_data.loc[weekly_data['player_name'] == name]
         headshot = '<img src="' + player_data['headshot_url'] + '" width="360" >'
@@ -242,11 +244,12 @@ def player_stats(name):
 
 @app.route('/NFL/Team/<team>/Schedule/<fullname>')
 def team_schedule(team, fullname):
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
+    selected_year = request.args.get('year', max(AVAILABLE_YEARS))  # Default to the latest year
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
     # PBP data is broken - NC 20204-07-22
-    # url = str('<a href="http://nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
-    # schedule['game_id'] = url
+    url = str('<a href="http://nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
+    schedule['game_id'] = url
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
     away_team_schedule = schedule.loc[schedule['away_team'] == team]
     full_schedule = [home_team_schedule, away_team_schedule]
@@ -265,14 +268,15 @@ def team_schedule(team, fullname):
 
 @app.route('/NFL/Team/<team>/Results/<fullname>')
 def team_results(team, fullname):
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv'
-    #my_file = Path(file_path)
-    #if my_file.is_file():
-    #    full_schedule = pd.read_csv(file_path, index_col=0)
-    #else:
-    #    update_team_schedule.delay(team)
-    #    flash("The teams data wasn't present. It's updating now. Please try again.")
-    #    return redirect(url_for('NFL'))
+    selected_year = request.args.get('year', max(AVAILABLE_YEARS))  # Default to the latest year
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
+    my_file = Path(file_path)
+    if my_file.is_file():
+        full_schedule = pd.read_csv(file_path, index_col=0)
+    else:
+        update_team_schedule.delay(team)
+        flash("The teams data wasn't present. It's updating now. Please try again.")
+        return redirect(url_for('NFL'))
     full_schedule = pd.read_csv(file_path, index_col=0)
     full_schedule.loc[full_schedule["overtime"] == 0, "overtime"] = "No"
     full_schedule.loc[full_schedule["overtime"] == 1, "overtime"] = "Yes"
@@ -286,23 +290,24 @@ def team_results(team, fullname):
 
 @app.route('/NFL/Team/<team>/FPA/<fullname>')
 def team_fpa(team, fullname):
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv'
-    #my_file = Path(file_path)
-    #if my_file.is_file():
-    #    full_schedule = pd.read_csv(file_path, index_col=0)
-    #else:
-    #    update_team_schedule.delay(team)
-    #    flash("The teams data wasn't present. It's updating now. Please try again.")
-    #    return redirect(url_for('NFL'))
+    selected_year = request.args.get('year', max(AVAILABLE_YEARS))  # Default to the latest year
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
+    my_file = Path(file_path)
+    if my_file.is_file():
+        full_schedule = pd.read_csv(file_path, index_col=0)
+    else:
+        update_team_schedule.delay(team)
+        flash("The teams data wasn't present. It's updating now. Please try again.")
+        return redirect(url_for('NFL'))
     full_schedule = pd.read_csv(file_path, index_col=0)
-    data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_data.csv'
-    #my_data_path = Path(data_file_path)
-    #if my_data_path.is_file():
-    weekly_team_data = pd.read_csv(my_data_path, index_col=0)
-    #else:
-    #    update_weekly_team_data.delay(team)
-    #    flash("The weekly team data wasn't present. It's updating now. Please try again.")
-    #    return redirect(url_for('NFL'))
+    data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
+    my_data_path = Path(data_file_path)
+    if my_data_path.is_file():
+        weekly_team_data = pd.read_csv(my_data_path, index_col=0)
+    else:
+        update_weekly_team_data.delay(team)
+        flash("The weekly team data wasn't present. It's updating now. Please try again.")
+        return redirect(url_for('NFL'))
     weekly_team_data = pd.read_csv(my_data_path, index_col=0)
     full_schedule.loc[full_schedule["overtime"] == 0, "overtime"] = "No"
     full_schedule.loc[full_schedule["overtime"] == 1, "overtime"] = "Yes"
@@ -325,7 +330,7 @@ def team_fpa(team, fullname):
     te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
     te_agg = te_data.agg({"fantasy_points_ppr": "sum"})
     te_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
-    fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_FPA.csv'
+    fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
     try:
         fpa_data = pd.read_csv(fpa_path, index_col=0)
         team_stats = fpa_data.loc[fpa_data['Team Name'] == team]
@@ -403,7 +408,8 @@ def neg_spread_highlight(df, col1, col2):
 
 @app.route('/NFL/FPA')
 def fpa():
-    fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_FPA.csv'
+    selected_year = request.args.get('year', max(AVAILABLE_YEARS))  # Default to the latest year
+    fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
     try:
         fpa_data = pd.read_csv(fpa_path, index_col=0)
         fpa_data.sort_values(by=['Team Name'], inplace=True)

@@ -1,0 +1,13 @@
+name: Nick Knows ARC test
+
+on: push
+
+jobs:
+  build-image-update-helm:
+    runs-on: gh-arc-set-nickknows-runner
+    steps:
+      - name: Check out the code repository
+        uses: actions/checkout@v4
+      - name: Run echo
+        run: |
+        echo $PATH

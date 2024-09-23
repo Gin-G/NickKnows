@@ -3,45 +3,49 @@ import os
 import time
 import nfl_data_py as nfl
 import pandas as pd
-from flask import flash
+from flask import flash, request
 
-year = 2023
+AVAILABLE_YEARS = list(range(2020, 2025)) 
+selected_year = max(AVAILABLE_YEARS)  # Default to the latest year
 
 @celery.task()
 def update_PBP_data():
     # PBP data is broken currently - NC 2024-07-22
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
-    #pbp_data = nfl.import_pbp_data([year])
-    #pbp_data.to_csv(file_path)
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
+    if selected_year == 2024:
+        pbp_data = nfl.import_pbp_data([selected_year], include_participation=False)
+    else:
+        pbp_data = nfl.import_pbp_data([selected_year])
+    pbp_data.to_csv(file_path)
 
 @celery.task()
 def update_roster_data():
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
-    roster_data = nfl.import_rosters([year])
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+    roster_data = nfl.import_weekly_rosters([selected_year])
     roster_data.to_csv(rfile_path)
 
 @celery.task()
 def update_sched_data():
-    scfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
-    schedule = nfl.import_schedules([year])
+    scfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
+    schedule = nfl.import_schedules([selected_year])
     schedule.to_csv(scfile_path)
 
 @celery.task()
 def update_week_data():
-    wefile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
-    weekly_data = nfl.import_weekly_data([year])
+    wefile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_weekly_data.csv'
+    weekly_data = nfl.import_weekly_data([selected_year])
     weekly_data.to_csv(wefile_path)
 
 @celery.task()
 def update_qb_yards_top10():
-    qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_yards_top10_data.csv'
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_qb_yards_top10_data.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
     if os.path.exists(file_path):
         pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
     if os.path.exists(rfile_path):
         roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
@@ -59,14 +63,14 @@ def update_qb_yards_top10():
 
 @celery.task()
 def update_qb_tds_top10():
-    qbtd10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_tds_top10_data.csv'
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    qbtd10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_qb_tds_top10_data.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
     if os.path.exists(file_path):
             pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
     if os.path.exists(rfile_path):
             roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
@@ -84,14 +88,14 @@ def update_qb_tds_top10():
 
 @celery.task()
 def update_rb_yards_top10():
-    rbyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_yds_top10_data.csv' 
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    rbyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rb_yds_top10_data.csv' 
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
     if os.path.exists(file_path):
         pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
     if os.path.exists(rfile_path):
         roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
@@ -109,14 +113,14 @@ def update_rb_yards_top10():
 
 @celery.task()
 def update_rb_tds_top10():
-    rbtds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_tds_top10_data.csv' 
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    rbtds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rb_tds_top10_data.csv' 
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
     if os.path.exists(file_path):
         pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
     if os.path.exists(rfile_path):
         roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
@@ -134,14 +138,14 @@ def update_rb_tds_top10():
 
 @celery.task()
 def update_rec_yds_top10():
-    recyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_yds_top10_data.csv' 
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    recyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rec_yds_top10_data.csv' 
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
     if os.path.exists(file_path):
         pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
     if os.path.exists(rfile_path):
         roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
@@ -159,14 +163,14 @@ def update_rec_yds_top10():
 
 @celery.task()
 def update_rec_tds_top10():
-    rectds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_tds_top10_data.csv' 
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    rectds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rec_tds_top10_data.csv' 
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
     if os.path.exists(file_path):
         pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
     if os.path.exists(rfile_path):
         roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
@@ -185,15 +189,15 @@ def update_rec_tds_top10():
 @celery.task()
 def update_team_stats(team):
     # Open Schedule data
-    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
+    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
     schedule = pd.read_csv(sched_path, index_col=0)
     team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
     if os.path.exists(team_dir):
         pass
     else:
         os.mkdir(os.getcwd() + '/nickknows/nfl/data/' + team + '/')
-    team_stats = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_stats.csv' 
-    team_schedule = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv' 
+    team_stats = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_stats.csv' 
+    team_schedule = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv' 
     #Replace game_id with a link that has Away vs. Home instead
     url = str('<a href="http://localhost:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
     #url = str('<a href="https://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
@@ -219,12 +223,12 @@ def update_team_stats(team):
     weekly_team_data = pd.DataFrame()
     for team in op_team:
         week = op_team.index(team) + 1
-        rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+        rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
         roster_data = pd.read_csv(rost_path, index_col=0)
         team_roster = roster_data.loc[roster_data['team'] == team]
         players = team_roster['player_name'].to_list()
         for player in players:
-            week_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
+            week_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_weekly_data.csv'
             weekly_data = pd.read_csv(week_path, index_col=0)
             player_data = weekly_data.loc[weekly_data['player_display_name'] == player]
             player_data = player_data.loc[player_data['week'] == week]
@@ -235,8 +239,8 @@ def update_team_stats(team):
 @celery.task()
 def update_team_schedule(team):
     # Open Schedule data
-    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
-    team_sched_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv'
+    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
+    team_sched_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
     team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
     if os.path.exists(team_dir):
         pass
@@ -260,8 +264,8 @@ def update_team_schedule(team):
     
 @celery.task()
 def update_weekly_team_data(team):
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv'
-    data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_data.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
+    data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
     team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
     if os.path.exists(team_dir):
         pass
@@ -280,12 +284,12 @@ def update_weekly_team_data(team):
     weekly_team_data = pd.DataFrame()
     for team in op_team:
         week = op_team.index(team) + 1
-        rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+        rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
         roster_data = pd.read_csv(rost_path, index_col=0)
         team_roster = roster_data.loc[roster_data['team'] == team]
         players = team_roster['player_name'].to_list()
         for player in players:
-            week_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
+            week_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_weekly_data.csv'
             weekly_data = pd.read_csv(week_path, index_col=0)
             player_data = weekly_data.loc[weekly_data['player_display_name'] == player]
             player_data = player_data.loc[player_data['week'] == week]
