@@ -10,4 +10,4 @@ jobs:
         uses: actions/checkout@v4
       - name: Run echo
         run: |
-        echo $PATH
+          echo $PATH
