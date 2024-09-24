@@ -1,6 +1,8 @@
 webapp:
   name: nickknows
   group: nickknows
+  fqdn: nickknows.gingmachine
+  path: /
   replicaCount: 1
   container: 
     image: docker.io/ncging/nickknows:2024-09-24.16

@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.webapp.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.webapp.name }}
+    group: {{ .Values.webapp.group }}
+  annotations:
+   traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  tls:
+    - hosts:
+      - {{ .Values.webapp.fqdn}}
+  rules:
+  - host: {{ .Values.webapp.fqdn }}
+    http:
+      paths:
+      - path: {{ .Values.webapp.path }}
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.webapp.name }}
+            port:
+              number: {{ .Values.webapp.container.port }}
