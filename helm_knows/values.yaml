@@ -1,6 +1,6 @@
 webapp:
-    image: docker.io/ncging/nickknows:2024-09-24.16
-    image: docker.io/ncging/nickknows:2024-09-24.16
+  name: nickknows
+  group: nickknows
   replicaCount: 1
   container: 
     image: docker.io/ncging/nickknows:2024-09-24.16

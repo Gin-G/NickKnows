@@ -29,7 +29,7 @@ jobs:
             ncging/nickknows:${{ steps.date.outputs.date }}
       - name: Update Helm chart with new image
         run: |
-          sed -i "/nickknows/ c\    image: docker.io/ncging/nickknows:${{ steps.date.outputs.date }}" helm_knows/values.yaml
+          sed -i "ncging/nickknows/ c\    image: docker.io/ncging/nickknows:${{ steps.date.outputs.date }}" helm_knows/values.yaml
       - name: Push changes to GitHub
         run: |
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
