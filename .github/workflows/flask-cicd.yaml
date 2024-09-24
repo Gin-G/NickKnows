@@ -25,11 +25,11 @@ jobs:
           file: Dockerfile
           push: true
           tags: |
-            ncging/nickknows:latest
-            ncging/nickknows:${{ steps.date.outputs.date }}
+            ncging/nick-knows:latest
+            ncging/nick-knows:${{ steps.date.outputs.date }}
       - name: Update Helm chart with new image
         run: |
-          sed -i "ncging/nickknows/ c\    image: docker.io/ncging/nickknows:${{ steps.date.outputs.date }}" helm_knows/values.yaml
+          sed -i "/nick-knows/ c\    image: docker.io/ncging/nick-knows:${{ steps.date.outputs.date }}" helm_knows/values.yaml
       - name: Push changes to GitHub
         run: |
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
