@@ -35,7 +35,6 @@ jobs:
         DATE_TAG: ${{ steps.date.outputs.date }}
       run: |
         argo submit --watch argo-workflow.yaml \
-          -n argo \
           -p DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME}" \
           -p DOCKERHUB_TOKEN="${DOCKERHUB_TOKEN}" \
           -p DATE_TAG="${DATE_TAG}"
