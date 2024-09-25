@@ -2,6 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: kaniko-build-
+  namespace: argo
 spec:
   entrypoint: build-and-push
   # Use a specific service account that has access to the required secrets
