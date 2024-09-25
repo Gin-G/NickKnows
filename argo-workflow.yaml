@@ -16,6 +16,7 @@ spec:
     parameters:
     - name: DOCKERHUB_USERNAME
     - name: DOCKERHUB_TOKEN
+    - name: DATE_TAG
 
   templates:
   - name: build-and-push
