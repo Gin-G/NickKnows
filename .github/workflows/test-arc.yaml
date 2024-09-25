@@ -13,7 +13,9 @@ jobs:
     - name: Get the current date for an image tag
       id: date
       run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
-
+    - name: Install curl?
+      run: |
+        apt install curl
     - name: Install Argo CLI
       run: |
         # Add commands to install Argo CLI here
