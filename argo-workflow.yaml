@@ -6,7 +6,7 @@ metadata:
 spec:
   entrypoint: build-and-push
   # Use a specific service account that has access to the required secrets
-  serviceAccountName: argo-workflow-sa
+  serviceAccountName: gh-arc-controller-gha-rs-controller
 
   # Specify the self-hosted runner
   nodeSelector:
