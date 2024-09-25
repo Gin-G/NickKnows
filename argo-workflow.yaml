@@ -80,7 +80,7 @@ spec:
       - name: DOCKERHUB_TOKEN
         value: "{{inputs.parameters.DOCKERHUB_TOKEN}}"
       - name: DATE_TAG
-        value: "{{ inputs.parameters.DATE_TAG }}"
+        value: "{{inputs.parameters.DATE_TAG}}"
       volumeMounts:
       - name: docker-config
         mountPath: /kaniko/.docker
