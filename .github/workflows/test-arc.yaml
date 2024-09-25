@@ -15,7 +15,7 @@ jobs:
       run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
     - name: Install curl?
       run: |
-        sudo apt install curl
+        sudo apt install -y curl
     - name: Install Argo CLI
       run: |
         # Add commands to install Argo CLI here
