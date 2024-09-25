@@ -30,7 +30,7 @@
         <div id="nfl_navbar"></div>
         <h1>Week {{ week }}</h1>
         <form>
-            <select name="year" id="year">
+            <select name="year" id="year" onchange="this.form.submit()">
                 {% for year in years %}
                     <option value="{{ year }}" {% if year == default_year %}selected{% endif %}>{{ year }}</option>
                 {% endfor %}
