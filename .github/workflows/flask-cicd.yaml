@@ -17,7 +17,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Get the current date for an image tag
         id: date
-        run: echo "date=$(date +'%Y-%m-%d.%H')" >> $GITHUB_OUTPUT
+        run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
       - name: Build and push Nick Knows Flask image
         uses: docker/build-push-action@v4
         with:
