@@ -34,6 +34,7 @@ spec:
       parameters:
       - name: DOCKERHUB_USERNAME
       - name: DOCKERHUB_TOKEN
+      - name: DATE_TAG
     container:
       image: gcr.io/kaniko-project/executor:latest
       command: ["/kaniko/executor"]
