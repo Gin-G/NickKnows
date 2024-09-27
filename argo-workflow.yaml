@@ -40,7 +40,7 @@ spec:
       command: ["/kaniko/executor"]
       args:
       - "--context=git://github.com/Gin-G/NickKnows.git"
-      - "--destination=docker.io/ncging/nick-knows-kaniko:$DATE_TAG"
+      - "--destination=docker.io/ncging/nick-knows-kaniko:{{inputs.parameters.DATE_TAG}}"
       # Add more build arguments as needed
       env:
       - name: DOCKER_CONFIG
