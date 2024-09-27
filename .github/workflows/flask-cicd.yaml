@@ -5,7 +5,7 @@ name: Nick Knows Flask CI/CD
 on: 
   push:
     paths:
-      - nickknows/*
+      - nickknows/**
 
 jobs:
   build-image-update-helm:
