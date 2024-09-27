@@ -8,10 +8,6 @@ spec:
   # Use a specific service account that has access to the required secrets
   serviceAccountName: argo-workflows
 
-  # Specify the self-hosted runner
-  nodeSelector:
-    kubernetes.io/hostname: self-hosted-runner-node
-
   # Define arguments to accept GitHub secrets
   arguments:
     parameters:
