@@ -8,7 +8,5 @@ webapp:
     image: docker.io/ncging/nick-knows:2024-09-27.20.47
     imagePullPolicy: Always
     port: 8000
-    memory: 1G
-    cpu: 2
 worker:
   replicaCount: 2
