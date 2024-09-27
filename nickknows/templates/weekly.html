@@ -11,7 +11,22 @@
 
         gtag('config', 'G-YMZBTB7JST');
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('scheduleForm');
+        const yearSelect = document.getElementById('year');
+        const weekSelect = document.getElementById('week');
     
+        yearSelect.addEventListener('change', function() {
+            form.submit();
+        });
+    
+        weekSelect.addEventListener('change', function() {
+            form.submit();
+        });
+    });
+    </script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
     <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
@@ -29,19 +44,22 @@
         <div id="header"></div>
         <div id="nfl_navbar"></div>
         <h1>Week {{ week }}</h1>
-        <form>
-            <select name="year" id="year" onchange="this.form.submit()">
+        <form id="scheduleForm" method="get" action="{{ url_for('schedule') }}">
+            <label for="year">Year:</label>
+            <select name="year" id="year">
                 {% for year in years %}
-                    <option value="{{ year }}">{{ year }}</option>
+                    <option value="{{ year }}" {% if year|string == selected_year|string %}selected{% endif %}>{{ year }}</option>
                 {% endfor %}
             </select>
-        </form>
-        <form>
-            <select name="week" id="week" onchange="this.form.submit()">
+
+            <label for="week">Week:</label>
+            <select name="week" id="week">
                 {% for week in weeks %}
-                    <option value="{{ week }}">{{ week }}</option>
+                    <option value="{{ week }}" {% if week|string == selected_week|string %}selected{% endif %}>Week {{ week }}</option>
                 {% endfor %}
             </select>
+
+            <button type="submit">Update Schedule</button>
         </form>
             {{ week_schedule | safe }}
     </body>
