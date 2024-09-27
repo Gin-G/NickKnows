@@ -166,9 +166,11 @@ def FPAupdate():
     return redirect(url_for('NFL'))
 
 
-@app.route('/NFL/schedule/<week>')
-def schedule(week):
+@app.route('/NFL/schedule/')
+def schedule():
     selected_year = request.args.get('year', max(AVAILABLE_YEARS))
+    week = request.args.get('week', '1')
+    available_weeks = range(1, 19) if selected_year >= 2021 else range(1, 18)
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
     week_schedule = schedule.loc[schedule['week'] == int(week)]
@@ -184,7 +186,7 @@ def schedule(week):
     week_schedule = week_schedule.hide(['roof','gameday','weekday','gametime','season','game_type','ftn','week','location','old_game_id','gsis','nfl_detail_id','surface','temp','wind','pfr','pff','espn','away_qb_id','home_qb_id','away_coach','home_coach','referee','stadium_id'], axis="columns")
     week_schedule = week_schedule.format(subset=['Away Score','Home Score','Result','Total','Away Moneyline','Home Moneyline','Away Spread Odds','Home Spread Odds','Under Odds','Over Odds'],precision=0).format(subset=['Spread','Total Line'],precision=1)
     week_schedule.apply(lambda week_schedule: total_highlight(week_schedule, "Total", "Total Line"), axis=None)
-    return render_template('weekly.html', week_schedule = HTML(week_schedule.to_html(render_links=True,escape=False,classes="table")), week = week, years=AVAILABLE_YEARS, selected_year=selected_year)
+    return render_template('weekly.html', week_schedule = HTML(week_schedule.to_html(render_links=True,escape=False,classes="table")), weeks = available_weeks, week = week, years=AVAILABLE_YEARS, selected_year=selected_year)
 
 @app.route('/NFL/Roster/<team>/<fullname>')
 def roster(team,fullname):

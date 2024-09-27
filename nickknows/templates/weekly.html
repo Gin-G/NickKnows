@@ -32,7 +32,14 @@
         <form>
             <select name="year" id="year" onchange="this.form.submit()">
                 {% for year in years %}
-                    <option value="{{ year }}" {% if year == default_year %}selected{% endif %}>{{ year }}</option>
+                    <option value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <form>
+            <select name="week" id="week" onchange="this.form.submit()">
+                {% for week in weeks %}
+                    <option value="{{ week }}">{{ week }}</option>
                 {% endfor %}
             </select>
         </form>
