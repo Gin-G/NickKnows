@@ -1,5 +1,4 @@
 name: Nick Knows ARC test
-
 on:
   push:
     branches: [ main ]
