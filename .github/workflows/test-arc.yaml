@@ -34,7 +34,7 @@ jobs:
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         DATE_TAG: ${{ steps.date.outputs.date }}
       run: |
-        argo submit --namespace argo --serviceaccount argo-workflows --log argo-workflow.yaml \
+        argo submit --namespace argo --log argo-workflow.yaml \
           -p DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME}" \
           -p DOCKERHUB_TOKEN="${DOCKERHUB_TOKEN}" \
           -p DATE_TAG="${DATE_TAG}"
