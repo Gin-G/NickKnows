@@ -16,7 +16,6 @@ jobs:
       run: |
         sudo apt update && \
         sudo apt install -y curl
-        
     - name: Install Argo CLI
       run: |
         # Add commands to install Argo CLI here
@@ -27,7 +26,6 @@ jobs:
         chmod +x argo-linux-amd64
         # Move binary to path
         sudo mv ./argo-linux-amd64 /usr/local/bin/argo
-
     - name: Submit Argo Workflow
       env:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
