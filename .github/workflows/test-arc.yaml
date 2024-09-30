@@ -12,7 +12,7 @@ jobs:
     - name: Get the current date for an image tag
       id: date
       run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
-    - name: Install curl?
+    - name: Install curl
       run: |
         sudo apt update && \
         sudo apt install -y curl
@@ -26,16 +26,37 @@ jobs:
         chmod +x argo-linux-amd64
         # Move binary to path
         sudo mv ./argo-linux-amd64 /usr/local/bin/argo
+        
     - name: Submit Argo Workflow
       env:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         DATE_TAG: ${{ steps.date.outputs.date }}
       run: |
-        argo submit --namespace argo --log argo-workflow.yaml \
+        workflow_name=$(argo submit --namespace argo argo-workflow.yaml \
           -p DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME}" \
           -p DOCKERHUB_TOKEN="${DOCKERHUB_TOKEN}" \
-          -p DATE_TAG="${DATE_TAG}"
-    - name: Get Argo Workflow Status
+          -p DATE_TAG="${DATE_TAG}" \
+          --output name)
+        echo "WORKFLOW_NAME=$workflow_name" >> $GITHUB_ENV
+  
+    - name: Wait for Argo Workflow completion
       run: |
-        argo 
+        while true; do
+          status=$(argo get -n argo ${{ env.WORKFLOW_NAME }} -o json | jq -r '.status.phase')
+          if [[ "$status" == "Succeeded" || "$status" == "Failed" || "$status" == "Error" ]]; then
+            break
+          fi
+          echo "Workflow status: $status. Waiting..."
+          sleep 30
+        done
+        echo "WORKFLOW_STATUS=$status" >> $GITHUB_ENV
+
+    - name: Check Argo Workflow status
+      run: |
+        if [[ "${{ env.WORKFLOW_STATUS }}" != "Succeeded" ]]; then
+          echo "Argo Workflow failed or errored"
+          argo logs -n argo ${{ env.WORKFLOW_NAME }}
+          exit 1
+        fi
+        echo "Argo Workflow succeeded"
