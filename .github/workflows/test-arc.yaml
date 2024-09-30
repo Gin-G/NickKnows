@@ -39,23 +39,32 @@ jobs:
           -p DATE_TAG="${DATE_TAG}" \
           --output name)
         echo "WORKFLOW_NAME=$workflow_name" >> $GITHUB_ENV
-    - name: Wait for Argo Workflow completion
-      run: |
+        
+        # Stream logs in real-time
+        argo logs -n argo $workflow_name -f &
+        log_pid=$!
+        
+        # Wait for workflow to complete
         while true; do
-          status=$(argo get -n argo ${{ env.WORKFLOW_NAME }} -o json | jq -r '.status.phase')
+          status=$(argo get -n argo $workflow_name -o json | jq -r '.status.phase')
           if [[ "$status" == "Succeeded" || "$status" == "Failed" || "$status" == "Error" ]]; then
             break
           fi
-          echo "Workflow status: $status. Waiting..."
-          sleep 30
+          sleep 10
         done
+        
+        # Stop log streaming
+        kill $log_pid
+        
         echo "WORKFLOW_STATUS=$status" >> $GITHUB_ENV
 
-    - name: Check Argo Workflow status
+    - name: Check Argo Workflow final status
       run: |
+        echo "Workflow final status: ${{ env.WORKFLOW_STATUS }}"
+        
         if [[ "${{ env.WORKFLOW_STATUS }}" != "Succeeded" ]]; then
           echo "Argo Workflow failed or errored"
-          argo logs -n argo ${{ env.WORKFLOW_NAME }}
           exit 1
         fi
+        
         echo "Argo Workflow succeeded"
