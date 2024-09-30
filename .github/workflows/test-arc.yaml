@@ -33,6 +33,16 @@ jobs:
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         DATE_TAG: ${{ steps.date.outputs.date }}
       run: |
+        cleanup() {
+          # Check if the process exists before trying to kill it
+          if ps -p $log_pid > /dev/null 2>&1; then
+            kill $log_pid
+          fi
+        }
+        
+        # Set up trap to ensure cleanup happens
+        trap cleanup EXIT
+        
         workflow_name=$(argo submit --namespace argo argo-workflow.yaml \
           -p DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME}" \
           -p DOCKERHUB_TOKEN="${DOCKERHUB_TOKEN}" \
@@ -52,9 +62,6 @@ jobs:
           fi
           sleep 10
         done
-        
-        # Stop log streaming
-        kill $log_pid
         
         echo "WORKFLOW_STATUS=$status" >> $GITHUB_ENV
 
