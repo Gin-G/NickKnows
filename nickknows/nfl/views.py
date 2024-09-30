@@ -169,7 +169,7 @@ def FPAupdate():
 @app.route('/NFL/schedule/')
 def schedule():
     selected_year = request.args.get('year', max(AVAILABLE_YEARS))
-    week = request.args.get('week', '1')
+    week = int(request.args.get('week', '1'))
     available_weeks = range(1, 19) if selected_year >= 2021 else range(1, 18)
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
