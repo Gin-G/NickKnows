@@ -2,7 +2,6 @@ name: Nick Knows ARC test
 on:
   push:
     branches: [ main ]
-
 jobs:
   build-and-push:
     runs-on: gh-arc-set-nickknows-runner
