@@ -26,7 +26,7 @@ jobs:
         chmod +x argo-linux-amd64
         # Move binary to path
         sudo mv ./argo-linux-amd64 /usr/local/bin/argo
-        
+
     - name: Submit Argo Workflow
       env:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -39,7 +39,6 @@ jobs:
           -p DATE_TAG="${DATE_TAG}" \
           --output name)
         echo "WORKFLOW_NAME=$workflow_name" >> $GITHUB_ENV
-  
     - name: Wait for Argo Workflow completion
       run: |
         while true; do
