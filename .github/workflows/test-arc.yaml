@@ -2,7 +2,7 @@ name: Nick Knows ARC test
 on:
   push:
     branches: [ main ]
-    
+
 jobs:
   build-and-push:
     runs-on: gh-arc-set-nickknows-runner
@@ -36,3 +36,6 @@ jobs:
           -p DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME}" \
           -p DOCKERHUB_TOKEN="${DOCKERHUB_TOKEN}" \
           -p DATE_TAG="${DATE_TAG}"
+    - name: Get Argo Workflow Status
+      run: |
+        argo 

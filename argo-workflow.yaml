@@ -28,6 +28,12 @@ spec:
             value: "{{workflow.parameters.DOCKERHUB_TOKEN}}"
           - name: DATE_TAG
             value: "{{workflow.parameters.DATE_TAG}}"
+    - - name: failed
+        template: failed
+        when: "{{steps.build-and-push-image.status}} == Failed"
+      - name: succeeded
+        template: succeeded
+        when: "{{steps.build-and-push-image.status}} == Succeeded"
 
   - name: kaniko
     inputs:
@@ -83,3 +89,15 @@ spec:
       volumeMounts:
       - name: docker-config
         mountPath: /kaniko/.docker
+
+  - name: failed
+    container:
+      image: alpine:3.6
+      command: [sh, -c]
+      args: ["echo \"The Workflow failed\""]
+
+  - name: succeeded
+    container:
+      image: alpine:3.6
+      command: [sh, -c]
+      args: ["echo \"The Workflow passed\""]
