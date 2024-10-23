@@ -26,3 +26,7 @@ spec:
             cpu: {{ .Values.webapp.container.cpu }}
         ports:
         - containerPort: {{ .Values.webapp.container.port }}
+      resources:
+        limits:
+          cpu: '0'
+          memory: '0'
