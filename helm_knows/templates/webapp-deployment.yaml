@@ -18,6 +18,9 @@ spec:
     spec:
       containers:
       - name: {{ .Values.webapp.name }}
+        env:
+        - name: FLASK_SECRET
+          value: $MY_VALUE
         image: {{ .Values.webapp.container.image }}
         imagePullPolicy: {{ .Values.webapp.container.imagePullPolicy }}
         resources:
