@@ -1,4 +1,5 @@
-app/nickknows/nfl/data/*
+app/nickknows/nfl/data/*.csv
+app/nickknows/nfl/data/*/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
