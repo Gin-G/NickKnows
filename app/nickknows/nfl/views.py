@@ -110,8 +110,7 @@ def NFL():
             rec_td_agg = rec_td_agg.format(precision=0)
             return render_template('nfl-home.html', pass_yards_data = pass_agg.to_html(classes="table"), pass_td_data = pass_td_agg.to_html(), rush_yards_data = rush_yds_agg.to_html(), rush_td_data = rush_td_agg.to_html(), rec_yards_data = rec_yds_agg.to_html(), rec_td_data = rec_td_agg.to_html(), years=AVAILABLE_YEARS, selected_year=selected_year)
         except Exception as e:
-            # PBP data function is broken - NC 2024-07-22
-            # update_PBP_data.delay()
+            update_PBP_data.delay()
             update_roster_data.delay()
             update_sched_data.delay()
             update_week_data.delay()
@@ -125,7 +124,6 @@ def NFL():
             flash(e)
         return render_template('nfl-home.html', years=AVAILABLE_YEARS, selected_year=selected_year)
     except Exception as e:
-        # PBP data function is broken - NC 2024-07-22
         update_PBP_data.delay()
         update_roster_data.delay()
         update_sched_data.delay()
@@ -141,7 +139,6 @@ def NFL():
 
 @app.route('/NFL/update')
 def NFLupdate():
-    # PBP data function is broken - NC 2024-07-22
     update_PBP_data.delay()
     update_roster_data.delay()
     update_sched_data.delay()
@@ -174,7 +171,6 @@ def schedule():
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
     schedule = pd.read_csv(file_path, index_col=0)
     week_schedule = schedule.loc[schedule['week'] == int(week)]
-    # PBP data function is broken - NC 2024-07-22
     url = str('<a href="http://nickknows.net/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + str('</a>')
     week_schedule['game_id'] = url
     week_schedule.loc[week_schedule["overtime"] == 0, "overtime"] = "No"
