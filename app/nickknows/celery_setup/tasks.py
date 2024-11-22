@@ -10,7 +10,6 @@ selected_year = max(AVAILABLE_YEARS)  # Default to the latest year
 
 @celery.task()
 def update_PBP_data():
-    # PBP data is broken currently - NC 2024-07-22
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
     if selected_year == 2024:
         pbp_data = nfl.import_pbp_data([selected_year], include_participation=False)
@@ -52,14 +51,49 @@ def update_qb_yards_top10():
         update_roster_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     try:
-        pbp_data = pbp_data[pbp_data["season_type"] == "REG"]
-        pbp_data = pbp_data[pbp_data["two_point_attempt"] == False]
-        pbp_data_pass = pbp_data[pbp_data["play_type"] == "pass"]
-        pbp_data_pass = pbp_data_pass.merge(roster_data[["player_id","player_name"]], left_on="passer_player_id", right_on="player_id")
-        pass_agg = pbp_data_pass.groupby(["player_name"], as_index=False).agg({"passing_yards": "sum"})
-        pass_agg.sort_values(by=['passing_yards'], inplace=True, ascending=False)
-        pass_agg.rename(columns={'player_name':'Player Name','passing_yards':"Total Passing Yards"}, inplace=True)
+        # Filter for regular season passing plays
+        pbp_data = pbp_data[
+            (pbp_data["season_type"] == "REG") &
+            (pbp_data["two_point_attempt"] == False) &
+            (pbp_data["play_type"] == "pass")
+        ]
+
+        # Merge with roster data
+        pbp_data_pass = pbp_data.merge(
+            roster_data[["player_id", "player_name"]], 
+            left_on="passer_player_id", 
+            right_on="player_id",
+            how='inner'
+        )
+
+        # Drop duplicate plays to ensure unique play counting
+        pbp_data_pass_unique = pbp_data_pass.drop_duplicates(subset=['game_id', 'play_id'])
+
+        # Group and aggregate passing yards
+        pass_agg = pbp_data_pass_unique.groupby(
+            ["player_name"], 
+            as_index=False
+        ).agg({"passing_yards": "sum"})
+
+        # Sort and format
+        pass_agg.sort_values(
+            by=['passing_yards'], 
+            inplace=True, 
+            ascending=False
+        )
+
+        pass_agg.rename(
+            columns={
+                'player_name': 'Player Name',
+                'passing_yards': "Total Passing Yards"
+            }, 
+            inplace=True
+        )
+
+        # Get top 10
         pass_agg = pass_agg.head(10)
+
+        # Save to CSV
         pass_agg.to_csv(qb10file_path)
     except:
         update_PBP_data.delay()
@@ -81,13 +115,47 @@ def update_qb_tds_top10():
         update_roster_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     try:
-        pbp_data = pbp_data[pbp_data["season_type"] == "REG"]
-        pbp_data = pbp_data[pbp_data["two_point_attempt"] == False]
-        pbp_data_pass = pbp_data[pbp_data["play_type"] == "pass"]
-        pbp_data_pass = pbp_data_pass.merge(roster_data[["player_id","player_name"]], left_on="passer_player_id", right_on="player_id")
-        pass_td_agg = pbp_data_pass.groupby(["player_name"], as_index=False).agg({"pass_touchdown":"sum"})
-        pass_td_agg.sort_values(by=['pass_touchdown'], inplace=True, ascending=False)
-        pass_td_agg.rename(columns={'player_name':'Player Name',"pass_touchdown":"Total Passing TD's"}, inplace=True)
+        # Filter for regular season passing touchdowns
+        pass_td_data = pbp_data[
+            (pbp_data["season_type"] == "REG") &
+            (pbp_data["two_point_attempt"] == False) &
+            (pbp_data["play_type"] == "pass") &
+            (pbp_data["pass_touchdown"] == 1)
+        ]
+
+        # Merge with roster data
+        pass_td_data = pass_td_data.merge(
+            roster_data[["player_id", "player_name"]], 
+            left_on="passer_player_id", 
+            right_on="player_id",
+            how='inner'
+        )
+
+        # Drop duplicate plays to count unique touchdowns
+        pass_td_data_unique = pass_td_data.drop_duplicates(subset=['game_id', 'play_id'])
+
+        # Group and count unique touchdowns
+        pass_td_agg = pass_td_data_unique.groupby(
+            ["player_name"], 
+            as_index=False
+        )["pass_touchdown"].count()
+
+        # Sort and format
+        pass_td_agg.sort_values(
+            by=['pass_touchdown'], 
+            inplace=True, 
+            ascending=False
+        )
+
+        pass_td_agg.rename(
+            columns={
+                'player_name': 'Player Name',
+                "pass_touchdown": "Total Passing TD's"
+            }, 
+            inplace=True
+        )
+
+        # Get top 10
         pass_td_agg = pass_td_agg.head(10)
         pass_td_agg.to_csv(qbtd10file_path)
     except:
@@ -110,14 +178,49 @@ def update_rb_yards_top10():
         update_roster_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     try:
-        pbp_data = pbp_data[pbp_data["season_type"] == "REG"]
-        pbp_data = pbp_data[pbp_data["two_point_attempt"] == False]
-        pbp_data_rush = pbp_data[pbp_data["play_type"] == "run"]
-        pbp_data_rush = pbp_data_rush.merge(roster_data[["player_id","player_name"]], left_on="rusher_player_id", right_on="player_id")
-        rush_yds_agg = pbp_data_rush.groupby(["player_name"], as_index=False).agg({"rushing_yards": "sum"})
-        rush_yds_agg.sort_values(by=['rushing_yards'], inplace=True, ascending=False)
-        rush_yds_agg.rename(columns={'player_name':'Player Name','rushing_yards':"Total Rushing Yards"}, inplace=True)
+        # Filter for regular season rushing plays
+        pbp_data = pbp_data[
+            (pbp_data["season_type"] == "REG") &
+            (pbp_data["two_point_attempt"] == False) &
+            (pbp_data["play_type"] == "run")
+        ]
+
+        # Merge with roster data
+        pbp_data_rush = pbp_data.merge(
+            roster_data[["player_id", "player_name"]], 
+            left_on="rusher_player_id", 
+            right_on="player_id",
+            how='inner'
+        )
+
+        # Drop duplicate plays
+        pbp_data_rush_unique = pbp_data_rush.drop_duplicates(subset=['game_id', 'play_id'])
+
+        # Group and aggregate rushing yards
+        rush_yds_agg = pbp_data_rush_unique.groupby(
+            ["player_name"], 
+            as_index=False
+        ).agg({"rushing_yards": "sum"})
+
+        # Sort and format
+        rush_yds_agg.sort_values(
+            by=['rushing_yards'], 
+            inplace=True, 
+            ascending=False
+        )
+
+        rush_yds_agg.rename(
+            columns={
+                'player_name': 'Player Name',
+                'rushing_yards': "Total Rushing Yards"
+            }, 
+            inplace=True
+        )
+
+        # Get top 10
         rush_yds_agg = rush_yds_agg.head(10)
+
+        # Save to CSV
         rush_yds_agg.to_csv(rbyds10)
     except:
         update_PBP_data.delay()
@@ -139,14 +242,50 @@ def update_rb_tds_top10():
         update_roster_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     try:
-        pbp_data = pbp_data[pbp_data["season_type"] == "REG"]
-        pbp_data = pbp_data[pbp_data["two_point_attempt"] == False]
-        pbp_data_rush = pbp_data[pbp_data["play_type"] == "run"]
-        pbp_data_rush = pbp_data_rush.merge(roster_data[["player_id","player_name"]], left_on="rusher_player_id", right_on="player_id")
-        rush_td_agg = pbp_data_rush.groupby(["player_name"], as_index=False).agg({"rush_touchdown":"sum"})
-        rush_td_agg.sort_values(by=['rush_touchdown'], inplace=True, ascending=False)
-        rush_td_agg.rename(columns={'player_name':'Player Name',"rush_touchdown":"Total Rushing TD's"}, inplace=True)
+# Filter for regular season rushing plays
+        pbp_data = pbp_data[
+            (pbp_data["season_type"] == "REG") &
+            (pbp_data["two_point_attempt"] == False) &
+            (pbp_data["play_type"] == "run") &
+            (pbp_data["rush_touchdown"] == 1)  # Only count actual touchdowns
+        ]
+
+        # Merge with roster data
+        pbp_data_rush = pbp_data.merge(
+            roster_data[["player_id", "player_name"]], 
+            left_on="rusher_player_id", 
+            right_on="player_id",
+            how='inner'
+        )
+
+        # Drop duplicate plays
+        pbp_data_rush_unique = pbp_data_rush.drop_duplicates(subset=['game_id', 'play_id'])
+
+        # Group and count unique touchdowns
+        rush_td_agg = pbp_data_rush_unique.groupby(
+            ["player_name"], 
+            as_index=False
+        )["rush_touchdown"].count()  # Using count instead of sum since we filtered for TDs
+
+        # Sort and format
+        rush_td_agg.sort_values(
+            by=['rush_touchdown'], 
+            inplace=True, 
+            ascending=False
+        )
+
+        rush_td_agg.rename(
+            columns={
+                'player_name': 'Player Name',
+                'rush_touchdown': "Total Rushing TD's"
+            }, 
+            inplace=True
+        )
+
+        # Get top 10
         rush_td_agg = rush_td_agg.head(10)
+
+        # Save to CSV
         rush_td_agg.to_csv(rbtds10)
     except:
         update_PBP_data.delay()
@@ -168,14 +307,50 @@ def update_rec_yds_top10():
         update_roster_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     try:
-        pbp_data = pbp_data[pbp_data["season_type"] == "REG"]
-        pbp_data = pbp_data[pbp_data["two_point_attempt"] == False]
-        pbp_data_rec = pbp_data[pbp_data["play_type"] == "pass"]
-        pbp_data_rec = pbp_data_rec.merge(roster_data[["player_id","player_name"]], left_on="receiver_player_id", right_on="player_id")
-        rec_yds_agg = pbp_data_rec.groupby(["player_name"], as_index=False).agg({"receiving_yards": "sum"})
-        rec_yds_agg.sort_values(by=['receiving_yards'], inplace=True, ascending=False)
-        rec_yds_agg.rename(columns={'player_name':'Player Name','receiving_yards':"Total Receiving Yards"}, inplace=True)
+# For receiving yards:
+# Filter for regular season passing plays
+        pbp_data = pbp_data[
+            (pbp_data["season_type"] == "REG") &
+            (pbp_data["two_point_attempt"] == False) &
+            (pbp_data["play_type"] == "pass")
+        ]
+
+        # Merge with roster data
+        pbp_data_rec = pbp_data.merge(
+            roster_data[["player_id", "player_name"]], 
+            left_on="receiver_player_id", 
+            right_on="player_id",
+            how='inner'
+        )
+
+        # Drop duplicate plays
+        pbp_data_rec_unique = pbp_data_rec.drop_duplicates(subset=['game_id', 'play_id'])
+
+        # Group and aggregate receiving yards
+        rec_yds_agg = pbp_data_rec_unique.groupby(
+            ["player_name"], 
+            as_index=False
+        ).agg({"receiving_yards": "sum"})
+
+        # Sort and format
+        rec_yds_agg.sort_values(
+            by=['receiving_yards'], 
+            inplace=True, 
+            ascending=False
+        )
+
+        rec_yds_agg.rename(
+            columns={
+                'player_name': 'Player Name',
+                'receiving_yards': "Total Receiving Yards"
+            }, 
+            inplace=True
+        )
+
+        # Get top 10
         rec_yds_agg = rec_yds_agg.head(10)
+
+        # Save to CSV
         rec_yds_agg.to_csv(recyds10)
     except:
         update_PBP_data.delay()
@@ -197,14 +372,51 @@ def update_rec_tds_top10():
         update_roster_data.delay()
         #flash('Data is updating in the background. Refresh the page in a bit')
     try:
-        pbp_data = pbp_data[pbp_data["season_type"] == "REG"]
-        pbp_data = pbp_data[pbp_data["two_point_attempt"] == False]
-        pbp_data_rec = pbp_data[pbp_data["play_type"] == "pass"]
-        pbp_data_rec = pbp_data_rec.merge(roster_data[["player_id","player_name"]], left_on="receiver_player_id", right_on="player_id")
-        rec_td_agg = pbp_data_rec.groupby(["player_name"], as_index=False).agg({"pass_touchdown":"sum"})
-        rec_td_agg.sort_values(by=['pass_touchdown'], inplace=True, ascending=False)
-        rec_td_agg.rename(columns={'player_name':'Player Name',"pass_touchdown":"Total Receiving TD's"}, inplace=True)
+# For receiving touchdowns:
+# Filter for regular season passing touchdown plays
+        pbp_data = pbp_data[
+            (pbp_data["season_type"] == "REG") &
+            (pbp_data["two_point_attempt"] == False) &
+            (pbp_data["play_type"] == "pass") &
+            (pbp_data["pass_touchdown"] == 1)  # Only count actual touchdowns
+        ]
+
+        # Merge with roster data
+        pbp_data_rec = pbp_data.merge(
+            roster_data[["player_id", "player_name"]], 
+            left_on="receiver_player_id", 
+            right_on="player_id",
+            how='inner'
+        )
+
+        # Drop duplicate plays
+        pbp_data_rec_unique = pbp_data_rec.drop_duplicates(subset=['game_id', 'play_id'])
+
+        # Group and count unique touchdowns
+        rec_td_agg = pbp_data_rec_unique.groupby(
+            ["player_name"], 
+            as_index=False
+        )["pass_touchdown"].count()  # Using count instead of sum since we filtered for TDs
+
+        # Sort and format
+        rec_td_agg.sort_values(
+            by=['pass_touchdown'], 
+            inplace=True, 
+            ascending=False
+        )
+
+        rec_td_agg.rename(
+            columns={
+                'player_name': 'Player Name',
+                'pass_touchdown': "Total Receiving TD's"
+            }, 
+            inplace=True
+        )
+
+        # Get top 10
         rec_td_agg = rec_td_agg.head(10)
+
+        # Save to CSV
         rec_td_agg.to_csv(rectds10)
     except:
         update_PBP_data.delay()
