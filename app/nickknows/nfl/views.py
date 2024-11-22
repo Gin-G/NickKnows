@@ -185,7 +185,7 @@ def schedule():
         week_schedule.apply(lambda week_schedule: total_highlight(week_schedule, "Total", "Total Line"), axis=None)
         return render_template('weekly.html', week_schedule = HTML(week_schedule.to_html(render_links=True,escape=False,classes="table")), weeks = available_weeks, week = week, years=AVAILABLE_YEARS, selected_year=selected_year)
     except FileNotFoundError as e:
-        flash(e)
+        flash(str(e))
         return redirect(url_for('NFL'))
 
 
@@ -205,7 +205,7 @@ def roster(team,fullname):
         team_roster = team_roster.format(precision=0, na_rep="Undrafted")
         return render_template('rosters.html', team_roster = team_roster.to_html(classes="table"), team = fullname)
     except FileNotFoundError as e:
-        flash(e)
+        flash(str(e))
         return redirect(url_for('NFL'))
     
 @app.route('/NFL/PbP/<game>')
@@ -223,7 +223,7 @@ def game_pbp(game):
         game_data = game_data.hide(['play_id','game_id','old_game_id','home_team','away_team','season_type','week','game_date','posteam_type','game_half','quarter_end','sp','qtr','goal_to_go','ydsnet','qb_kneel','qb_spike','qb_scramble'], axis="columns")
         return render_template('pbp.html', game_data = game_data.to_html(), game = game)
     except FileNotFoundError as e:
-        flash(e)
+        flash(str(e))
         return redirect(url_for('NFL'))
 
 @app.route('/NFL/Player/<name>')
@@ -274,7 +274,7 @@ def team_schedule(team, fullname):
         full_schedule = full_schedule.format(subset=['Away Score','Home Score','Result','Total','Away Moneyline','Home Moneyline','Away Spread Odds','Home Spread Odds','Under Odds','Over Odds'],precision=0, na_rep="-").format(subset=['Spread','Total Line'],precision=1, na_rep="-").format(subset=['Overtime','Away QB','Home QB'], na_rep="-")    
         return render_template('team-schedule.html', team_schedule = full_schedule.to_html(classes="table"), fullname = fullname)
     except FileNotFoundError as e:
-        flash(e)
+        flash(str(e))
         return redirect(url_for('NFL'))
     
 @app.route('/NFL/Team/<team>/Results/<fullname>')
@@ -300,7 +300,7 @@ def team_results(team, fullname):
         full_schedule = full_schedule.format(subset=['Away Score','Home Score','Result','Total','Away Moneyline','Home Moneyline','Away Spread Odds','Home Spread Odds','Under Odds','Over Odds'],precision=0).format(subset=['Spread','Total Line'],precision=1)
         return render_template('team-schedule.html', team_schedule = full_schedule.to_html(classes="table"), fullname = fullname)
     except FileNotFoundError as e:
-        flash(e)
+        flash(str(e))
         return redirect(url_for('NFL'))
     
 @app.route('/NFL/Team/<team>/FPA/<fullname>')
@@ -401,7 +401,7 @@ def team_fpa(team, fullname):
         te_data = te_data.format(subset=['Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs','Special Teams TD'],precision=0, na_rep="-").format(subset=['Receiving EPA','Target Share','STD Points','PPR Points','RACR','% Air Yards','WOPR'],precision=2, na_rep="-")
         return render_template('team-fpa.html', team=team, team_fpa = full_schedule.to_html(classes="table"), fullname = fullname, rush_data=rush_data.to_html(classes="table"), pass_data = pass_data.to_html(classes="table"), rec_data = rec_data.to_html(classes="table"), te_data = te_data.to_html(classes="table"), pass_agg = pass_agg['fantasy_points_ppr']/len(weeks), rush_agg = rush_agg['fantasy_points_ppr']/len(weeks), rec_agg = rec_agg['fantasy_points_ppr']/len(weeks), te_agg = te_agg['fantasy_points_ppr']/len(weeks))
     except FileNotFoundError as e:
-        flash(e)
+        flash(str(e))
         return redirect(url_for('NFL'))
     
 def total_highlight(df, col1, col2):
