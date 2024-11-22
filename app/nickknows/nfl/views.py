@@ -134,7 +134,7 @@ def NFL():
         update_rb_tds_top10.delay()
         update_rec_yds_top10.delay()
         update_rec_tds_top10.delay()
-        flash(e)
+        flash('Updating data in background')
         return render_template('nfl-home.html', years=AVAILABLE_YEARS, selected_year=selected_year)
 
 @app.route('/NFL/update')
