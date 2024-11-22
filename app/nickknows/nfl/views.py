@@ -196,12 +196,42 @@ def roster(team,fullname):
         file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
         roster_data = pd.read_csv(file_path, index_col=0)
         team_roster = roster_data.loc[roster_data['team'] == team]
+
+        # Drop duplicates based on player identifying information
+        # Keep the first occurrence of each player
+        team_roster = team_roster.drop_duplicates(
+            subset=['player_name', 'jersey_number'], 
+            keep='first'
+        )
+
         url = str('<a href="http://nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
         team_roster['player_name'] = url
-        team_roster.rename(columns={'depth_chart_position':'Position','jersey_number':'Number','status':'Status','player_name':'Full Name','first_name':'First Name','last_name':'Last Name','height':'Height','weight':'Weight','football_name':'Preferred Name','rookie_year':'Rookie Year','draft_club':'Drafted By','draft_number':'Draft Number'}, inplace=True)
+        team_roster.rename(columns={
+            'depth_chart_position':'Position',
+            'jersey_number':'Number',
+            'status':'Status',
+            'player_name':'Full Name',
+            'first_name':'First Name',
+            'last_name':'Last Name',
+            'height':'Height',
+            'weight':'Weight',
+            'football_name':'Preferred Name',
+            'rookie_year':'Rookie Year',
+            'draft_club':'Drafted By',
+            'draft_number':'Draft Number'
+        }, inplace=True)
+
         team_roster.sort_values(by=['Number'], inplace=True)
         team_roster = team_roster.style.hide(axis="index")
-        team_roster = team_roster.hide(['season','team','position','birth_date','college','player_id','espn_id','sportradar_id','yahoo_id','rotowire_id','pff_id','pfr_id',	'fantasy_data_id','sleeper_id',	'years_exp','headshot_url',	'ngs_position','week','game_type','status_description_abbr','esb_id','gsis_it_id','smart_id','entry_year'], axis="columns")
+        team_roster = team_roster.hide([
+            'season', 'team', 'position', 'birth_date', 'college',
+            'player_id', 'espn_id', 'sportradar_id', 'yahoo_id',
+            'rotowire_id', 'pff_id', 'pfr_id', 'fantasy_data_id',
+            'sleeper_id', 'years_exp', 'headshot_url', 'ngs_position',
+            'week', 'game_type', 'status_description_abbr', 'esb_id',
+            'gsis_it_id', 'smart_id', 'entry_year'
+        ], axis="columns")
+
         team_roster = team_roster.format(precision=0, na_rep="Undrafted")
         return render_template('rosters.html', team_roster = team_roster.to_html(classes="table"), team = fullname)
     except FileNotFoundError as e:
