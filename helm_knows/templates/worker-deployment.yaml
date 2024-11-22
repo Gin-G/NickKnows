@@ -26,4 +26,11 @@ spec:
             - -A
             - nickknows.celery
             - worker
+        volumeMounts:
+        - name: data-volume
+          mountPath: /NickKnows/app/nickknows/nfl/data
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.webapp.name }}-pvc
     

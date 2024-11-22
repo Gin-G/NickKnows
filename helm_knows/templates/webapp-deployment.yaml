@@ -29,7 +29,14 @@ spec:
             cpu: {{ .Values.webapp.container.cpu }}
         ports:
         - containerPort: {{ .Values.webapp.container.port }}
+        volumeMounts:
+        - name: data-volume
+          mountPath: /NickKnows/app/nickknows/nfl/data
         resources:
           limits:
             cpu: '0'
             memory: '0'
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.webapp.name }}-pvc
