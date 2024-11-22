@@ -21,7 +21,6 @@ AVAILABLE_YEARS = list(range(2020, 2025))
 def NFL():
     selected_year = request.args.get('year', max(AVAILABLE_YEARS))  # Default to the latest year
     try:
-        #PBP data function is broken - NC 2024-07-22
         file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
         if os.path.exists(file_path):
             if (time.time() - os.path.getmtime(file_path)) > (7 * 24 * 60 * 60):
@@ -128,6 +127,7 @@ def NFL():
         update_roster_data.delay()
         update_sched_data.delay()
         update_week_data.delay()
+        time.sleep(30)
         update_qb_yards_top10.delay()
         update_qb_tds_top10.delay()
         update_rb_yards_top10.delay()
