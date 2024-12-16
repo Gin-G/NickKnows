@@ -11,6 +11,7 @@ metadata:
    traefik.ingress.kubernetes.io/router.tls: "true"
    cert-manager.io/issuer: "letsencrypt-prod"
 spec:
+  ingressClassName: traefik
   tls:
     - hosts:
       - {{ .Values.webapp.fqdn}}
