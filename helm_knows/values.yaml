@@ -1,7 +1,7 @@
 webapp:
   name: nickknows
   group: nickknows
-  fqdn: nickknows.gingmachine
+  fqdn: nickknows.ging.nickknows.net
   path: /
   replicaCount: 1
   container: 
