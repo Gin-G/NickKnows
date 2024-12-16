@@ -9,7 +9,7 @@ metadata:
   annotations:
    traefik.ingress.kubernetes.io/router.entrypoints: websecure
    traefik.ingress.kubernetes.io/router.tls: "true"
-   cert-manager.io/issuer: "letsencrypt-cloudflare"
+   cert-manager.io/cluster-issuer: "letsencrypt-cloudflare"
    kubernetes.io/ingress-class: traefik
 spec:
   ingressClassName: traefik
