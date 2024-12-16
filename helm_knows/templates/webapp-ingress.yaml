@@ -16,7 +16,7 @@ spec:
       secretName: nickknows-tls
   rules:
   - host: {{ .Values.webapp.fqdn }}
-    http:
+    https:
       paths:
       - path: {{ .Values.webapp.path }}
         pathType: Prefix
