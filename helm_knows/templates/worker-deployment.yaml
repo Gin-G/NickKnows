@@ -27,9 +27,18 @@ spec:
             - nickknows.celery
             - worker
             - --concurrency=1
+            - --max-tasks-per-child=100
+            - --prefetch-multiplier=1
         volumeMounts:
         - name: data-volume
           mountPath: /NickKnows/app/nickknows/nfl/data
+        resources:
+          requests:
+            cpu: .25
+            memory: 512Mi
+          limits:
+            cpu: 1
+            memory: 1gi
       volumes:
       - name: data-volume
         persistentVolumeClaim:
