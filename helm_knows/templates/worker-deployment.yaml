@@ -20,6 +20,13 @@ spec:
       containers:
       - name: {{ .Values.webapp.name }}-worker
         image: {{ .Values.webapp.container.image }}
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
         imagePullPolicy: {{ .Values.webapp.container.imagePullPolicy }}
         args:
             - celery
@@ -31,13 +38,6 @@ spec:
         volumeMounts:
         - name: data-volume
           mountPath: /NickKnows/app/nickknows/nfl/data
-        resources:
-          requests:
-            cpu: .25
-            memory: 512Mi
-          limits:
-            cpu: 1
-            memory: 1gi
       volumes:
       - name: data-volume
         persistentVolumeClaim:
