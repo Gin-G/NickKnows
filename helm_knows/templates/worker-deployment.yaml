@@ -26,7 +26,6 @@ spec:
             - -A
             - nickknows.celery
             - worker
-            - --concurrency=1
             - --max-tasks-per-child=100
             - --prefetch-multiplier=1
         volumeMounts:
