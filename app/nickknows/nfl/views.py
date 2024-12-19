@@ -156,10 +156,16 @@ def NFLupdate():
 @app.route('/NFL/FPA/update')
 def FPAupdate():
     teams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
+    
+    # Create a chain of tasks for each team
     for team in teams:
-        update_team_schedule.delay(team)
-        update_weekly_team_data.delay(team)
-    flash('All data is updating in the background. Changes should be reflected on the pages shortly')
+        # Chain the tasks so weekly_team_data waits for team_schedule to complete
+        chain(
+            update_team_schedule.s(team),
+            update_weekly_team_data.s(team)
+        ).delay()
+
+    flash('All team data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL'))
 
 
