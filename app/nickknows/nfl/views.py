@@ -365,16 +365,16 @@ def team_fpa(team, fullname):
         full_schedule = full_schedule.apply(lambda full_schedule: total_highlight(full_schedule, "Total", "Total Line"), axis=None)
         weeks = weekly_team_data['week'].unique()
         pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
-        pass_agg = pass_data.agg({"fantasy_points_ppr": "sum"})
+        pass_agg = pass_data.groupby('week')['fantasy_points_ppr'].sum()
         pass_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
         rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
-        rush_agg = rush_data.agg({"fantasy_points_ppr": "sum"})
+        rush_agg = rush_data.groupby('week')['fantasy_points_ppr'].sum()
         rush_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
         rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
-        rec_agg = rec_data.agg({"fantasy_points_ppr": "sum"})
+        rec_agg = rec_data.groupby('week')['fantasy_points_ppr'].sum()
         rec_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
         te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
-        te_agg = te_data.agg({"fantasy_points_ppr": "sum"})
+        te_agg = te_data.groupby('week')['fantasy_points_ppr'].sum()
         te_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
         fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
         try:
@@ -382,18 +382,18 @@ def team_fpa(team, fullname):
             team_stats = fpa_data.loc[fpa_data['Team Name'] == team]
             print(len(team_stats))
             if len(team_stats) == 0:
-                pass_agg_csv = pass_agg['fantasy_points_ppr']/len(weeks) 
-                rush_agg_csv = rush_agg['fantasy_points_ppr']/len(weeks)
-                rec_agg_csv = rec_agg['fantasy_points_ppr']/len(weeks) 
-                te_agg_csv = te_agg['fantasy_points_ppr']/len(weeks)
+                pass_agg_csv = pass_agg.mean()
+                rush_agg_csv = rush_agg.mean() 
+                rec_agg_csv = rec_agg.mean()
+                te_agg_csv = te_agg.mean()
                 data = [team,pass_agg_csv,rush_agg_csv,rec_agg_csv,te_agg_csv]
                 df = pd.DataFrame([data])
                 df.to_csv(fpa_path, mode='a', header=False)
         except:
-            pass_agg_csv = pass_agg['fantasy_points_ppr']/len(weeks) 
-            rush_agg_csv = rush_agg['fantasy_points_ppr']/len(weeks)
-            rec_agg_csv = rec_agg['fantasy_points_ppr']/len(weeks) 
-            te_agg_csv = te_agg['fantasy_points_ppr']/len(weeks)
+            pass_agg_csv = pass_agg.mean()
+            rush_agg_csv = rush_agg.mean() 
+            rec_agg_csv = rec_agg.mean()
+            te_agg_csv = te_agg.mean()
             data = [team,pass_agg_csv,rush_agg_csv,rec_agg_csv,te_agg_csv]
             df = pd.DataFrame([data], columns=['Team Name','QB','RB','WR','TE'])
             df.to_csv(fpa_path)
