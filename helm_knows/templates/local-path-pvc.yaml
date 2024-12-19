@@ -4,6 +4,9 @@ metadata:
   name: {{ .Values.webapp.name }}-pvc
   namespace: {{ .Release.Namespace }}
 spec:
+  annotations: {
+    volume.kubernetes.io/selected-node: "gingmachine"
+  }
   accessModes:
     - ReadWriteOnce
   storageClassName: local-path
