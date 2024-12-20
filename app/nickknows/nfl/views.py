@@ -161,8 +161,8 @@ def FPAupdate():
     for team in teams:
         # Chain the tasks so weekly_team_data waits for team_schedule to complete
         chain(
-            update_team_schedule.si(team),
-            update_weekly_team_data.si(team)
+            update_team_schedule.s(team),
+            update_weekly_team_data.s(team)
         ).delay()
 
     flash('All team data is updating in the background. Changes should be reflected on the pages shortly')
