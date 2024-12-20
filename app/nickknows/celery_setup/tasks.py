@@ -4,6 +4,7 @@ import time
 import nfl_data_py as nfl
 import pandas as pd
 from flask import flash, request
+import matplotlib.pyplot as plt
 
 AVAILABLE_YEARS = list(range(2020, 2025)) 
 selected_year = max(AVAILABLE_YEARS)  # Default to the latest year
@@ -534,29 +535,64 @@ def update_weekly_team_data(team):
     weekly_team_data.to_csv(data_file_path)
 
 @celery.task()
-def update_fpa_data(*args):
-    teams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
+def generate_team_graphs(team, weekly_team_data):
+    pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
+    rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
+    rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
+    te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
+    
+    # Generate QB graph
+    pass_data_img = pass_data[['player_display_name','fantasy_points_ppr']]
+    pass_data_img.plot.bar(x='player_display_name', xlabel='')
+    plt.tight_layout()
+    plt.savefig('nickknows/static/' + team + '_' + 'QB_FPA.png')
+    plt.close()
+    
+    # Generate RB graph
+    rush_data_img = rush_data[['player_display_name','fantasy_points_ppr']]
+    rush_data_img.plot.bar(x='player_display_name', xlabel='')
+    plt.tight_layout()
+    plt.savefig('nickknows/static/' + team + '_' + 'RB_FPA.png')
+    plt.close()
+    
+    # Generate WR graph
+    rec_data_img = rec_data[['player_display_name','fantasy_points_ppr']]
+    rec_data_img.plot.bar(x='player_display_name', xlabel='')
+    plt.tight_layout()
+    plt.savefig('nickknows/static/' + team + '_' + 'WR_FPA.png')
+    plt.close()
+    
+    # Generate TE graph
+    te_data_img = te_data[['player_display_name','fantasy_points_ppr']]
+    te_data_img.plot.bar(x='player_display_name', xlabel='')
+    plt.tight_layout()
+    plt.savefig('nickknows/static/' + team + '_' + 'TE_FPA.png')
+    plt.close()
+
+@celery.task()
+def process_team_data(team):
+    data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
+    weekly_team_data = pd.read_csv(data_file_path, index_col=0)
+    
+    # Process position data
+    pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
+    rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
+    rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
+    te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
+    
+    # Calculate averages
+    pass_agg = pass_data.groupby('week')['fantasy_points_ppr'].sum().mean()
+    rush_agg = rush_data.groupby('week')['fantasy_points_ppr'].sum().mean()
+    rec_agg = rec_data.groupby('week')['fantasy_points_ppr'].sum().mean()
+    te_agg = te_data.groupby('week')['fantasy_points_ppr'].sum().mean()
+    
+    # Generate graphs
+    generate_team_graphs.delay(team, weekly_team_data)
+    
+    return [team, pass_agg, rush_agg, rec_agg, te_agg]
+
+@celery.task()
+def update_fpa_data(results):
     fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
-    
-    all_team_data = []
-    for team in teams:
-        data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
-        if os.path.exists(data_file_path):
-            weekly_team_data = pd.read_csv(data_file_path, index_col=0)
-            
-            # Calculate averages for each position
-            pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
-            rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
-            rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
-            te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
-            
-            pass_agg = pass_data.groupby('week')['fantasy_points_ppr'].sum().mean()
-            rush_agg = rush_data.groupby('week')['fantasy_points_ppr'].sum().mean()
-            rec_agg = rec_data.groupby('week')['fantasy_points_ppr'].sum().mean()
-            te_agg = te_data.groupby('week')['fantasy_points_ppr'].sum().mean()
-            
-            all_team_data.append([team, pass_agg, rush_agg, rec_agg, te_agg])
-    
-    # Create final DataFrame and save
-    df = pd.DataFrame(all_team_data, columns=['Team Name', 'QB', 'RB', 'WR', 'TE'])
+    df = pd.DataFrame(results, columns=['Team Name', 'QB', 'RB', 'WR', 'TE'])
     df.to_csv(fpa_path)

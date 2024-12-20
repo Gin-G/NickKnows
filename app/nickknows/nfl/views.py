@@ -3,7 +3,7 @@ from turtle import position
 from flask import render_template, url_for, redirect, flash, request
 from numpy import full
 from nickknows import app
-from ..celery_setup.tasks import update_fpa_data, update_PBP_data, update_roster_data, update_sched_data, update_week_data, update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10, update_team_schedule, update_weekly_team_data
+from ..celery_setup.tasks import process_team_data, update_fpa_data, update_PBP_data, update_roster_data, update_sched_data, update_week_data, update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10, update_team_schedule, update_weekly_team_data
 from celery import chain, chord
 import nfl_data_py as nfl
 import pandas as pd
@@ -157,19 +157,20 @@ def NFLupdate():
 def FPAupdate():
     teams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
     
-    # Create chains for each team
+    # Create chains for each team that include graph generation
     team_chains = []
     for team in teams:
         team_chains.append(
             chain(
                 update_team_schedule.si(team),
-                update_weekly_team_data.si(team)
+                update_weekly_team_data.si(team),
+                process_team_data.si(team)
             )
         )
     
     # Execute all chains in parallel and collect results
     chord(team_chains)(update_fpa_data.s())
-
+    
     flash('All team data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL'))
 
