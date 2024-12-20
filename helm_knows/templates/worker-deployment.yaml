@@ -33,6 +33,9 @@ spec:
             - -A
             - nickknows.celery
             - worker
+            - --loglevel=info
+            - --events
+            - --task-events
         volumeMounts:
         - name: data-volume
           mountPath: /NickKnows/app/nickknows/nfl/data
