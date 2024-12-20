@@ -11,8 +11,8 @@ metadata:
     traefik.ingress.kubernetes.io/router.tls: "true"
     cert-manager.io/cluster-issuer: "letsencrypt-cloudflare"
     kubernetes.io/ingress-class: traefik
+    traefik.ingress.kubernetes.io/router.middlewares: default-strip-prefix@kubernetescrd
     external-dns.alpha.kubernetes.io/target: "8.44.158.127"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: traefik
   tls:
@@ -23,14 +23,14 @@ spec:
   - host: {{ .Values.webapp.fqdn }}
     http:
       paths:
-      - path: {{ .Values.webapp.path }}(/|$)(.*)
+      - path: {{ .Values.webapp.path }}
         pathType: Prefix
         backend:
           service:
             name: {{ .Values.webapp.name }}
             port:
               number: {{ .Values.webapp.container.port }}
-      - path: /flower(/|$)(.*)
+      - path: /flower
         pathType: Prefix
         backend:
           service:
