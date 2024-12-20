@@ -28,5 +28,6 @@ spec:
           - nickknows.celery
           - flower
           - --port=5555
+          - --url_prefix=flower
         ports:
           - containerPort: 5555

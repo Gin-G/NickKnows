@@ -29,7 +29,7 @@ spec:
             name: {{ .Values.webapp.name }}
             port:
               number: {{ .Values.webapp.container.port }}
-      - path: /flower
+      - path: /flower(/|$)(.*)
         pathType: Prefix
         backend:
           service:
