@@ -435,7 +435,20 @@ def team_fpa(team, fullname):
         rush_data = rush_data.format(subset=['Rush Yards','Rush Fumbles','Rush Fumbles Lost','Rush 1st Downs','Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs'],precision=0, na_rep="-").format(subset=['Rush EPA','Target Share','STD Points','PPR Points'],precision=2, na_rep="-")
         rec_data = rec_data.format(subset=['Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs','Special Teams TD'],precision=0, na_rep="-").format(subset=['Receiving EPA','Target Share','STD Points','PPR Points','RACR','% Air Yards','WOPR'],precision=2, na_rep="-")
         te_data = te_data.format(subset=['Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs','Special Teams TD'],precision=0, na_rep="-").format(subset=['Receiving EPA','Target Share','STD Points','PPR Points','RACR','% Air Yards','WOPR'],precision=2, na_rep="-")
-        return render_template('team-fpa.html', team=team, team_fpa = full_schedule.to_html(classes="table"), fullname = fullname, rush_data=rush_data.to_html(classes="table"), pass_data = pass_data.to_html(classes="table"), rec_data = rec_data.to_html(classes="table"), te_data = te_data.to_html(classes="table"), pass_agg = pass_agg['fantasy_points_ppr']/len(weeks), rush_agg = rush_agg['fantasy_points_ppr']/len(weeks), rec_agg = rec_agg['fantasy_points_ppr']/len(weeks), te_agg = te_agg['fantasy_points_ppr']/len(weeks))
+        return render_template('team-fpa.html', 
+            team=team, 
+            team_fpa=full_schedule.to_html(classes="table"), 
+            fullname=fullname, 
+            rush_data=rush_data.to_html(classes="table"), 
+            pass_data=pass_data.to_html(classes="table"), 
+            rec_data=rec_data.to_html(classes="table"), 
+            te_data=te_data.to_html(classes="table"), 
+            # Convert the aggregated series to mean values
+            pass_agg=pass_agg.mean(),
+            rush_agg=rush_agg.mean(),
+            rec_agg=rec_agg.mean(),
+            te_agg=te_agg.mean()
+        )
     except FileNotFoundError as e:
         flash(str(e))
         return redirect(url_for('NFL'))
