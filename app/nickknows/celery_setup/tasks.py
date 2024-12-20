@@ -499,7 +499,7 @@ def update_team_schedule(team):
     update_weekly_team_data.delay(team)
     
 @celery.task()
-def update_weekly_team_data(team):
+def update_weekly_team_data(team, *args):
     file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
     data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
     team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
