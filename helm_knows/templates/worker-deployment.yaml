@@ -33,8 +33,6 @@ spec:
             - -A
             - nickknows.celery
             - worker
-            - --max-tasks-per-child=100
-            - --prefetch-multiplier=1
         volumeMounts:
         - name: data-volume
           mountPath: /NickKnows/app/nickknows/nfl/data
