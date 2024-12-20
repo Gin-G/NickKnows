@@ -29,3 +29,10 @@ spec:
             name: {{ .Values.webapp.name }}
             port:
               number: {{ .Values.webapp.container.port }}
+      - path: /flower
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.webapp.name }}-flower
+            port:
+              number: 5555
