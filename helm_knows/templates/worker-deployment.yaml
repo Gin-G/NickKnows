@@ -36,6 +36,9 @@ spec:
             - --loglevel=info
             - --events
             - --task-events
+            - --concurrency=2
+            - -Ofair
+            - --prefetch-multiplier=1
         volumeMounts:
         - name: data-volume
           mountPath: /NickKnows/app/nickknows/nfl/data
