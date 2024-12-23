@@ -88,7 +88,7 @@ table {
 .table-container {
   width: 100%;
   overflow-x: auto;  /* Horizontal scroll on small screens */
-  margin: 20px 0;
+  margin: 20px 0 60px 0;
   padding: 0 10px;
   box-sizing: border-box;
 }
