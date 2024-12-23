@@ -505,51 +505,49 @@ def update_team_schedule(team):
 def update_weekly_team_data(team):
     logger.info(f"Starting weekly team data update for {team}")
     try:
+        # Setup directories and paths
         team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
-        logger.info(f"Checking directory: {team_dir}")
-        
         if not os.path.exists(team_dir):
             os.mkdir(team_dir)
-            logger.info(f"Created directory for {team}")
-
+        
+        # Read files once
         file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
-        logger.info(f"Reading schedule from: {file_path}")
-        
-        full_schedule = pd.read_csv(file_path, index_col=0)
-        logger.info(f"Processing schedule for {team}")
-        
-        # Process home/away games
-        ishome = full_schedule['home_team'].str.contains(team)
-        full_schedule['is_home'] = ishome
-        
-        # Get opponent teams
-        op_team1 = full_schedule.loc[full_schedule['is_home'] == True, ['away_team', 'week']]
-        op_team2 = full_schedule.loc[full_schedule['is_home'] == False, ['home_team', 'week']]
-        op_team = pd.concat([op_team1, op_team2])
-        
-        logger.info(f"Processing opponent data for {team}")
-        op_team["op_team"] = op_team['away_team'].fillna('') + op_team['home_team'].fillna('')
-        op_team = op_team.sort_values(by=['week'])
-        op_teams = op_team["op_team"].to_list()
-        
-        # Process weekly data
-        weekly_team_data = pd.DataFrame()
         rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
         week_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_weekly_data.csv'
         
+        # Read all data once
+        full_schedule = pd.read_csv(file_path, index_col=0)
+        roster_data = pd.read_csv(rost_path, index_col=0)
+        weekly_data = pd.read_csv(week_path, index_col=0)
+        
+        # Process schedule
+        ishome = full_schedule['home_team'].str.contains(team)
+        full_schedule['is_home'] = ishome
+        
+        # Get opponent teams more efficiently
+        op_team = pd.concat([
+            full_schedule.loc[full_schedule['is_home'], ['away_team', 'week']],
+            full_schedule.loc[~full_schedule['is_home'], ['home_team', 'week']]
+        ])
+        op_team["op_team"] = op_team['away_team'].fillna('') + op_team['home_team'].fillna('')
+        op_teams = op_team.sort_values(by=['week'])['op_team'].tolist()
+        
+        # Process all weekly data at once
+        all_weekly_data = []
         for opponent in op_teams:
             week = op_teams.index(opponent) + 1
-            logger.info(f"Processing week {week} vs {opponent}")
+            team_roster = roster_data[roster_data['team'] == opponent]
+            players = team_roster['player_name'].tolist()
             
-            roster_data = pd.read_csv(rost_path, index_col=0)
-            team_roster = roster_data.loc[roster_data['team'] == opponent]
-            players = team_roster['player_name'].to_list()
-            
-            for player in players:
-                weekly_data = pd.read_csv(week_path, index_col=0)
-                player_data = weekly_data.loc[weekly_data['player_display_name'] == player]
-                player_data = player_data.loc[player_data['week'] == week]
-                weekly_team_data = pd.concat([weekly_team_data, player_data])
+            # Filter weekly data for all players in one go
+            week_data = weekly_data[
+                (weekly_data['player_display_name'].isin(players)) & 
+                (weekly_data['week'] == week)
+            ]
+            all_weekly_data.append(week_data)
+        
+        # Combine all data at once
+        weekly_team_data = pd.concat(all_weekly_data, ignore_index=True)
         
         # Save processed data
         output_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
