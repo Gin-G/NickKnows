@@ -480,18 +480,29 @@ def neg_spread_highlight(df, col1, col2):
 
 @app.route('/NFL/FPA')
 def fpa():
-    selected_year = request.args.get('year', max(AVAILABLE_YEARS))  # Default to the latest year
+    selected_year = request.args.get('year', max(AVAILABLE_YEARS))
     fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
     try:
         fpa_data = pd.read_csv(fpa_path, index_col=0)
         fpa_data.sort_values(by=['Team Name'], inplace=True)
+        
+        # Create plots
         cols = list(fpa_data.columns.values)
         cols.pop(0)
         fpa_data.set_index('Team Name').plot.bar(subplots=True, figsize=(8, 16), sharex=False)
         plt.tight_layout()
         plt.savefig('nickknows/static/FPA.png')
-        fpa_data = fpa_data.style.hide(axis="index").format(precision=2)
-        return render_template('fpa.html', fpa_data = fpa_data.to_html(classes='table'),)
+        
+        # Style the table with color gradients for each column
+        fpa_data = fpa_data.style\
+            .hide(axis="index")\
+            .format(precision=2)\
+            .background_gradient(subset=['QB'], cmap='RdYlGn_r')\
+            .background_gradient(subset=['RB'], cmap='RdYlGn_r')\
+            .background_gradient(subset=['WR'], cmap='RdYlGn_r')\
+            .background_gradient(subset=['TE'], cmap='RdYlGn_r')
+        
+        return render_template('fpa.html', fpa_data=fpa_data.to_html(classes='table'))
     except Exception as e:
-        flash(e)
+        flash(str(e))
         return render_template('nfl-home.html')
