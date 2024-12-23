@@ -11,4 +11,4 @@ webapp:
   storage:
     size: 2Gi
 worker:
-  replicaCount: 1
+  replicaCount: 2

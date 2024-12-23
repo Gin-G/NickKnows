@@ -36,7 +36,7 @@ spec:
             - --loglevel=info
             - --events
             - --task-events
-            - --concurrency=2
+            - --concurrency=4
             - -Ofair
             - --prefetch-multiplier=1
         volumeMounts:
