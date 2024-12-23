@@ -602,18 +602,38 @@ def process_team_data(team):
         data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
         weekly_team_data = pd.read_csv(data_file_path, index_col=0)
         
-        # Convert DataFrame to dict before passing to next task
-        weekly_data_dict = weekly_team_data.to_dict('records')
+        # Calculate FPA stats
+        pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
+        rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
+        rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
+        te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
         
-        # Pass the dict instead of DataFrame
-        generate_team_graphs.delay(team, weekly_data_dict)
-        return True
+        pass_agg = pass_data['fantasy_points_ppr'].mean()
+        rush_agg = rush_data['fantasy_points_ppr'].mean()
+        rec_agg = rec_data['fantasy_points_ppr'].mean()
+        te_agg = te_data['fantasy_points_ppr'].mean()
+        
+        # Return data in correct format for DataFrame
+        return {
+            'Team Name': team,
+            'QB': pass_agg,
+            'RB': rush_agg,
+            'WR': rec_agg,
+            'TE': te_agg
+        }
+        
     except Exception as e:
         logger.error(f"Error processing team data for {team}: {str(e)}")
         raise
 
 @celery.task()
 def update_fpa_data(results):
-    fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
-    df = pd.DataFrame(results, columns=['Team Name', 'QB', 'RB', 'WR', 'TE'])
-    df.to_csv(fpa_path)
+    logger.info(f"Updating FPA data with {len(results)} teams")
+    try:
+        fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
+        df = pd.DataFrame(results)
+        df.to_csv(fpa_path)
+        return f"Updated FPA data for {len(results)} teams"
+    except Exception as e:
+        logger.error(f"Error updating FPA data: {str(e)}")
+        raise
