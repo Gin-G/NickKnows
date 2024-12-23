@@ -501,8 +501,8 @@ def update_team_schedule(team):
     full_schedule.to_csv(team_sched_path)
     update_weekly_team_data.delay(team)
 
-@celery.task(bind=True)
-def update_weekly_team_data(self, team):
+@celery.task()
+def update_weekly_team_data(team):
     logger.info(f"Starting weekly team data update for {team}")
     try:
         team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
