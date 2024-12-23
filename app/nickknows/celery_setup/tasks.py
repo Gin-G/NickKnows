@@ -560,7 +560,9 @@ def update_weekly_team_data(team):
         raise
 
 @celery.task()
-def generate_team_graphs(team, weekly_team_data):
+def generate_team_graphs(team, weekly_data_dict):
+    weekly_team_data = pd.DataFrame.from_records(weekly_data_dict)
+    
     pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
     rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
     rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
@@ -596,25 +598,32 @@ def generate_team_graphs(team, weekly_team_data):
 
 @celery.task()
 def process_team_data(team):
-    data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
-    weekly_team_data = pd.read_csv(data_file_path, index_col=0)
-    
-    # Process position data
-    pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
-    rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
-    rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
-    te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
-    
-    # Calculate averages
-    pass_agg = pass_data.groupby('week')['fantasy_points_ppr'].sum().mean()
-    rush_agg = rush_data.groupby('week')['fantasy_points_ppr'].sum().mean()
-    rec_agg = rec_data.groupby('week')['fantasy_points_ppr'].sum().mean()
-    te_agg = te_data.groupby('week')['fantasy_points_ppr'].sum().mean()
-    
-    # Generate graphs
-    generate_team_graphs.delay(team, weekly_team_data)
-    
-    return [team, pass_agg, rush_agg, rec_agg, te_agg]
+    try:
+        data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
+        weekly_team_data = pd.read_csv(data_file_path, index_col=0)
+        
+        # Convert DataFrame to dict before passing to next task
+        weekly_data_dict = weekly_team_data.to_dict('records')
+        
+        # Pass the dict instead of DataFrame
+        generate_team_graphs.delay(team, weekly_data_dict)
+        return True
+    except Exception as e:
+        logger.error(f"Error processing team data for {team}: {str(e)}")
+        raise
+
+@celery.task()
+def generate_team_graphs(team, weekly_data_dict):
+    try:
+        # Reconstruct DataFrame from dict
+        weekly_team_data = pd.DataFrame.from_records(weekly_data_dict)
+        
+        pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
+        rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
+        rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
+        te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
+        
+        # Rest of graph generation code...
 
 @celery.task()
 def update_fpa_data(results):
