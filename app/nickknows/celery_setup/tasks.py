@@ -438,7 +438,7 @@ def update_team_stats(team):
     team_stats = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_stats.csv' 
     team_schedule = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv' 
     #Replace game_id with a link that has Away vs. Home instead
-    url = str('<a href="http://localhost:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
+    url = str('<a href="https://nickknows.ging.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
     #url = str('<a href="https://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
     schedule['game_id'] = url
     #Create a full schedule for the team selected
@@ -487,7 +487,7 @@ def update_team_schedule(team):
         os.mkdir(os.getcwd() + '/nickknows/nfl/data/' + team + '/')
     schedule = pd.read_csv(sched_path, index_col=0)
     #Replace game_id with a link that has Away vs. Home instead
-    url = str('<a href="http://localhost:5000/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
+    url = str('<a href="https://nickknows.ging.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
     #url = str('<a href="https://www.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
     schedule['game_id'] = url
     #Create a full schedule for the team selected
