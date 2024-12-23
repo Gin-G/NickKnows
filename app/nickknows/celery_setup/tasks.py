@@ -613,19 +613,6 @@ def process_team_data(team):
         raise
 
 @celery.task()
-def generate_team_graphs(team, weekly_data_dict):
-    try:
-        # Reconstruct DataFrame from dict
-        weekly_team_data = pd.DataFrame.from_records(weekly_data_dict)
-        
-        pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
-        rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
-        rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
-        te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
-        
-        # Rest of graph generation code...
-
-@celery.task()
 def update_fpa_data(results):
     fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
     df = pd.DataFrame(results, columns=['Team Name', 'QB', 'RB', 'WR', 'TE'])
