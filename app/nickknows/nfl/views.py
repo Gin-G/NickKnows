@@ -444,6 +444,40 @@ def format_schedule(schedule):
         .format(subset=['Spread','Total Line'], precision=1)
     return schedule
     
+def update_fpa_file(team, aggregates):
+    """Update team's FPA data in the master FPA file"""
+    selected_year = request.args.get('year', max(AVAILABLE_YEARS)) 
+    try:
+        fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
+        
+        # Create or load FPA DataFrame
+        if os.path.exists(fpa_path):
+            fpa_data = pd.read_csv(fpa_path, index_col=0)
+        else:
+            fpa_data = pd.DataFrame(columns=['Team Name', 'QB', 'RB', 'WR', 'TE'])
+        
+        # Update team data
+        team_data = {
+            'Team Name': team,
+            'QB': aggregates['QB'],
+            'RB': aggregates['RB'],
+            'WR': aggregates['WR'],
+            'TE': aggregates['TE']
+        }
+        
+        # Update or append team data
+        if team in fpa_data['Team Name'].values:
+            fpa_data.loc[fpa_data['Team Name'] == team] = pd.Series(team_data)
+        else:
+            fpa_data = pd.concat([fpa_data, pd.DataFrame([team_data])], ignore_index=True)
+        
+        # Sort and save
+        fpa_data = fpa_data.sort_values('Team Name')
+        fpa_data.to_csv(fpa_path)
+        
+    except Exception as e:
+        return (f"Error updating FPA file for {team}: {str(e)}")
+
 def total_highlight(df, col1, col2):
     mask = df[col1] > df[col2]
     omask = df[col1] < df[col2]
