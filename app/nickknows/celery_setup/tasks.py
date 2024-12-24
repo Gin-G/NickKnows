@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from celery.utils.log import get_task_logger
 logger = get_task_logger(__name__)
 
+# Add at top of file with other constants
+SITE_DOMAIN = "https://nickknows.ging.nickknows.net"
 AVAILABLE_YEARS = list(range(2020, 2025)) 
 selected_year = max(AVAILABLE_YEARS)  # Default to the latest year
 
@@ -438,7 +440,10 @@ def update_team_stats(team):
     team_stats = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_stats.csv' 
     team_schedule = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv' 
     #Replace game_id with a link that has Away vs. Home instead
-    url = str('<a href="https://nickknows.ging.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
+    url = (f'<a href="{SITE_DOMAIN}/NFL/PbP/' + 
+           schedule['game_id'] + '">' + 
+           schedule['away_team'] + ' vs. ' + 
+           schedule['home_team'] + '</a>')
     schedule['game_id'] = url
     #Create a full schedule for the team selected
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
@@ -480,23 +485,30 @@ def update_team_schedule(team):
     sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
     team_sched_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
     team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
-    if os.path.exists(team_dir):
-        pass
-    else:
-        os.mkdir(os.getcwd() + '/nickknows/nfl/data/' + team + '/')
+    if not os.path.exists(team_dir):
+        os.mkdir(team_dir)
+        
     schedule = pd.read_csv(sched_path, index_col=0)
-    #Replace game_id with a link that has Away vs. Home instead
-    url = str('<a href="https://nickknows.ging.nickknows.net/NFL/PbP/') + schedule['game_id'] + str('">') + schedule['away_team'] + ' vs. ' + schedule['home_team'] + str('</a>')
+    
+    # Create full URL with proper formatting
+    url = (f'<a href="{SITE_DOMAIN}/NFL/PbP/' + 
+           schedule['game_id'] + '">' + 
+           schedule['away_team'] + ' vs. ' + 
+           schedule['home_team'] + '</a>')
+    
+    # Ensure URL is not escaped when saved
     schedule['game_id'] = url
-    #Create a full schedule for the team selected
+    schedule['game_id'] = schedule['game_id'].astype('string')
+    
+    # Create full schedule for team
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
     away_team_schedule = schedule.loc[schedule['away_team'] == team]
-    full_schedule = [home_team_schedule, away_team_schedule]
-    full_schedule = pd.concat(full_schedule)
-    #Drop any games that haven't been played
+    full_schedule = pd.concat([home_team_schedule, away_team_schedule])
+    
+    # Drop unplayed games and sort
     full_schedule = full_schedule.dropna(subset=['away_score'])
     full_schedule = full_schedule.sort_values(by=['week'])
-    full_schedule.to_csv(team_sched_path)
+    full_schedule.to_csv(team_sched_path, escape=False)
     update_weekly_team_data.delay(team)
 
 @celery.task()
