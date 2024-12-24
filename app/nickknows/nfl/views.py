@@ -13,6 +13,8 @@ from IPython.display import HTML
 import os
 import time
 from pathlib import Path
+from celery.utils.log import get_task_logger
+logger = get_task_logger(__name__)
 pd.options.mode.chained_assignment = None
 
 AVAILABLE_YEARS = list(range(2020, 2025)) 
@@ -476,7 +478,8 @@ def update_fpa_file(team, aggregates):
         fpa_data.to_csv(fpa_path)
         
     except Exception as e:
-        return (f"Error updating FPA file for {team}: {str(e)}")
+        logger.error(f"Error updating FPA file for {team}: {str(e)}")
+        raise
 
 def total_highlight(df, col1, col2):
     mask = df[col1] > df[col2]

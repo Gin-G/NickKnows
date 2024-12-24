@@ -612,18 +612,15 @@ def process_team_data(team):
         data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
         weekly_team_data = pd.read_csv(data_file_path, index_col=0)
         
-        # Calculate FPA stats
-        pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
-        rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
-        rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
-        te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
+        # Group by week and position first to get position totals per week
+        weekly_position_totals = weekly_team_data.groupby(['week', 'position'])['fantasy_points_ppr'].sum().reset_index()
         
-        pass_agg = pass_data['fantasy_points_ppr'].mean()
-        rush_agg = rush_data['fantasy_points_ppr'].mean()
-        rec_agg = rec_data['fantasy_points_ppr'].mean()
-        te_agg = te_data['fantasy_points_ppr'].mean()
+        # Calculate mean fantasy points against per position
+        pass_agg = weekly_position_totals[weekly_position_totals['position'] == 'QB'].groupby('week')['fantasy_points_ppr'].first().mean()
+        rush_agg = weekly_position_totals[weekly_position_totals['position'] == 'RB'].groupby('week')['fantasy_points_ppr'].first().mean()
+        rec_agg = weekly_position_totals[weekly_position_totals['position'] == 'WR'].groupby('week')['fantasy_points_ppr'].first().mean()
+        te_agg = weekly_position_totals[weekly_position_totals['position'] == 'TE'].groupby('week')['fantasy_points_ppr'].first().mean()
         
-        # Return data in correct format for DataFrame
         return {
             'Team Name': team,
             'QB': pass_agg,
@@ -631,9 +628,8 @@ def process_team_data(team):
             'WR': rec_agg,
             'TE': te_agg
         }
-        
     except Exception as e:
-        logger.error(f"Error processing team data for {team}: {str(e)}")
+        logger.error(f"Error processing team {team}: {str(e)}")
         raise
 
 @celery.task()
