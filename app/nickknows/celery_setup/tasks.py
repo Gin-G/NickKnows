@@ -508,7 +508,7 @@ def update_team_schedule(team):
     # Drop unplayed games and sort
     full_schedule = full_schedule.dropna(subset=['away_score'])
     full_schedule = full_schedule.sort_values(by=['week'])
-    full_schedule.to_csv(team_sched_path, escape=False)
+    full_schedule.to_csv(team_sched_path)
     update_weekly_team_data.delay(team)
 
 @celery.task()
