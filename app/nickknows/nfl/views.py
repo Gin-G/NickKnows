@@ -384,7 +384,6 @@ def team_fpa(team, fullname):
             ].groupby('week')['fantasy_points_ppr'].first().mean()
         
         # Create position plots
-        plt.style.use('seaborn')
         for pos, data in positions.items():
             plt.figure(figsize=(10, 6))
             plot_data = data[['player_display_name', 'fantasy_points_ppr']]
