@@ -347,116 +347,102 @@ def team_results(team, fullname):
 @app.route('/NFL/Team/<team>/FPA/<fullname>')
 def team_fpa(team, fullname):
     try:
-        selected_year = request.args.get('year', max(AVAILABLE_YEARS))  # Default to the latest year
+        selected_year = request.args.get('year', max(AVAILABLE_YEARS))
         file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
-        my_file = Path(file_path)
-        if my_file.is_file():
-            full_schedule = pd.read_csv(file_path, index_col=0)
-        else:
-            update_team_schedule.delay(team)
-            flash("The teams data wasn't present. It's updating now. Please try again.")
-            return redirect(url_for('NFL'))
-        full_schedule = pd.read_csv(file_path, index_col=0)
         data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
-        my_data_path = Path(data_file_path)
-        if my_data_path.is_file():
-            weekly_team_data = pd.read_csv(my_data_path, index_col=0)
-        else:
-            update_weekly_team_data.delay(team)
-            flash("The weekly team data wasn't present. It's updating now. Please try again.")
-            return redirect(url_for('NFL'))
-        weekly_team_data = pd.read_csv(my_data_path, index_col=0)
-        full_schedule.loc[full_schedule["overtime"] == 0, "overtime"] = "No"
-        full_schedule.loc[full_schedule["overtime"] == 1, "overtime"] = "Yes"
-        full_schedule.loc[full_schedule["div_game"] == 0, "div_game"] = "No"
-        full_schedule.loc[full_schedule["div_game"] == 1, "div_game"] = "Yes"
-        full_schedule.rename(columns = {'game_id':'Game','away_team':'Away Team','away_score':'Away Score','home_team':'Home Team','home_score':'Home Score','result':'Result','total':'Total','overtime':'Overtime','away_rest':'Away Rest','home_rest':'Home Rest','away_moneyline':'Away Moneyline','home_moneyline':'Home Moneyline','spread_line':'Spread','away_spread_odds':'Away Spread Odds','home_spread_odds':'Home Spread Odds','total_line':'Total Line','under_odds':'Under Odds','over_odds':'Over Odds','div_game':'Division Game','away_qb_name':'Away QB','home_qb_name':'Home QB','stadium':'Stadium'}, inplace=True)
-        full_schedule = full_schedule.style.hide(axis="index").hide(['roof','gameday','weekday','gametime','season','game_type','ftn','week','location','old_game_id','gsis','nfl_detail_id','surface','temp','wind','pfr','pff','espn','away_qb_id','home_qb_id','away_coach','home_coach','referee','stadium_id'], axis="columns")
-        full_schedule = full_schedule.format(subset=['Away Score','Home Score','Result','Total','Away Moneyline','Home Moneyline','Away Spread Odds','Home Spread Odds','Under Odds','Over Odds'],precision=0).format(subset=['Spread','Total Line'],precision=1)
-        full_schedule = full_schedule.apply(lambda full_schedule: total_highlight(full_schedule, "Total", "Total Line"), axis=None)
-        weeks = weekly_team_data['week'].unique()
-        pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
-        pass_agg = pass_data.groupby('week')['fantasy_points_ppr'].sum()
-        pass_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
-        rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
-        rush_agg = rush_data.groupby('week')['fantasy_points_ppr'].sum()
-        rush_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
-        rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
-        rec_agg = rec_data.groupby('week')['fantasy_points_ppr'].sum()
-        rec_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
-        te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
-        te_agg = te_data.groupby('week')['fantasy_points_ppr'].sum()
-        te_data.sort_values(by=['fantasy_points_ppr'], inplace=True, ascending=False)
-        fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
-        try:
-            fpa_data = pd.read_csv(fpa_path, index_col=0)
-            team_stats = fpa_data.loc[fpa_data['Team Name'] == team]
-            print(len(team_stats))
-            if len(team_stats) == 0:
-                pass_agg_csv = pass_agg.mean()
-                rush_agg_csv = rush_agg.mean() 
-                rec_agg_csv = rec_agg.mean()
-                te_agg_csv = te_agg.mean()
-                data = [team,pass_agg_csv,rush_agg_csv,rec_agg_csv,te_agg_csv]
-                df = pd.DataFrame([data])
-                df.to_csv(fpa_path, mode='a', header=False)
-        except:
-            pass_agg_csv = pass_agg.mean()
-            rush_agg_csv = rush_agg.mean() 
-            rec_agg_csv = rec_agg.mean()
-            te_agg_csv = te_agg.mean()
-            data = [team,pass_agg_csv,rush_agg_csv,rec_agg_csv,te_agg_csv]
-            df = pd.DataFrame([data], columns=['Team Name','QB','RB','WR','TE'])
-            df.to_csv(fpa_path)
-        pass_data = pass_data.drop_duplicates()
-        rush_data = rush_data.drop_duplicates()
-        rec_data = rec_data.drop_duplicates()
-        te_data = te_data.drop_duplicates()
-        pass_data_img = pass_data[['player_display_name','fantasy_points_ppr']]
-        pass_data_img.plot.bar(x='player_display_name', xlabel='')
-        plt.tight_layout()
-        plt.savefig('nickknows/static/' + team + '_' + 'QB_FPA.png')
-        rush_data_img = rush_data[['player_display_name','fantasy_points_ppr']]
-        rush_data_img.plot.bar(x='player_display_name', xlabel='')
-        plt.tight_layout()
-        plt.savefig('nickknows/static/' + team + '_' + 'RB_FPA.png')
-        rec_data_img = rec_data[['player_display_name','fantasy_points_ppr']]
-        rec_data_img.plot.bar(x='player_display_name', xlabel='')
-        plt.tight_layout()
-        plt.savefig('nickknows/static/' + team + '_' + 'WR_FPA.png')
-        te_data_img = te_data[['player_display_name','fantasy_points_ppr']]
-        te_data_img.plot.bar(x='player_display_name', xlabel='')
-        plt.tight_layout()
-        plt.savefig('nickknows/static/' + team + '_' + 'TE_FPA.png')
-        pass_data.rename(columns={'player_display_name':'Name','position':'Position','recent_team':'Team','week':'Week','completions':'Completions','attempts':'Attempts','passing_yards':"Pass Yds",'passing_tds':"Pass TDs",'interceptions':"INTs",'sacks':"Sacks",'sack_yards':"Sack Yards",'sack_fumbles':"Sack Fumbles",'sack_fumbles_lost':'Sack Fumbles Lost','passing_air_yards':'Pass Air Yards','passing_yards_after_catch':'Pass YAC','passing_first_downs':'Passing 1st Downs','passing_epa':'Pass EPA','passing_2pt_conversions':'Pass 2pt','pacr':'PACR','fantasy_points':'STD Points','fantasy_points_ppr':'PPR Points'}, inplace=True)
-        rush_data.rename(columns={'player_display_name':'Name','position':'Position','recent_team':'Team','week':'Week','carries':'Carries','rushing_yards':'Rush Yards','rushing_tds':'Rush TDs','rushing_fumbles':'Rush Fumbles','rushing_fumbles_lost':'Rush Fumbles Lost','rushing_first_downs':'Rush 1st Downs','rushing_epa':'Rush EPA','rushing_2pt_conversions':'Rush 2pt',	'receptions':'Receptions',	'targets':'Targets','receiving_yards':'Receiving Yards','receiving_tds':'Receiving TDs','receiving_fumbles':'Receiving Fumbles','receiving_fumbles_lost':'Receiving Fumbles Lost','receiving_air_yards':'Receiving Air Yards','receiving_yards_after_catch':'Receiving YAC','receiving_first_downs':'Receiving 1st Downs','receiving_2pt_conversions':'Receiving 2pt','target_share':'Target Share','fantasy_points':'STD Points','fantasy_points_ppr':'PPR Points'}, inplace=True)
-        rec_data.rename(columns={'player_display_name':'Name','position':'Position','recent_team':'Team','week':'Week','receptions':'Receptions','targets':'Targets','receiving_yards':'Receiving Yards','receiving_tds':'Receiving TDs','receiving_fumbles':'Receiving Fumbles','receiving_fumbles_lost':'Receiving Fumbles Lost','receiving_air_yards':'Receiving Air Yards','receiving_yards_after_catch':'Receiving YAC','receiving_first_downs':'Receiving 1st Downs','receiving_2pt_conversions':'Receiving 2pt','target_share':'Target Share','fantasy_points':'STD Points','fantasy_points_ppr':'PPR Points','receiving_epa':'Receiving EPA','racr':'RACR','air_yards_share':'% Air Yards','wopr':'WOPR','special_teams_tds':'Special Teams TD'}, inplace=True)
-        te_data.rename(columns={'player_display_name':'Name','position':'Position','recent_team':'Team','week':'Week','receptions':'Receptions','targets':'Targets','receiving_yards':'Receiving Yards','receiving_tds':'Receiving TDs','receiving_fumbles':'Receiving Fumbles','receiving_fumbles_lost':'Receiving Fumbles Lost','receiving_air_yards':'Receiving Air Yards','receiving_yards_after_catch':'Receiving YAC','receiving_first_downs':'Receiving 1st Downs','receiving_2pt_conversions':'Receiving 2pt','target_share':'Target Share','fantasy_points':'STD Points','fantasy_points_ppr':'PPR Points','receiving_epa':'Receiving EPA','racr':'RACR','air_yards_share':'% Air Yards','wopr':'WOPR','special_teams_tds':'Special Teams TD'}, inplace=True)
-        pass_data = pass_data.style.hide(axis="index").hide(['dakota','player_id','player_name','position_group','headshot_url','season','season_type','opponent_team','carries','rushing_yards','rushing_tds','rushing_fumbles','rushing_fumbles_lost','rushing_first_downs','rushing_epa','rushing_2pt_conversions','receptions','targets','receiving_yards','receiving_tds','receiving_fumbles','receiving_fumbles_lost','receiving_air_yards','receiving_yards_after_catch','receiving_first_downs','receiving_epa','receiving_2pt_conversions','racr','target_share','air_yards_share','wopr','special_teams_tds'], axis="columns")
-        rush_data = rush_data.style.hide(axis="index").hide(['dakota','player_id','player_name','position_group','headshot_url','season','season_type','opponent_team','completions','attempts','passing_yards','passing_tds','interceptions','sacks','sack_yards','sack_fumbles','sack_fumbles_lost','passing_air_yards','passing_yards_after_catch','passing_first_downs','passing_epa','passing_2pt_conversions','pacr','dakota','receiving_epa','racr','air_yards_share','wopr','special_teams_tds'], axis="columns")
-        rec_data = rec_data.style.hide(axis="index").hide(['dakota','player_id','player_name','position_group','headshot_url','season','season_type','opponent_team','completions','attempts','passing_yards','passing_tds','interceptions','sacks','sack_yards','sack_fumbles','sack_fumbles_lost','passing_air_yards','passing_yards_after_catch','passing_first_downs','passing_epa','passing_2pt_conversions','pacr','dakota','carries','rushing_yards','rushing_tds','rushing_fumbles','rushing_fumbles_lost','rushing_first_downs','rushing_epa','rushing_2pt_conversions'], axis="columns")
-        te_data = te_data.style.hide(axis="index").hide(['dakota','player_id','player_name','position_group','headshot_url','season','season_type','opponent_team','completions','attempts','passing_yards','passing_tds','interceptions','sacks','sack_yards','sack_fumbles','sack_fumbles_lost','passing_air_yards','passing_yards_after_catch','passing_first_downs','passing_epa','passing_2pt_conversions','pacr','dakota','carries','rushing_yards','rushing_tds','rushing_fumbles','rushing_fumbles_lost','rushing_first_downs','rushing_epa','rushing_2pt_conversions'], axis="columns")
-        pass_data = pass_data.format(subset=['Pass Yds','INTs','Sacks','Sack Yards','Pass Air Yards','Pass YAC','Passing 1st Downs'],precision=0, na_rep="-").format(subset=['Pass EPA','PACR','STD Points','PPR Points'],precision=2, na_rep="-")
-        rush_data = rush_data.format(subset=['Rush Yards','Rush Fumbles','Rush Fumbles Lost','Rush 1st Downs','Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs'],precision=0, na_rep="-").format(subset=['Rush EPA','Target Share','STD Points','PPR Points'],precision=2, na_rep="-")
-        rec_data = rec_data.format(subset=['Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs','Special Teams TD'],precision=0, na_rep="-").format(subset=['Receiving EPA','Target Share','STD Points','PPR Points','RACR','% Air Yards','WOPR'],precision=2, na_rep="-")
-        te_data = te_data.format(subset=['Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs','Special Teams TD'],precision=0, na_rep="-").format(subset=['Receiving EPA','Target Share','STD Points','PPR Points','RACR','% Air Yards','WOPR'],precision=2, na_rep="-")
-        return render_template('team-fpa.html', 
-            team=team, 
-            team_fpa=full_schedule.to_html(classes="table"), 
-            fullname=fullname, 
-            rush_data=rush_data.to_html(classes="table"), 
-            pass_data=pass_data.to_html(classes="table"), 
-            rec_data=rec_data.to_html(classes="table"), 
-            te_data=te_data.to_html(classes="table"), 
-            # Convert the aggregated series to mean values
-            pass_agg=pass_agg.mean(),
-            rush_agg=rush_agg.mean(),
-            rec_agg=rec_agg.mean(),
-            te_agg=te_agg.mean()
-        )
-    except FileNotFoundError as e:
+        
+        # Validate and load data
+        for path in [file_path, data_file_path]:
+            if not Path(path).is_file():
+                update_team_schedule.delay(team)
+                flash("Data is updating. Please try again.")
+                return redirect(url_for('NFL'))
+        
+        # Load data files
+        full_schedule = pd.read_csv(file_path, index_col=0)
+        weekly_team_data = pd.read_csv(data_file_path, index_col=0)
+        
+        # Calculate position totals per week
+        weekly_position_totals = weekly_team_data.groupby(['week', 'position'])['fantasy_points_ppr'].sum().reset_index()
+        
+        # Process individual position data
+        positions = {
+            'QB': weekly_team_data[weekly_team_data['position'] == 'QB'],
+            'RB': weekly_team_data[weekly_team_data['position'] == 'RB'],
+            'WR': weekly_team_data[weekly_team_data['position'] == 'WR'],
+            'TE': weekly_team_data[weekly_team_data['position'] == 'TE']
+        }
+        
+        # Calculate aggregates and sort data
+        aggregates = {}
+        for pos, data in positions.items():
+            positions[pos] = data.sort_values('fantasy_points_ppr', ascending=False)
+            aggregates[pos] = weekly_position_totals[
+                weekly_position_totals['position'] == pos
+            ].groupby('week')['fantasy_points_ppr'].first().mean()
+        
+        # Create position plots
+        plt.style.use('seaborn')
+        for pos, data in positions.items():
+            plt.figure(figsize=(10, 6))
+            plot_data = data[['player_display_name', 'fantasy_points_ppr']]
+            ax = plot_data.plot.bar(x='player_display_name', y='fantasy_points_ppr')
+            plt.title(f'{pos} Fantasy Points Against')
+            plt.xticks(rotation=45, ha='right')
+            plt.tight_layout()
+            plt.savefig(f'nickknows/static/{team}_{pos}_FPA.png')
+            plt.close()
+        
+        # Format schedule data
+        full_schedule = format_schedule(full_schedule)
+        
+        # Update FPA data
+        update_fpa_file(team, aggregates)
+        
+        # Format position data for display
+        styled_positions = {
+            pos: data.style.hide(axis="index")
+                          .format({'fantasy_points_ppr': '{:.2f}'})
+                          .to_html(classes="table")
+            for pos, data in positions.items()
+        }
+        
+        return render_template('team-fpa.html',
+                             team=team,
+                             team_fpa=full_schedule.to_html(classes="table"),
+                             fullname=fullname,
+                             pass_data=styled_positions['QB'],
+                             rush_data=styled_positions['RB'],
+                             rec_data=styled_positions['WR'],
+                             te_data=styled_positions['TE'],
+                             pass_agg=aggregates['QB'],
+                             rush_agg=aggregates['RB'],
+                             rec_agg=aggregates['WR'],
+                             te_agg=aggregates['TE'])
+                             
+    except Exception as e:
         flash(str(e))
         return redirect(url_for('NFL'))
+
+def format_schedule(schedule):
+    """Helper function to format schedule data"""
+    schedule.loc[schedule["overtime"] == 0, "overtime"] = "No"
+    schedule.loc[schedule["overtime"] == 1, "overtime"] = "Yes"
+    schedule.loc[schedule["div_game"] == 0, "div_game"] = "No"
+    schedule.loc[schedule["div_game"] == 1, "div_game"] = "Yes"
+    
+    schedule = schedule.style.hide(axis="index")\
+        .hide(['roof','gameday','weekday','gametime','season','game_type',
+               'ftn','week','location','old_game_id','gsis','nfl_detail_id',
+               'surface','temp','wind','pfr','pff','espn','away_qb_id',
+               'home_qb_id','away_coach','home_coach','referee','stadium_id'],
+              axis="columns")\
+        .format(subset=['Away Score','Home Score','Result','Total',
+                       'Away Moneyline','Home Moneyline','Away Spread Odds',
+                       'Home Spread Odds','Under Odds','Over Odds'],
+                precision=0)\
+        .format(subset=['Spread','Total Line'], precision=1)
+    return schedule
     
 def total_highlight(df, col1, col2):
     mask = df[col1] > df[col2]
