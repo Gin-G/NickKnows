@@ -6,15 +6,41 @@
     }
 </style>
 
+<script>
+    function toggleNav() {
+        var x = document.getElementById("navLinks");
+        if (x.className === "nav-links") {
+            x.className += " responsive";
+        } else {
+            x.className = "nav-links";
+        }
+    }
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+        var navLinks = document.getElementById('navLinks');
+        var hamburger = document.querySelector('.navbar .icon');
+        if (!navLinks.contains(e.target) && !hamburger.contains(e.target)) {
+            navLinks.className = "nav-links";
+        }
+    });
+</script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
 <div class="navbar">
-    <a href="{{url_for('home')}}">Home</a>
-    <a href="{{url_for('NFL')}}" style="margin-left: 0%;">NFL Home</a>
-    <a href="{{url_for('schedule')}}" style="margin-left: 0%;">Schedule</a>
-    <div class="dropdown">
-        <button class="dropbtn">Rosters
-        <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="dropdown-content">
+    <a href="{{url_for('home')}}" class="brand">Home</a>
+    <a href="javascript:void(0);" class="icon" onclick="toggleNav()">
+        <i class="fa fa-bars"></i>
+    </a>
+    <div class="nav-links" id="navLinks">
+        <a href="{{url_for('NFL')}}">NFL Home</a>
+        <a href="{{url_for('schedule')}}">Schedule</a>
+        <div class="dropdown">
+            <button class="dropbtn">Rosters
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
             <a href="{{url_for('roster', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
             <a href="{{url_for('roster', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
             <a href="{{url_for('roster', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>

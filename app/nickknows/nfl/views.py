@@ -377,40 +377,26 @@ def team_fpa(team, fullname):
         
         # Calculate aggregates and sort data
         aggregates = {}
+        styled_positions = {}
         for pos, data in positions.items():
             positions[pos] = data.sort_values('fantasy_points_ppr', ascending=False)
             aggregates[pos] = weekly_position_totals[
                 weekly_position_totals['position'] == pos
             ].groupby('week')['fantasy_points_ppr'].first().mean()
-        
-        # Create position plots
-        for pos, data in positions.items():
-            plt.figure(figsize=(10, 6))
-            plot_data = data[['player_display_name', 'fantasy_points_ppr']]
-            ax = plot_data.plot.bar(x='player_display_name', y='fantasy_points_ppr')
-            plt.title(f'{pos} Fantasy Points Against')
-            plt.xticks(rotation=45, ha='right')
-            plt.tight_layout()
-            plt.savefig(f'nickknows/static/{team}_{pos}_FPA.png')
-            plt.close()
-        
-        # Format schedule data
-        full_schedule = format_schedule(full_schedule)
-        
-        # Update FPA data
-        update_fpa_file(team, aggregates)
-        
-        # Format position data for display
-        styled_positions = {
-            pos: data.style.hide(axis="index")
-                          .format({'fantasy_points_ppr': '{:.2f}'})
-                          .to_html(classes="table")
-            for pos, data in positions.items()
-        }
-        
+            
+            # Style position data
+            styled_positions[pos] = data.style.hide(axis="index")\
+                .format({'fantasy_points_ppr': '{:.2f}'})\
+                .to_html(classes="table")
+
+        # Style schedule data without using format_schedule helper
+        full_schedule = full_schedule.style.hide(axis="index")\
+            .format(precision=2)\
+            .to_html(classes="table")
+
         return render_template('team-fpa.html',
                              team=team,
-                             team_fpa=full_schedule.to_html(classes="table"),
+                             team_fpa=full_schedule,
                              fullname=fullname,
                              pass_data=styled_positions['QB'],
                              rush_data=styled_positions['RB'],
@@ -422,6 +408,7 @@ def team_fpa(team, fullname):
                              te_agg=aggregates['TE'])
                              
     except Exception as e:
+        logger.error(f"Error in team_fpa for {team}: {str(e)}")
         flash(str(e))
         return redirect(url_for('NFL'))
 
