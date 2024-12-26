@@ -180,13 +180,18 @@ table tbody tr:nth-of-type(even) {
 }
 
 /* Links inside the navbar */
-.navbar a {
+.nav-links {
   float: left;
   font-size: 14px;
   color: white;
   padding: 17px 6px;
   text-decoration: none;
   width: fit-content;
+}
+
+.navbar a:not(.brand):not(.icon) {
+  padding: 17px 6px;
+  text-decoration: none;
 }
 
 /* The dropdown container */
