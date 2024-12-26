@@ -190,12 +190,6 @@ table tbody tr:nth-of-type(even) {
   width: fit-content;
 }
 
-.navbar a:not(.brand):not(.icon) {
-  padding: 17px 6px;
-  text-decoration: none;
-  color: white;
-}
-
 /* The dropdown container */
 .dropdown {
   float: left;
