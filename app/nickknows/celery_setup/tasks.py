@@ -572,38 +572,31 @@ def update_weekly_team_data(team):
 def generate_team_graphs(team, weekly_data_dict):
     weekly_team_data = pd.DataFrame.from_records(weekly_data_dict)
     
-    pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
-    rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
-    rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
-    te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
+    # Process each position's data
+    positions = {
+        'QB': weekly_team_data[weekly_team_data['position'] == 'QB'],
+        'RB': weekly_team_data[weekly_team_data['position'] == 'RB'],
+        'WR': weekly_team_data[weekly_team_data['position'] == 'WR'],
+        'TE': weekly_team_data[weekly_team_data['position'] == 'TE']
+    }
     
-    # Generate QB graph
-    pass_data_img = pass_data[['player_display_name','fantasy_points_ppr']]
-    pass_data_img.plot.bar(x='player_display_name', xlabel='')
-    plt.tight_layout()
-    plt.savefig('nickknows/static/' + team + '_' + 'QB_FPA.png')
-    plt.close()
-    
-    # Generate RB graph
-    rush_data_img = rush_data[['player_display_name','fantasy_points_ppr']]
-    rush_data_img.plot.bar(x='player_display_name', xlabel='')
-    plt.tight_layout()
-    plt.savefig('nickknows/static/' + team + '_' + 'RB_FPA.png')
-    plt.close()
-    
-    # Generate WR graph
-    rec_data_img = rec_data[['player_display_name','fantasy_points_ppr']]
-    rec_data_img.plot.bar(x='player_display_name', xlabel='')
-    plt.tight_layout()
-    plt.savefig('nickknows/static/' + team + '_' + 'WR_FPA.png')
-    plt.close()
-    
-    # Generate TE graph
-    te_data_img = te_data[['player_display_name','fantasy_points_ppr']]
-    te_data_img.plot.bar(x='player_display_name', xlabel='')
-    plt.tight_layout()
-    plt.savefig('nickknows/static/' + team + '_' + 'TE_FPA.png')
-    plt.close()
+    # Generate graphs for each position
+    for pos, data in positions.items():
+        # Group by player and sum their fantasy points
+        player_totals = data.groupby('player_display_name')['fantasy_points_ppr'].sum().reset_index()
+        # Sort by fantasy points descending
+        player_totals = player_totals.sort_values('fantasy_points_ppr', ascending=False)
+        
+        # Create and save plot
+        plt.figure(figsize=(15, 8))  # Larger figure size to fit all players
+        player_totals.plot.bar(x='player_display_name', y='fantasy_points_ppr', xlabel='')
+        plt.title(f'{team} vs {pos}s Fantasy Points')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.savefig(f'nickknows/static/{team}_{pos}_FPA.png', bbox_inches='tight')
+        plt.close()
+        
+        logger.info(f"Generated {pos} plot for {team} with {len(player_totals)} players")
 
 @celery.task()
 def process_team_data(team):

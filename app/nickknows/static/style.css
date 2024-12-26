@@ -337,3 +337,11 @@ table tbody tr:nth-of-type(even) {
       font-size: 14px;
   }
 }
+
+
+@media screen and (orientation: landscape) and (max-width: 900px) {
+  .navbar {
+      overflow-y: auto;
+      max-height: 100vh;
+  }
+}
