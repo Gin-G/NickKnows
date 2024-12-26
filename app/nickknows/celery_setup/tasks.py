@@ -569,7 +569,6 @@ def update_weekly_team_data(team):
         logger.error(f"Error processing {team}: {str(e)}")
         raise
 
-@celery.task()
 def generate_team_graphs(team, weekly_data_dict):
     weekly_team_data = pd.DataFrame.from_records(weekly_data_dict)
     
@@ -615,6 +614,9 @@ def process_team_data(team):
         # Group by week and position first to get position totals per week
         weekly_position_totals = weekly_team_data.groupby(['week', 'position'])['fantasy_points_ppr'].sum().reset_index()
         
+        # Generate plots using existing function
+        generate_team_graphs(team, weekly_team_data)
+
         # Calculate mean fantasy points against per position
         pass_agg = weekly_position_totals[weekly_position_totals['position'] == 'QB'].groupby('week')['fantasy_points_ppr'].first().mean()
         rush_agg = weekly_position_totals[weekly_position_totals['position'] == 'RB'].groupby('week')['fantasy_points_ppr'].first().mean()
