@@ -312,7 +312,8 @@ def team_schedule(team, fullname):
         full_schedule.loc[full_schedule["div_game"] == 0, "div_game"] = "No"
         full_schedule.loc[full_schedule["div_game"] == 1, "div_game"] = "Yes"
         full_schedule.rename(columns = {'game_id':'Game','away_team':'Away Team','away_score':'Away Score','home_team':'Home Team','home_score':'Home Score','result':'Result','total':'Total','overtime':'Overtime','away_rest':'Away Rest','home_rest':'Home Rest','away_moneyline':'Away Moneyline','home_moneyline':'Home Moneyline','spread_line':'Spread','away_spread_odds':'Away Spread Odds','home_spread_odds':'Home Spread Odds','total_line':'Total Line','under_odds':'Under Odds','over_odds':'Over Odds','div_game':'Division Game','away_qb_name':'Away QB','home_qb_name':'Home QB','stadium':'Stadium'}, inplace=True)
-        full_schedule = full_schedule.style.hide(axis="index").hide(['roof','gameday','weekday','gametime','season','game_type','ftn','week','location','old_game_id','gsis','nfl_detail_id','surface','temp','wind','pfr','pff','espn','away_qb_id','home_qb_id','away_coach','home_coach','referee','stadium_id'], axis="columns")
+        full_schedule = full_schedule.style.hide(axis="index")
+        full_schedule = full_schedule.hide(['roof','gameday','weekday','gametime','season','game_type','ftn','week','location','old_game_id','gsis','nfl_detail_id','surface','temp','wind','pfr','pff','espn','away_qb_id','home_qb_id','away_coach','home_coach','referee','stadium_id'], axis="columns")
         full_schedule = full_schedule.format(subset=['Away Score','Home Score','Result','Total','Away Moneyline','Home Moneyline','Away Spread Odds','Home Spread Odds','Under Odds','Over Odds'],precision=0, na_rep="-").format(subset=['Spread','Total Line'],precision=1, na_rep="-").format(subset=['Overtime','Away QB','Home QB'], na_rep="-")    
         return render_template('team-schedule.html', team_schedule = full_schedule.to_html(classes="table"), fullname = fullname)
     except FileNotFoundError as e:
@@ -363,48 +364,51 @@ def team_fpa(team, fullname):
         full_schedule = pd.read_csv(file_path, index_col=0)
         weekly_team_data = pd.read_csv(data_file_path, index_col=0)
         
-        # Calculate position totals per week
+        # Process position data
+        pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
+        rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']
+        rec_data = weekly_team_data[weekly_team_data['position'] == 'WR']
+        te_data = weekly_team_data[weekly_team_data['position'] == 'TE']
+        
+        # Calculate weekly totals for aggregates
         weekly_position_totals = weekly_team_data.groupby(['week', 'position'])['fantasy_points_ppr'].sum().reset_index()
         
-        # Process individual position data
-        positions = {
-            'QB': weekly_team_data[weekly_team_data['position'] == 'QB'],
-            'RB': weekly_team_data[weekly_team_data['position'] == 'RB'],
-            'WR': weekly_team_data[weekly_team_data['position'] == 'WR'],
-            'TE': weekly_team_data[weekly_team_data['position'] == 'TE']
-        }
-        
-        # Calculate aggregates and sort data
-        aggregates = {}
-        styled_positions = {}
-        for pos, data in positions.items():
-            positions[pos] = data.sort_values('fantasy_points_ppr', ascending=False)
-            aggregates[pos] = weekly_position_totals[
-                weekly_position_totals['position'] == pos
-            ].groupby('week')['fantasy_points_ppr'].first().mean()
-            
-            # Style position data
-            styled_positions[pos] = data.style.hide(axis="index")\
-                .format({'fantasy_points_ppr': '{:.2f}'})\
-                .to_html(classes="table")
+        # Rename columns with proper display names
+        pass_data.rename(columns={'player_display_name':'Name','position':'Position','recent_team':'Team','week':'Week','completions':'Completions','attempts':'Attempts','passing_yards':"Pass Yds",'passing_tds':"Pass TDs",'interceptions':"INTs",'sacks':"Sacks",'sack_yards':"Sack Yards",'sack_fumbles':"Sack Fumbles",'sack_fumbles_lost':'Sack Fumbles Lost','passing_air_yards':'Pass Air Yards','passing_yards_after_catch':'Pass YAC','passing_first_downs':'Passing 1st Downs','passing_epa':'Pass EPA','passing_2pt_conversions':'Pass 2pt','pacr':'PACR','fantasy_points':'STD Points','fantasy_points_ppr':'PPR Points'}, inplace=True)
+        rush_data.rename(columns={'player_display_name':'Name','position':'Position','recent_team':'Team','week':'Week','carries':'Carries','rushing_yards':'Rush Yards','rushing_tds':'Rush TDs','rushing_fumbles':'Rush Fumbles','rushing_fumbles_lost':'Rush Fumbles Lost','rushing_first_downs':'Rush 1st Downs','rushing_epa':'Rush EPA','rushing_2pt_conversions':'Rush 2pt', 'receptions':'Receptions', 'targets':'Targets','receiving_yards':'Receiving Yards','receiving_tds':'Receiving TDs','receiving_fumbles':'Receiving Fumbles','receiving_fumbles_lost':'Receiving Fumbles Lost','receiving_air_yards':'Receiving Air Yards','receiving_yards_after_catch':'Receiving YAC','receiving_first_downs':'Receiving 1st Downs','receiving_2pt_conversions':'Receiving 2pt','target_share':'Target Share','fantasy_points':'STD Points','fantasy_points_ppr':'PPR Points'}, inplace=True)
+        rec_data.rename(columns={'player_display_name':'Name','position':'Position','recent_team':'Team','week':'Week','receptions':'Receptions','targets':'Targets','receiving_yards':'Receiving Yards','receiving_tds':'Receiving TDs','receiving_fumbles':'Receiving Fumbles','receiving_fumbles_lost':'Receiving Fumbles Lost','receiving_air_yards':'Receiving Air Yards','receiving_yards_after_catch':'Receiving YAC','receiving_first_downs':'Receiving 1st Downs','receiving_2pt_conversions':'Receiving 2pt','target_share':'Target Share','fantasy_points':'STD Points','fantasy_points_ppr':'PPR Points','receiving_epa':'Receiving EPA','racr':'RACR','air_yards_share':'% Air Yards','wopr':'WOPR','special_teams_tds':'Special Teams TD'}, inplace=True)
+        te_data.rename(columns={'player_display_name':'Name','position':'Position','recent_team':'Team','week':'Week','receptions':'Receptions','targets':'Targets','receiving_yards':'Receiving Yards','receiving_tds':'Receiving TDs','receiving_fumbles':'Receiving Fumbles','receiving_fumbles_lost':'Receiving Fumbles Lost','receiving_air_yards':'Receiving Air Yards','receiving_yards_after_catch':'Receiving YAC','receiving_first_downs':'Receiving 1st Downs','receiving_2pt_conversions':'Receiving 2pt','target_share':'Target Share','fantasy_points':'STD Points','fantasy_points_ppr':'PPR Points','receiving_epa':'Receiving EPA','racr':'RACR','air_yards_share':'% Air Yards','wopr':'WOPR','special_teams_tds':'Special Teams TD'}, inplace=True)
 
-        # Style schedule data without using format_schedule helper
-        full_schedule = full_schedule.style.hide(axis="index")\
-            .format(precision=2)\
-            .to_html(classes="table")
+        # Style and hide columns
+        pass_data = pass_data.style.hide(axis="index").hide(['dakota','player_id','player_name','position_group','headshot_url','season','season_type','opponent_team','carries','rushing_yards','rushing_tds','rushing_fumbles','rushing_fumbles_lost','rushing_first_downs','rushing_epa','rushing_2pt_conversions','receptions','targets','receiving_yards','receiving_tds','receiving_fumbles','receiving_fumbles_lost','receiving_air_yards','receiving_yards_after_catch','receiving_first_downs','receiving_epa','receiving_2pt_conversions','racr','target_share','air_yards_share','wopr','special_teams_tds'], axis="columns")
+        rush_data = rush_data.style.hide(axis="index").hide(['dakota','player_id','player_name','position_group','headshot_url','season','season_type','opponent_team','completions','attempts','passing_yards','passing_tds','interceptions','sacks','sack_yards','sack_fumbles','sack_fumbles_lost','passing_air_yards','passing_yards_after_catch','passing_first_downs','passing_epa','passing_2pt_conversions','pacr','dakota','receiving_epa','racr','air_yards_share','wopr','special_teams_tds'], axis="columns")
+        rec_data = rec_data.style.hide(axis="index").hide(['dakota','player_id','player_name','position_group','headshot_url','season','season_type','opponent_team','completions','attempts','passing_yards','passing_tds','interceptions','sacks','sack_yards','sack_fumbles','sack_fumbles_lost','passing_air_yards','passing_yards_after_catch','passing_first_downs','passing_epa','passing_2pt_conversions','pacr','dakota','carries','rushing_yards','rushing_tds','rushing_fumbles','rushing_fumbles_lost','rushing_first_downs','rushing_epa','rushing_2pt_conversions'], axis="columns")
+        te_data = te_data.style.hide(axis="index").hide(['dakota','player_id','player_name','position_group','headshot_url','season','season_type','opponent_team','completions','attempts','passing_yards','passing_tds','interceptions','sacks','sack_yards','sack_fumbles','sack_fumbles_lost','passing_air_yards','passing_yards_after_catch','passing_first_downs','passing_epa','passing_2pt_conversions','pacr','dakota','carries','rushing_yards','rushing_tds','rushing_fumbles','rushing_fumbles_lost','rushing_first_downs','rushing_epa','rushing_2pt_conversions'], axis="columns")
+
+        # Format numeric columns
+        pass_data = pass_data.format(subset=['Pass Yds','INTs','Sacks','Sack Yards','Pass Air Yards','Pass YAC','Passing 1st Downs'],precision=0, na_rep="-").format(subset=['Pass EPA','PACR','STD Points','PPR Points'],precision=2, na_rep="-")
+        rush_data = rush_data.format(subset=['Rush Yards','Rush Fumbles','Rush Fumbles Lost','Rush 1st Downs','Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs'],precision=0, na_rep="-").format(subset=['Rush EPA','Target Share','STD Points','PPR Points'],precision=2, na_rep="-")
+        rec_data = rec_data.format(subset=['Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs','Special Teams TD'],precision=0, na_rep="-").format(subset=['Receiving EPA','Target Share','STD Points','PPR Points','RACR','% Air Yards','WOPR'],precision=2, na_rep="-")
+        te_data = te_data.format(subset=['Receiving Yards','Receiving Fumbles','Receiving Fumbles Lost','Receiving Air Yards','Receiving YAC','Receiving 1st Downs','Special Teams TD'],precision=0, na_rep="-").format(subset=['Receiving EPA','Target Share','STD Points','PPR Points','RACR','% Air Yards','WOPR'],precision=2, na_rep="-")
+
+        # Calculate position averages
+        pass_agg = weekly_position_totals[weekly_position_totals['position'] == 'QB'].groupby('week')['fantasy_points_ppr'].first().mean()
+        rush_agg = weekly_position_totals[weekly_position_totals['position'] == 'RB'].groupby('week')['fantasy_points_ppr'].first().mean()
+        rec_agg = weekly_position_totals[weekly_position_totals['position'] == 'WR'].groupby('week')['fantasy_points_ppr'].first().mean()
+        te_agg = weekly_position_totals[weekly_position_totals['position'] == 'TE'].groupby('week')['fantasy_points_ppr'].first().mean()
 
         return render_template('team-fpa.html',
                              team=team,
-                             team_fpa=full_schedule,
+                             team_fpa=full_schedule.to_html(classes="table"),
                              fullname=fullname,
-                             pass_data=styled_positions['QB'],
-                             rush_data=styled_positions['RB'],
-                             rec_data=styled_positions['WR'],
-                             te_data=styled_positions['TE'],
-                             pass_agg=aggregates['QB'],
-                             rush_agg=aggregates['RB'],
-                             rec_agg=aggregates['WR'],
-                             te_agg=aggregates['TE'])
+                             pass_data=pass_data.to_html(classes="table"),
+                             rush_data=rush_data.to_html(classes="table"),
+                             rec_data=rec_data.to_html(classes="table"),
+                             te_data=te_data.to_html(classes="table"),
+                             pass_agg=pass_agg,
+                             rush_agg=rush_agg,
+                             rec_agg=rec_agg,
+                             te_agg=te_agg)
                              
     except Exception as e:
         logger.error(f"Error in team_fpa for {team}: {str(e)}")
