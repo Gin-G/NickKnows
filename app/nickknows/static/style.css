@@ -172,6 +172,10 @@ table tbody tr:nth-of-type(even) {
   width: 100%;
 }
 
+.navbar .brand {
+  margin-left: 5%;
+}
+
 /* Links inside the navbar */
 .navbar a {
   float: left;
@@ -186,6 +190,7 @@ table tbody tr:nth-of-type(even) {
 .dropdown {
   float: left;
   overflow: hidden;
+  font-family: Arial;
 }
 
 /* Dropdown button */
