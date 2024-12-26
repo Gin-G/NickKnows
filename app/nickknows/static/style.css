@@ -172,6 +172,13 @@ table tbody tr:nth-of-type(even) {
   width: 100%;
 }
 
+.navbar .brand {
+  float: left;
+  margin-left: 5%;  /* Adjust value as needed */
+  padding: 17px 6px;
+  text-decoration: none;
+}
+
 /* Links inside the navbar */
 .navbar a {
   float: left;
