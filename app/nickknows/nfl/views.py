@@ -364,6 +364,16 @@ def team_fpa(team, fullname):
         full_schedule = pd.read_csv(file_path, index_col=0)
         weekly_team_data = pd.read_csv(data_file_path, index_col=0)
         
+        # Format team schedule
+        full_schedule.loc[full_schedule["overtime"] == 0, "overtime"] = "No"
+        full_schedule.loc[full_schedule["overtime"] == 1, "overtime"] = "Yes"
+        full_schedule.loc[full_schedule["div_game"] == 0, "div_game"] = "No"
+        full_schedule.loc[full_schedule["div_game"] == 1, "div_game"] = "Yes"
+        full_schedule.rename(columns = {'game_id':'Game','away_team':'Away Team','away_score':'Away Score','home_team':'Home Team','home_score':'Home Score','result':'Result','total':'Total','overtime':'Overtime','away_rest':'Away Rest','home_rest':'Home Rest','away_moneyline':'Away Moneyline','home_moneyline':'Home Moneyline','spread_line':'Spread','away_spread_odds':'Away Spread Odds','home_spread_odds':'Home Spread Odds','total_line':'Total Line','under_odds':'Under Odds','over_odds':'Over Odds','div_game':'Division Game','away_qb_name':'Away QB','home_qb_name':'Home QB','stadium':'Stadium'}, inplace=True)
+        full_schedule = full_schedule.style.hide(axis="index").hide(['roof','gameday','weekday','gametime','season','game_type','ftn','week','location','old_game_id','gsis','nfl_detail_id','surface','temp','wind','pfr','pff','espn','away_qb_id','home_qb_id','away_coach','home_coach','referee','stadium_id'], axis="columns")
+        full_schedule = full_schedule.format(subset=['Away Score','Home Score','Result','Total','Away Moneyline','Home Moneyline','Away Spread Odds','Home Spread Odds','Under Odds','Over Odds'],precision=0).format(subset=['Spread','Total Line'],precision=1)
+        full_schedule = full_schedule.apply(lambda full_schedule: total_highlight(full_schedule, "Total", "Total Line"), axis=None)
+
         # Process position data
         pass_data = weekly_team_data[weekly_team_data['position'] == 'QB']
         rush_data = weekly_team_data[weekly_team_data['position'] == 'RB']

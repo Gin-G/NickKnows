@@ -199,7 +199,6 @@ table tbody tr:nth-of-type(even) {
 
 /* Dropdown button */
 .dropdown .dropbtn {
-  font-size: 14px;
   border: none;
   outline: none;
   color: white;
