@@ -176,6 +176,7 @@ table tbody tr:nth-of-type(even) {
   float: left;
   margin-left: 5%;  /* Adjust value as needed */
   padding: 17px 6px;
+  color: white;
   text-decoration: none;
 }
 
@@ -192,6 +193,7 @@ table tbody tr:nth-of-type(even) {
 .navbar a:not(.brand):not(.icon) {
   padding: 17px 6px;
   text-decoration: none;
+  color: white;
 }
 
 /* The dropdown container */
