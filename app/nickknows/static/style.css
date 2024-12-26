@@ -172,19 +172,10 @@ table tbody tr:nth-of-type(even) {
   width: 100%;
 }
 
-.navbar .brand {
-  float: left;
-  font-family: inherit; /* Important for vertical align on mobile phones */
-  margin-left: 5%;  /* Adjust value as needed */
-  padding: 17px 6px;
-  color: white;
-  text-decoration: none;
-}
-
 /* Links inside the navbar */
-.nav-links {
+.navbar a {
   float: left;
-  font-family: inherit; /* Important for vertical align on mobile phones */
+  font-size: 14px;
   color: white;
   padding: 17px 6px;
   text-decoration: none;
@@ -199,6 +190,7 @@ table tbody tr:nth-of-type(even) {
 
 /* Dropdown button */
 .dropdown .dropbtn {
+  font-size: 14px;
   border: none;
   outline: none;
   color: white;
