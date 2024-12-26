@@ -177,7 +177,7 @@ table tbody tr:nth-of-type(even) {
   float: left;
   font-size: 14px;
   color: white;
-  padding: 17px 6px;
+  padding: 2px 6px;
   text-decoration: none;
   margin-left: 5%;
   width: fit-content;
