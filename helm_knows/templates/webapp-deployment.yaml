@@ -33,7 +33,7 @@ spec:
         - name: data-volume
           mountPath: /NickKnows/app/nickknows/nfl/data
         - name: images-volume
-          mountPath: /NickKnows/app/nickknows/nfl/static/images
+          mountPath: /NickKnows/app/nickknows/static/images
         resources:
           limits:
             cpu: '0'
