@@ -582,8 +582,6 @@ def generate_team_graphs(team, weekly_data_dict):
     for pos, data in positions.items():
         # Group by player and sum their fantasy points
         player_totals = data
-        # Sort by fantasy points descending
-        player_totals = player_totals.sort_values('fantasy_points_ppr', ascending=False)
         
         # Create and save plot
         player_totals.plot.bar(x='player_display_name', y='fantasy_points_ppr', xlabel='')
