@@ -6,26 +6,6 @@
     }
 </style>
 
-<script>
-    function toggleNav() {
-        var x = document.getElementById("navLinks");
-        if (x.className === "nav-links") {
-            x.className += " responsive";
-        } else {
-            x.className = "nav-links";
-        }
-    }
-    
-    // Close menu when clicking outside
-    document.addEventListener('click', function(e) {
-        var navLinks = document.getElementById('navLinks');
-        var hamburger = document.querySelector('.navbar .icon');
-        if (!navLinks.contains(e.target) && !hamburger.contains(e.target)) {
-            navLinks.className = "nav-links";
-        }
-    });
-</script>
-
 <div class="navbar">
     <a href="{{url_for('home')}}" class="brand">Home</a>
     <div class="dropdown">
