@@ -588,7 +588,7 @@ def generate_team_graphs(team, weekly_data_dict):
         plt.title(f'{team} vs {pos}s Fantasy Points')
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
-        plt.savefig(f'nickknows/static/{team}_{pos}_FPA.png', bbox_inches='tight')
+        plt.savefig(f'nickknows/nfl/data/{team}/{team}_{pos}_FPA.png', bbox_inches='tight')
         plt.close()
         
         logger.info(f"Generated {pos} plot for {team} with {len(player_totals)} players")
