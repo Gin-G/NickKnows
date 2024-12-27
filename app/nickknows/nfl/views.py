@@ -353,12 +353,17 @@ def team_fpa(team, fullname):
         file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
         data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
         
-        # Validate and load data
-        for path in [file_path, data_file_path]:
-            if not Path(path).is_file():
-                update_team_schedule.delay(team)
-                flash("Data is updating. Please try again.")
-                return redirect(url_for('NFL'))
+        # Validate schedule file
+        if not Path(file_path).is_file():
+            update_team_schedule.delay(team)
+            flash("The team schedule is updating. Please try again.")
+            return redirect(url_for('NFL'))
+            
+        # Validate weekly data file
+        if not Path(data_file_path).is_file():
+            update_weekly_team_data.delay(team)
+            flash("The weekly team data is updating. Please try again.")
+            return redirect(url_for('NFL'))
         
         # Load data files
         full_schedule = pd.read_csv(file_path, index_col=0)
