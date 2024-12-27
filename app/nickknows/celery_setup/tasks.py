@@ -588,7 +588,7 @@ def generate_team_graphs(team, weekly_data_dict):
         plt.title(f'{team} vs {pos}s Fantasy Points')
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
-        folder_path = os.getcwd() + '/nickknows/static/images/' + team + '/'
+        folder_path = 'nickknows/static/images/' + team + '/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
         plt.savefig(f'nickknows/static/images/{team}/{team}_{pos}_FPA.png', bbox_inches='tight')
@@ -607,7 +607,7 @@ def process_team_data(team):
         weekly_position_totals = weekly_team_data.groupby(['week', 'position'])['fantasy_points_ppr'].sum().reset_index()
         
         # Generate plots using existing function
-        plot = generate_team_graphs(team, weekly_team_data)
+        generate_team_graphs(team, weekly_team_data)
 
         # Calculate mean fantasy points against per position
         pass_agg = weekly_position_totals[weekly_position_totals['position'] == 'QB'].groupby('week')['fantasy_points_ppr'].first().mean()
@@ -620,8 +620,7 @@ def process_team_data(team):
             'QB': pass_agg,
             'RB': rush_agg,
             'WR': rec_agg,
-            'TE': te_agg,
-            'Plot': plot
+            'TE': te_agg
         }
     except Exception as e:
         logger.error(f"Error processing team {team}: {str(e)}")
