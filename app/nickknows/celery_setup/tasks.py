@@ -588,10 +588,10 @@ def generate_team_graphs(team, weekly_data_dict):
         plt.title(f'{team} vs {pos}s Fantasy Points')
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
-        folder_path = 'nickknows/static/images/' + team + '/'
+        folder_path = '/NickKnows/app/nickknows/static/images/' + team + '/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
-        plt.savefig(f'nickknows/static/images/{team}/{team}_{pos}_FPA.png', bbox_inches='tight')
+        plt.savefig(f'/NickKnows/app/nickknows/static/images/{team}/{team}_{pos}_FPA.png', bbox_inches='tight')
         plt.close()
         
         logger.info(f"Generated {pos} plot for {team} with {len(player_totals)} players")
