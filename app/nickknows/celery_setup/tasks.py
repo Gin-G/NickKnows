@@ -592,6 +592,7 @@ def generate_team_graphs(team, weekly_data_dict):
         plt.close()
         
         logger.info(f"Generated {pos} plot for {team} with {len(player_totals)} players")
+        return f"Generated {pos} plot for {team} with {len(player_totals)} players"
 
 @celery.task()
 def process_team_data(team):
@@ -603,7 +604,7 @@ def process_team_data(team):
         weekly_position_totals = weekly_team_data.groupby(['week', 'position'])['fantasy_points_ppr'].sum().reset_index()
         
         # Generate plots using existing function
-        generate_team_graphs(team, weekly_team_data)
+        plot = generate_team_graphs(team, weekly_team_data)
 
         # Calculate mean fantasy points against per position
         pass_agg = weekly_position_totals[weekly_position_totals['position'] == 'QB'].groupby('week')['fantasy_points_ppr'].first().mean()
@@ -616,7 +617,8 @@ def process_team_data(team):
             'QB': pass_agg,
             'RB': rush_agg,
             'WR': rec_agg,
-            'TE': te_agg
+            'TE': te_agg,
+            'Plot': plot
         }
     except Exception as e:
         logger.error(f"Error processing team {team}: {str(e)}")
