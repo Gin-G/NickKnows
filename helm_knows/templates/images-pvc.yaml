@@ -3,6 +3,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ .Values.webapp.name }}-images-pvc
   namespace: {{ .Release.Namespace }}
+  annotations: {
+    volume.kubernetes.io/selected-node: "gingmachine"
+  }
 spec:
   accessModes:
     - ReadWriteOnce
