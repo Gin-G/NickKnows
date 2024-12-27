@@ -515,48 +515,52 @@ def update_team_schedule(team):
 @celery.task()
 def update_weekly_team_data(team):
     try:
+        # Setup directories
         team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
         if not os.path.exists(team_dir):
             os.mkdir(team_dir)
-        
+
         # Read files
         file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
         rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
         week_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_weekly_data.csv'
-        
+
         # Load data
         full_schedule = pd.read_csv(file_path, index_col=0)
         roster_data = pd.read_csv(rost_path, index_col=0)
         weekly_data = pd.read_csv(week_path, index_col=0)
-        
-        # Get opponent teams with correct weeks
-        opponents_by_week = pd.DataFrame()
-        opponents_by_week['week'] = full_schedule['week']
-        opponents_by_week['opponent'] = np.where(
-            full_schedule['home_team'] == team,
-            full_schedule['away_team'],
-            full_schedule['home_team']
-        )
-        
+
+        # Identify opponents using home/away logic
+        ishome = full_schedule['home_team'].str.contains(team)
+        full_schedule['is_home'] = ishome
+        op_team1 = full_schedule.loc[full_schedule['is_home'] == True, ['away_team', 'week']]
+        op_team2 = full_schedule.loc[full_schedule['is_home'] == False, ['home_team', 'week']]
+        opponents = pd.concat([op_team1, op_team2])
+        opponents["opponent"] = opponents['away_team'].fillna('') + opponents['home_team'].fillna('')
+        opponents = opponents.sort_values(by=['week'])
+
         # Process weekly data
-        all_weekly_data = []
-        for _, row in opponents_by_week.iterrows():
+        weekly_team_data = pd.DataFrame()
+        for _, row in opponents.iterrows():
             week = row['week']
             opponent = row['opponent']
+            
+            logger.info(f"Processing {opponent} week {week}")
             
             # Get opponent roster
             team_roster = roster_data[roster_data['team'] == opponent]
             players = team_roster['player_name'].tolist()
             
-            # Get weekly stats for opponent players
-            week_data = weekly_data[
+            # Get player stats for that week
+            player_data = weekly_data[
                 (weekly_data['player_display_name'].isin(players)) & 
-                (weekly_data['week'] == week)
+                (weekly_data['week'] == week) &
+                (weekly_data['recent_team'] == opponent)
             ]
-            all_weekly_data.append(week_data)
-        
-        # Combine and save
-        weekly_team_data = pd.concat(all_weekly_data)
+            
+            weekly_team_data = pd.concat([weekly_team_data, player_data])
+
+        # Save processed data
         output_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
         weekly_team_data.to_csv(output_path)
         
