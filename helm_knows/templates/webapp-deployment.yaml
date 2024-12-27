@@ -32,6 +32,8 @@ spec:
         volumeMounts:
         - name: data-volume
           mountPath: /NickKnows/app/nickknows/nfl/data
+        - name: images-volume
+          mountPath: /NickKnows/app/nickknows/nfl/static/images
         resources:
           limits:
             cpu: '0'
@@ -40,3 +42,6 @@ spec:
       - name: data-volume
         persistentVolumeClaim:
           claimName: {{ .Values.webapp.name }}-pvc
+      - name: images-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.webapp.name }}-images-pvc

@@ -518,7 +518,7 @@ def fpa():
         cols.pop(0)
         fpa_data.set_index('Team Name').plot.bar(subplots=True, figsize=(8, 16), sharex=False)
         plt.tight_layout()
-        plt.savefig('nickknows/static/FPA.png')
+        plt.savefig('nickknows/static/images/FPA.png')
         
         # Style the table with color gradients for each column
         fpa_data = fpa_data.style\
