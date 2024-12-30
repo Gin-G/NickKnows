@@ -11,11 +11,11 @@
         <i class="fa fa-bars"></i>
         <a href="{{url_for('NFL')}}">NFL Home</a>
         <a href="{{url_for('schedule')}}">Schedule</a>
-        <div class="dropdown">
-            <button class="dropbtn">Rosters
-                <i class="fa fa-caret-down"></i>
-            </button>
-            <div class="dropdown-content">
+    <div class="dropdown">
+        <button class="dropbtn">Rosters
+            <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content">
             <a href="{{url_for('roster', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
             <a href="{{url_for('roster', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
             <a href="{{url_for('roster', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>
