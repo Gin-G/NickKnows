@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Login to Harbor
         run: |
-          echo "${{ secrets.HARBOR_PASS }}" | docker login -u ${{ secrets.HARBOR_USER }} --password-stdin harbor.ging.nickknows.net
+          echo ${{ secrets.HARBOR_PASS }} | docker login harbor.ging.nickknows.net -u ${{ secrets.HARBOR_USER }} --password-stdin 
       - name: Get the current date for an image tag
         id: date
         run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
