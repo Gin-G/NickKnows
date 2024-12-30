@@ -164,6 +164,7 @@ table tbody tr:nth-of-type(even) {
 }
 
 /* Navbar container */
+/* 
 .navbar {
   overflow: hidden;
   background-color: #393f44;
@@ -175,8 +176,9 @@ table tbody tr:nth-of-type(even) {
 .navbar .brand {
   margin-left: 5%;
 }
-
+*/
 /* Links inside the navbar */
+/* 
 .navbar a {
   float: left;
   font-size: 14px;
@@ -185,8 +187,9 @@ table tbody tr:nth-of-type(even) {
   text-decoration: none;
   width: fit-content;
 }
+*/
 
-/* The dropdown container */
+/* The dropdown container */ 
 .dropdown {
   float: left;
   overflow: hidden;
