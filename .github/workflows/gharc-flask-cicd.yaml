@@ -19,10 +19,17 @@ jobs:
       - name: Get the current date for an image tag
         id: date
         run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
-      - name: Build and push Nick Knows Flask image"
+      - name: Set up Docker Buildx
         run: |
-          docker buildx create --use --driver=remote tcp://buildkit-buildkit-service.arc-systems:1234
-          docker buildx build --push -t harbor.ging.nickknows.net/nickknows/nick-knows:${{ steps.date.outputs.date }} .
+          docker buildx create --name builder-instance --driver=remote tcp://buildkit-buildkit-service.arc-systems:1234 --driver-opt network=host
+          docker buildx use builder-instance
+      - name: Build and push Nick Knows Flask image
+        run: |
+          docker buildx build \
+          --push \
+          --provenance=false \
+          --allow security.insecure \
+          -t harbor.ging.nickknows.net/nickknows/nick-knows:${{ steps.date.outputs.date }} .
       - name: Update Helm chart with new image
         run: |
           sed -i "/nick-knows/ c\    image: harbor.ging.nickknows.net/nickknows/nick-knows:${{ steps.date.outputs.date }}" helm_knows/values.yaml
