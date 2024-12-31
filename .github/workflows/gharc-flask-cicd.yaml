@@ -13,9 +13,6 @@ jobs:
     steps:
       - name: Check out the code repository
         uses: actions/checkout@v4
-      - name: Login to Harbor
-        run: |
-          echo ${{ secrets.HARBOR_PASS }} | docker login harbor.ging.nickknows.net -u ${{ secrets.HARBOR_USER }} --password-stdin 
       - name: Get the current date for an image tag
         id: date
         run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
@@ -23,6 +20,9 @@ jobs:
         run: |
           docker buildx create --name builder-instance --driver=remote tcp://buildkit-buildkit-service.arc-systems:1234
           docker buildx use builder-instance
+      - name: Login to Harbor
+        run: |
+          echo ${{ secrets.HARBOR_PASS }} | docker login harbor.ging.nickknows.net -u ${{ secrets.HARBOR_USER }} --password-stdin 
       - name: Build and push Nick Knows Flask image
         run: |
           docker buildx build \
