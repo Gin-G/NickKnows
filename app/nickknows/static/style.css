@@ -164,7 +164,6 @@ table tbody tr:nth-of-type(even) {
 }
 
 /* Navbar container */
-/* 
 .navbar {
   overflow: hidden;
   background-color: #393f44;
@@ -176,9 +175,8 @@ table tbody tr:nth-of-type(even) {
 .navbar .brand {
   margin-left: 5%;
 }
-*/
+
 /* Links inside the navbar */
-/* 
 .navbar a {
   float: left;
   font-size: 14px;
@@ -187,7 +185,6 @@ table tbody tr:nth-of-type(even) {
   text-decoration: none;
   width: fit-content;
 }
-*/
 
 /* The dropdown container */ 
 .dropdown {
@@ -208,11 +205,11 @@ table tbody tr:nth-of-type(even) {
   margin: 0; /* Important for vertical align on mobile phones */
 }
 
-/* Add a red background color to navbar links on hover 
+/* Add a red background color to navbar links on hover */
 .navbar a:hover, .dropdown:hover .dropbtn {
   background-color: darkblue;
 }
-*/
+
 
 /* Dropdown content (hidden by default) */
 .dropdown-content {
