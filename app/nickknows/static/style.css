@@ -308,6 +308,12 @@ table tbody tr:nth-of-type(even) {
   margin: 0 auto;
 }
 
+.social-links {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+}
+
 /* Media queries for larger screens */
 @media screen and (min-width: 768px) {
   table td, 
