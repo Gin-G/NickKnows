@@ -238,15 +238,17 @@ table tbody tr:nth-of-type(even) {
 }
 */
 
-/* Add a grey background color to dropdown links on hover */
+/* Add a grey background color to dropdown links on hover 
 .dropdown-content a:hover {
   background-color: #ddd;
 }
+*/
 
-/* Show the dropdown menu on hover */
+/* Show the dropdown menu on hover
 .dropdown:hover .dropdown-content {
   display: block;
 }
+*/
 
 .inline-block-child {
   display: inline-block;
@@ -307,15 +309,6 @@ table tbody tr:nth-of-type(even) {
       padding: 4px 8px;
   }
 
-  .navbar {
-      flex-direction: row;
-  }
-
-  .navbar-links {
-      display: flex;
-      flex-direction: row;
-  }
-
   img {
       max-width: 800px;
   }
@@ -350,8 +343,4 @@ table tbody tr:nth-of-type(even) {
 
 
 @media screen and (orientation: landscape) and (max-width: 900px) {
-  .navbar {
-      overflow-y: auto;
-      max-height: 100vh;
-  }
 }
