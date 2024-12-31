@@ -175,6 +175,16 @@ table tbody tr:nth-of-type(even) {
   justify-content: start;
 }
 
+.navbar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    padding: 10px;
+    cursor: pointer;
+}
+
 .navbar .brand {
   margin-left: 5%;
 }
@@ -187,6 +197,11 @@ table tbody tr:nth-of-type(even) {
   padding: 0px 6px;
   text-decoration: none;
   width: fit-content;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
 }
 
 /* The dropdown container */ 
@@ -330,7 +345,47 @@ table tbody tr:nth-of-type(even) {
   img {
       max-width: 800px;
   }
+
+  .navbar {
+    padding: 0;
+  }
+
+  .navbar-toggle {
+      display: block;
+      position: absolute;
+      right: 10px;
+      top: 10px;
+  }
+
+  .nav-links {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      background-color: #393f44;
+  }
+
+  .nav-links.active {
+      display: flex;
+  }
+
+  .nav-links a, 
+  .nav-links .dropdown {
+      width: 100%;
+      text-align: left;
+      padding: 10px;
+  }
+
+  .dropdown-content {
+      position: relative;
+      width: 100%;
+      box-shadow: none;
+      padding-left: 20px;
+  }
 }
 
 @media screen and (orientation: landscape) and (max-width: 900px) {
+  .nav-links {
+      max-height: 80vh;
+      overflow-y: auto;
+  }
 }

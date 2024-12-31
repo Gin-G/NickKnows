@@ -6,16 +6,19 @@
     }
 </style>
 
-<div class="navbar">
-<a href="{{url_for('home')}}" class="brand">Home</a>
-    <i class="fa fa-bars"></i>
-    <a href="{{url_for('NFL')}}">NFL Home</a>
-    <a href="{{url_for('schedule')}}">Schedule</a>
-    <div class="dropdown">
-        <button class="dropbtn">Rosters
-            <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="dropdown-content">
+<nav class="navbar">
+    <a href="{{url_for('home')}}" class="brand">Home</a>
+    <button class="navbar-toggle" onclick="toggleNav()">
+        <i class="fa fa-bars"></i>
+    </button>
+    <div class="nav-links" id="navLinks">
+        <a href="{{url_for('NFL')}}">NFL Home</a>
+        <a href="{{url_for('schedule')}}">Schedule</a>
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown(this)">
+                Rosters <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
             <a href="{{url_for('roster', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
             <a href="{{url_for('roster', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
             <a href="{{url_for('roster', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>
@@ -51,7 +54,7 @@
         </div>
     </div>
     <div class="dropdown">
-        <button class="dropbtn">Team Schedule
+        <button class="dropbtn" onclick="toggleDropdown(this)">Team Schedule
         <i class="fa fa-caret-down"></i>
         </button>
         <div class="dropdown-content">
@@ -90,7 +93,7 @@
         </div>
     </div>
     <div class="dropdown">
-        <button class="dropbtn">Team Results
+        <button class="dropbtn" onclick="toggleDropdown(this)">Team Results
         <i class="fa fa-caret-down"></i>
         </button>
         <div class="dropdown-content">
@@ -130,7 +133,7 @@
         </div>
     </div>
     <div class="dropdown">
-        <button class="dropbtn">Team FPA
+        <button class="dropbtn" onclick="toggleDropdown(this)">Team FPA
         <i class="fa fa-caret-down"></i>
         </button>
         <div class="dropdown-content">
@@ -177,4 +180,18 @@
         <a id="social-media" href="https://www.youtube.com/channel/UCttd2npS2zsDR0_VlxVA-PA"><img src="{{ url_for('static', filename='yt.jpg') }}" height="35px" width="35px"></a>
         <a id="social-media" href="https://www.instagram.com/nickco7/"><img src="{{ url_for('static', filename='ig.jpg') }}" height="35px" width="35px"></a>
     </div>
-</div>
+</nav>
+
+<script>
+    function toggleNav() {
+        var navLinks = document.getElementById("navLinks");
+        navLinks.classList.toggle("active");
+    }
+    
+    function toggleDropdown(btn) {
+        if (window.innerWidth < 768) {
+            var content = btn.nextElementSibling;
+            content.style.display = content.style.display === "block" ? "none" : "block";
+        }
+    }
+</script>
