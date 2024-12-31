@@ -8,7 +8,10 @@
 
 <nav class="navbar">
     <a href="{{url_for('home')}}" class="brand">Home</a>
-    <div class="dropdown">
+    <button class="navbar-toggle" onclick="toggleNav()">
+        <i class="fa fa-bars"></i>
+    </button>
+    <div class="nav-links" id="navLinks">
         <button class="dropbtn">Interests
         <i class="fa fa-caret-down"></i>
         </button>
@@ -31,3 +34,17 @@
     <a id="social-media" href="https://www.instagram.com/nickco7/"><img src="static/ig.jpg" height="35px" width="35px"></a>
     </div>
 </nav>
+
+<script>
+    function toggleNav() {
+        var navLinks = document.getElementById("navLinks");
+        navLinks.classList.toggle("active");
+    }
+    
+    function toggleDropdown(btn) {
+        if (window.innerWidth < 768) {
+            var content = btn.nextElementSibling;
+            content.style.display = content.style.display === "block" ? "none" : "block";
+        }
+    }
+</script>

@@ -28,7 +28,6 @@ jobs:
           docker buildx build \
           --push \
           --provenance=false \
-          --allow security.insecure \
           -t harbor.ging.nickknows.net/nickknows/nick-knows:${{ steps.date.outputs.date }} .
       - name: Update Helm chart with new image
         run: |
