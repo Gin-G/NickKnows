@@ -334,11 +334,6 @@ table tbody tr:nth-of-type(even) {
       font-size: 24px;
       margin: 10px 0;
   }
-
-  .button {
-      padding: 8px 16px;
-      font-size: 14px;
-  }
 }
 
 
