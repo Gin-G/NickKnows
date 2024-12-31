@@ -26,7 +26,6 @@ jobs:
       - name: Build and push Nick Knows Flask image
         run: |
           docker buildx build --load -t harbor.ging.nickknows.net/nickknows/nick-knows:${{ steps.date.outputs.date }} .
-          docker push harbor.ging.nickknows.net/nickknows/nick-knows:${{ steps.date.outputs.date }}
       - name: Update Helm chart with new image
         run: |
           sed -i "/nick-knows/ c\    image: harbor.ging.nickknows.net/nickknows/nick-knows:${{ steps.date.outputs.date }}" helm_knows/values.yaml
