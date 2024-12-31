@@ -21,7 +21,7 @@ jobs:
         run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
       - name: Set up Docker Buildx
         run: |
-          docker buildx create --name builder-instance --driver=remote tcp://buildkit-buildkit-service.arc-systems:1234 --driver-opt network=host
+          docker buildx create --name builder-instance --driver=remote tcp://buildkit-buildkit-service.arc-systems:1234
           docker buildx use builder-instance
       - name: Build and push Nick Knows Flask image
         run: |
