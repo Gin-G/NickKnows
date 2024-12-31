@@ -7,6 +7,7 @@
 </style>
 
 <div class="navbar">
+<ul id="navbar-main-elements" class="navbar-nav">
 <a href="{{url_for('home')}}" class="brand">Home</a>
     <i class="fa fa-bars"></i>
     <a href="{{url_for('NFL')}}">NFL Home</a>
@@ -170,6 +171,7 @@
             <a href="{{url_for('team_fpa', team='WAS', fullname='Washington Commanders')}}">Washington Commanders</a>
         </div>
     </div>
+</ul>
     <div style="position: relative; left:-5%">
         <a id="social-media" href="https://www.facebook.com/Nick.A.Cote"><img src="{{ url_for('static', filename='fb.jpg') }}" height="35px" width="35px"></a>
         <a id="social-media" href="https://twitter.com/NCGingi"><img src="{{ url_for('static', filename='twit.jpg') }}" height="35px" width="35px"></a>
