@@ -309,9 +309,8 @@ table tbody tr:nth-of-type(even) {
 }
 
 .social-links {
-  display: flex;
-  justify-content: center;
-  padding: 10px;
+  position: relative; 
+  left:-5%
 }
 
 /* Media queries for larger screens */

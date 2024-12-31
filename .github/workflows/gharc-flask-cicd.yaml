@@ -13,22 +13,22 @@ jobs:
     steps:
       - name: Check out the code repository
         uses: actions/checkout@v4
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Get the current date for an image tag
         id: date
         run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
-      - name: Set up Docker Buildx
+      - name: Build and push Nick Knows Flask image"
         run: |
-          docker buildx create --name builder-instance --driver=remote tcp://buildkit-buildkit-service.arc-systems:1234
-          docker buildx use builder-instance
-      - name: Login to Harbor
-        run: |
-          echo ${{ secrets.HARBOR_PASS }} | docker login harbor.ging.nickknows.net -u ${{ secrets.HARBOR_USER }} --password-stdin 
-      - name: Build and push Nick Knows Flask image
-        run: |
-          docker buildx build --load -t harbor.ging.nickknows.net/nickknows/nick-knows:${{ steps.date.outputs.date }} .
+          docker buildx create --use --driver=remote tcp://buildkit-buildkit-service.arc-systems:1234
+          docker buildx build --push -t ${{ secrets.DOCKERHUB_USERNAME }}/nick-knows:latest .
+          docker buildx build --push -t ${{ secrets.DOCKERHUB_USERNAME }}/nick-knows:${{ steps.date.outputs.date }} .
       - name: Update Helm chart with new image
         run: |
-          sed -i "/nick-knows/ c\    image: harbor.ging.nickknows.net/nickknows/nick-knows:${{ steps.date.outputs.date }}" helm_knows/values.yaml
+          sed -i "/nick-knows/ c\    image: docker.io/ncging/nick-knows:${{ steps.date.outputs.date }}" helm_knows/values.yaml
       - name: Push changes to GitHub
         run: |
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
