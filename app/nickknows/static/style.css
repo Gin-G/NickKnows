@@ -279,6 +279,11 @@ margin: 0 auto;
   margin-left: auto;
 }
 
+a#social-media {
+  margin-left: 0;
+  float: right;
+}
+
 /* Make tables more compact on small screens */
 @media screen and (max-width: 768px) {
 table {
