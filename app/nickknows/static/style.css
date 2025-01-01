@@ -1,396 +1,295 @@
-* {
-  box-sizing: border-box;
-}
-
 body {
-    background-color: #708090;
-    text-align: center;
-    font-family: Arial, Helvetica, sans-serif;
-    padding: 0px;
-    margin: 0px auto;
+  background-color: #708090;
+  text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 0px;
+  margin: 0px auto;
 }
 
 .bubble {
-    margin: 20px auto;
-    width: 95%;
-    font: 15px Arial;
-    background-color: #7393B3;
-    color: #FFFFFF;
-    text-align: center;
-    border-radius: 5px;
-    justify-content: space-between
+  margin: 20px auto;
+  width: 95%;
+  font: 15px Arial;
+  background-color: #7393B3;
+  color: #FFFFFF;
+  text-align: center;
+  border-radius: 5px;
+  justify-content: space-between
 }
 
 p {
-  width : 90%;
-  color: #FFFFFF;
-  text-align: left;
-  margin: 20px 5%;
+width : 90%;
+color: #FFFFFF;
+text-align: left;
+margin: 20px 5%;
 }
 
 img {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  border-radius: 5px;
-  width: 98%;
+display: block;
+margin-left: auto;
+margin-right: auto;
 }
 
 h1 {
-    margin: 20px auto;
-    width: fit-content;
-    background-color: #454545;
-    color: #FFFFFF;
-    text-align: center;
-    border-radius: 5px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 53px;
-    padding: 5px 15px;
-}
-
-h2 {
-  margin: 5px auto;
+  margin: 20px auto;
   width: fit-content;
-  background-color: #FFFFFF;
-  color: #454545;
-  text-align: center;
-  border-radius: 5px;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 33px;
-  padding: 5px 15px;
-}
-
-h3 {
-  margin: 5px auto;
-  width: 600px;
   background-color: #454545;
   color: #FFFFFF;
   text-align: center;
   border-radius: 5px;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 33px;
+  font-size: 53px;
+  padding: 5px 15px;
+}
+
+h2 {
+margin: 5px auto;
+width: fit-content;
+background-color: #FFFFFF;
+color: #454545;
+text-align: center;
+border-radius: 5px;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 33px;
+padding: 5px 15px;
+}
+
+h3 {
+margin: 5px auto;
+width: 600px;
+background-color: #454545;
+color: #FFFFFF;
+text-align: center;
+border-radius: 5px;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 33px;
 }
 
 .headerfont {
-    font-family: "Brush Script MT";
-    font-size: 53px;  
-    position: relative;  
-    font-weight: bold;
-    color: #393f44;
+  font-family: "Brush Script MT";
+  font-size: 53px;  
+  position: relative;  
+  font-weight: bold;
+  color: #393f44;
 }
 
-/* Mobile-first table styles */
 table {
-  background-color: #FFFFFF;
-  border: 2px solid black;
-  border-collapse: collapse;
-  color: #000000;
-  font-size: 14px;
-  margin: 0 auto;
-  width: 100%;
-  min-width: 300px;
+background-color: #FFFFFF;
+border: 4px solid black;
+border-collapse: collapse;
+color: #000000;
+font-size: 0.9em;  /* Slightly smaller font */
+margin: 0 auto;    /* Center tables */
+width: 95%;        /* Take up most but not all of container */
+table-layout: fixed; /* More predictable column widths */
 }
 
 /* Add responsive table container */
 .table-container {
-  width: 100%;
-  overflow-x: auto;  /* Horizontal scroll on small screens */
-  margin: 20px 0 60px 0;
-  padding: 0 10px;
-  box-sizing: border-box;
+width: 100%;
+overflow-x: auto;  /* Horizontal scroll on small screens */
+margin: 20px 0;
+padding: 0 10px;
+box-sizing: border-box;
 }
 
 .player-table {
-  vertical-align: middle;
+vertical-align: middle;
 }
 
 table thead tr {
-  background-color: #393f44;
-  color: #FFFFFF;
+background-color: #393f44;
+color: #FFFFFF;
 }
 
 table thead th {
-  border-right: 1px solid #FFFFFF;
-  padding: 3px;
+border-right: 1px solid #FFFFFF;
+padding: 3px;
 }
 
 table tbody tr {
-  border-bottom: 1px solid #dddddd;
-  padding: 10px 3px;
+border-bottom: 1px solid #dddddd;
+padding: 10px 3px;
 }
 
 table td {
-  width: fit-content;
-  border-right: 1px solid #dddddd;
-  padding: 3px 12px;
+width: fit-content;
+border-right: 1px solid #dddddd;
+padding: 3px 12px;
 }
 
 caption {
-    font-size: 150%;
-    padding: 5px;
+  font-size: 150%;
+  padding: 5px;
 }
 
 table tbody tr:nth-of-type(even) {
-  background-color: #f3f3f3;
+background-color: #f3f3f3;
 }
 
 .italic-mid {
-    font-size: 125%;
-    font-style: italic;
-    text-align: center;
+  font-size: 125%;
+  font-style: italic;
+  text-align: center;
 }
 
 .italic-left {
-    font-size: 125%;
-    font-style: italic;
-    text-align: left;
+  font-size: 125%;
+  font-style: italic;
+  text-align: left;
 }
 
 .italic-right {
-    font-size: 125%;
-    font-style: italic;
-    text-align: right;
+  font-size: 125%;
+  font-style: italic;
+  text-align: right;
 }
 
 .big-bold {
-    font-size: 150%;
-    font-weight: bold;
-    display: inline
+  font-size: 150%;
+  font-weight: bold;
+  display: inline
 }
 
 .mid-bold {
-    font-size: 135%;
-    font-weight: bold;
-    display: inline
+  font-size: 135%;
+  font-weight: bold;
+  display: inline
 }
 
 /* Navbar container */
 .navbar {
-  overflow: hidden;
-  background-color: #393f44;
-  font-family: Arial;
-  height: 50px;
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: start;
-}
-
-.navbar-toggle {
-    display: none;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 24px;
-    padding: 10px;
-    cursor: pointer;
-}
-
-.navbar .brand {
-  margin-left: 5%;
+overflow: hidden;
+background-color: #393f44;
+font-family: Arial;
+height: 50px;
+width: 100%;
 }
 
 /* Links inside the navbar */
 .navbar a {
-  float: left;
-  font-size: 14px;
-  color: white;
-  padding: 0px 6px;
-  text-decoration: none;
-  width: fit-content;
+float: left;
+font-size: 14px;
+color: white;
+padding: 17px 6px;
+text-decoration: none;
+margin-left: 5%;
+width: fit-content;
 }
 
-.nav-links {
-    display: flex;
-    align-items: center;
-}
-
-/* The dropdown container */ 
+/* The dropdown container */
 .dropdown {
-  float: left;
-  overflow: hidden;
-  font-family: Arial;
+float: left;
+overflow: hidden;
 }
 
 /* Dropdown button */
 .dropdown .dropbtn {
-  font-size: 14px;
-  border: none;
-  outline: none;
-  color: white;
-  padding: 17px 6px;
-  background-color: inherit;
-  font-family: inherit; /* Important for vertical align on mobile phones */
-  margin: 0; /* Important for vertical align on mobile phones */
+font-size: 14px;
+border: none;
+outline: none;
+color: white;
+padding: 17px 6px;
+background-color: inherit;
+font-family: inherit; /* Important for vertical align on mobile phones */
+margin: 0; /* Important for vertical align on mobile phones */
 }
 
 /* Add a red background color to navbar links on hover */
 .navbar a:hover, .dropdown:hover .dropbtn {
-  background-color: darkblue;
+background-color: darkblue;
 }
-
 
 /* Dropdown content (hidden by default) */
 .dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #f9f9f9;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
+display: none;
+position: absolute;
+background-color: #f9f9f9;
+min-width: 160px;
+box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+z-index: 1;
 }
-
 
 /* Links inside the dropdown */
 .dropdown-content a {
-  float: none;
-  color: black;
-  padding: 6px 16px;
-  text-decoration: none;
-  display: block;
-  text-align: left;
-  height: auto;
-  margin-left: 0%;
+float: none;
+color: black;
+padding: 6px 16px;
+text-decoration: none;
+display: block;
+text-align: left;
+height: auto;
+margin-left: 0%;
 }
-
 
 /* Add a grey background color to dropdown links on hover */
 .dropdown-content a:hover {
-  background-color: #ddd;
+background-color: #ddd;
 }
 
-
-/* Show the dropdown menu on hover*/
+/* Show the dropdown menu on hover */
 .dropdown:hover .dropdown-content {
-  display: block;
+display: block;
 }
-
 
 .inline-block-child {
-  display: inline-block;
+display: inline-block;
 }
 
 .inline-block-child-box {
-  display: inline-block;
-  background-color: #000000;
-  color: #ffffff;
-  border-radius: 5px;
-  padding: 5px;
-  margin-right: 5px;
-  margin-left: 5px;  
+display: inline-block;
+background-color: #000000;
+color: #ffffff;
+border-radius: 5px;
+padding: 5px;
+margin-right: 5px;
+margin-left: 5px;  
 }
 
 .header-image {
-  float:left;
-  width:318px;
-  height:90px;
-  position: relative; 
-  top: 40%; 
-  left: 15%;
+float:left;
+width:318px;
+height:90px;
+position: relative; 
+top: 40%; 
+left: 15%;
 }
 
 .row {
-  display: flex;
-  justify-content: center;
-  gap: 26px;
+display: flex;
+justify-content: center;
+gap: 26px;
 }
 
 .column {
-  flex: 50%;
-  padding: 4px 8px;
+flex: 50%;
+padding: 4px 8px;
 }
 
 /* Adjust column styles */
 .nfl-column {
-  padding: 4px 8px;
-  width: 100%;
-  max-width: 800px; /* Maximum width for readability */
-  margin: 0 auto;
+padding: 4px 8px;
+width: 100%;
+max-width: 800px; /* Maximum width for readability */
+margin: 0 auto;
 }
 
 .social-links {
   margin-right: 20px;
+  margin-left: auto;
 }
 
-/* Media queries for larger screens */
-@media screen and (min-width: 768px) {
-  table td, 
-  table th {
-      padding: 6px 4px;
-      font-size: 12px;
-  }
-
-  table {
-      font-size: 0.9em;
-      border: 4px solid black;
-  }
-
-  table td:before {
-    content: attr(data-label);
-    float: left;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-
-  h1 {
-      font-size: 24px;
-      margin: 10px auto;
-  }
-
-  .row {
-      flex-direction: row;
-      gap: 26px;
-  }
-
-  .column {
-      flex: 1;
-      padding: 4px 8px;
-  }
-
-  img {
-      max-width: 98%;
-  }
-
-  .navbar {
-    padding: 0;
-  }
-
-  .navbar-toggle {
-      display: block;
-      position: absolute;
-      right: 10px;
-      top: 10px;
-  }
-
-  .nav-links {
-      display: none;
-      width: 100%;
-      flex-direction: column;
-      background-color: #393f44;
-  }
-
-  .nav-links.active {
-      display: flex;
-  }
-
-  .nav-links a, 
-  .nav-links .dropdown {
-      width: 100%;
-      text-align: left;
-      padding: 10px;
-  }
-
-  .dropdown-content {
-      position: relative;
-      width: 100%;
-      box-shadow: none;
-      padding-left: 20px;
-  }
+/* Make tables more compact on small screens */
+@media screen and (max-width: 768px) {
+table {
+  font-size: 0.8em;
+  width: 100%;
 }
 
-@media screen and (orientation: landscape) and (max-width: 900px) {
-  .nav-links {
-      max-height: 80vh;
-      overflow-y: auto;
-  }
+table td {
+  padding: 2px 6px;
+}
+}
+.column img {
+border-radius: 24px;
 }

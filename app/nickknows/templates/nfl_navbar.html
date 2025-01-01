@@ -8,8 +8,8 @@
 
 <nav class="navbar">
     <a href="{{url_for('home')}}" class="brand">Home</a>
-    <button class="navbar-toggle" onclick="toggleNav()">
-        <i class="fa fa-bars"></i>
+    <button class="navbar-toggle" style="color: #ffffff;" onclick="toggleNav()">
+        <i class="fa-solid fa-bars" style="color: #ffffff;"></i>
     </button>
     <div class="nav-links" id="navLinks">
         <a href="{{url_for('NFL')}}">NFL Home</a>
@@ -174,7 +174,7 @@
         </div>
     </div>
     </div>
-    <div style="position: relative; left:-5%">
+    <div class="social-links">
         <a id="social-media" href="https://www.facebook.com/Nick.A.Cote"><img src="{{ url_for('static', filename='fb.jpg') }}" height="35px" width="35px"></a>
         <a id="social-media" href="https://twitter.com/NCGingi"><img src="{{ url_for('static', filename='twit.jpg') }}" height="35px" width="35px"></a>
         <a id="social-media" href="https://www.linkedin.com/in/nicholas-alan-cote/"><img src="{{ url_for('static', filename='in.jpg') }}" height="35px" width="35px"></a>

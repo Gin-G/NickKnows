@@ -1,19 +1,8 @@
-<style>
-    #social-media {
-        padding: 7.5px;
-        margin: auto;
-        float: right;
-    }
-</style>
-
 <nav class="navbar">
     <a href="{{url_for('home')}}" class="brand">Home</a>
-    <button class="navbar-toggle" onclick="toggleNav()">
-        <i class="fa fa-bars"></i>
-    </button>
-    <div class="nav-links" id="navLinks">
+    <div class="dropdown">
         <button class="dropbtn">Interests
-        <i class="fa fa-caret-down"></i>
+            <i class="fa fa-caret-down"></i>
         </button>
         <div class="dropdown-content">
             <a href="{{url_for('arcade')}}">Arcade</a>
@@ -27,24 +16,10 @@
         </div>
     </div>
     <div class="social-links">
-    <a id="social-media" href="https://www.facebook.com/Nick.A.Cote"><img src="static/fb.jpg" height="35px" width="35px"></a>
-    <a id="social-media" href="https://twitter.com/NCGingi"><img src="static/twit.jpg" height="35px" width="35px"></a>
-    <a id="social-media" href="https://www.linkedin.com/in/nicholas-alan-cote/"><img src="static/in.jpg" height="35px" width="35px"></a>
-    <a id="social-media" href="https://www.youtube.com/channel/UCttd2npS2zsDR0_VlxVA-PA"><img src="static/yt.jpg" height="35px" width="35px"></a>
-    <a id="social-media" href="https://www.instagram.com/nickco7/"><img src="static/ig.jpg" height="35px" width="35px"></a>
+        <a id="social-media" href="https://www.facebook.com/Nick.A.Cote"><img src="static/fb.jpg" height="35px" width="35px"></a>
+        <a id="social-media" href="https://twitter.com/NCGingi"><img src="static/twit.jpg" height="35px" width="35px"></a>
+        <a id="social-media" href="https://www.linkedin.com/in/nicholas-alan-cote/"><img src="static/in.jpg" height="35px" width="35px"></a>
+        <a id="social-media" href="https://www.youtube.com/channel/UCttd2npS2zsDR0_VlxVA-PA"><img src="static/yt.jpg" height="35px" width="35px"></a>
+        <a id="social-media" href="https://www.instagram.com/nickco7/"><img src="static/ig.jpg" height="35px" width="35px"></a>
     </div>
 </nav>
-
-<script>
-    function toggleNav() {
-        var navLinks = document.getElementById("navLinks");
-        navLinks.classList.toggle("active");
-    }
-    
-    function toggleDropdown(btn) {
-        if (window.innerWidth < 768) {
-            var content = btn.nextElementSibling;
-            content.style.display = content.style.display === "block" ? "none" : "block";
-        }
-    }
-</script>
