@@ -305,6 +305,8 @@ a#social-media {
 @media screen and (max-width: 768px) {
   .navbar-toggle {
     display: block;
+    position: relative;
+    z-index: 100;
     float: left;
     color: white;
     font-size: 24px;
@@ -314,6 +316,11 @@ a#social-media {
     border: none;
     cursor: pointer;
   }
+
+.navbar-toggle i {
+  width: 24px;
+  height: 24px;
+}
 
   .nfl-row {
       flex-direction: column;
