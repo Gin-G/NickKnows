@@ -174,9 +174,17 @@ font-size: 14px;
 color: white;
 padding: 17px 6px;
 text-decoration: none;
-margin-left: 5%;
 width: fit-content;
 }
+
+.brand {
+  margin-left: 5%;
+}
+
+/* Links inside the navbar */
+.navbar-toggle {
+  display: none;
+  }
 
 /* The dropdown container */
 .dropdown {

@@ -1,8 +1,9 @@
 from flask import Flask
 from flask.templating import render_template
 from celery import Celery
+import os
 
-REDIS_ENV = 'redis'
+REDIS_ENV = os.environ.get('REDIS_ENV', 'redis')
 
 app = Flask(__name__)
 app.config["CELERY_BROKER_URL"] = 'redis://' + REDIS_ENV + ':6379'
