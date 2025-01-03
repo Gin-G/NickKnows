@@ -46,19 +46,9 @@
             <div class='row'>
                 <div class='nfl-column'>
                     <img src="{{ url_for('static', filename='images/{}/{}_QB_FPA.png'.format(team, team)) }}">
-                </div>
-                <div class='nfl-column'>
                     <img src="{{ url_for('static', filename='images/{}/{}_RB_FPA.png'.format(team, team)) }}">
-                </div>
-            </div>
-            <div class='row'>
-                <div class='nfl-column'>
                     <img src="{{ url_for('static', filename='images/{}/{}_WR_FPA.png'.format(team, team)) }}">
-                </div>
-                <div class='nfl-column'>
                     <img src="{{ url_for('static', filename='images/{}/{}_TE_FPA.png'.format(team, team)) }}">
-                </div>
-            </div>
             <h2>Results</h2>
             {{ team_fpa | safe }}<br>
             <h2>QB Stats</h2>

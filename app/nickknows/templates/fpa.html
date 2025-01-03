@@ -42,14 +42,8 @@
         <form action="{{ url_for('FPAupdate') }}">
             <input type="submit" value="Update FPA Data" style="font-size: 20px;border-radius: 5px;">
         </form>
-        <div class='row'>
-            <div class='nfl-column'>
                 <img src="{{ url_for('static', filename='images/FPA.png')  }}">
-            </div>
-            <div class='nfl-column'>
                 {{ fpa_data | safe  }}
-            </div>
-        </div>
       </body>
     </head>
 </html>
