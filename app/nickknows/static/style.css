@@ -449,5 +449,6 @@ a#social-media {
   
   table td {
     padding: 2px 6px;
+    width: fit-content;
   }
 }
