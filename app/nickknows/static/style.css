@@ -444,7 +444,7 @@ a#social-media {
   table {
     font-size: 0.8em;
     width: 100%;
-    overflow: scroll;
+    overflow-x: auto;
   }
   
   table td {
