@@ -39,10 +39,10 @@
         <div id="header"></div>
         <div id="nfl_navbar"></div>
         <h1>{{ fullname }}</h1>
-            <h3>Against QB = {{ pass_agg|round(2, 'common') }} pts/week</h3>
-            <h3>Against RB = {{ rush_agg|round(2, 'common') }} pts/week</h3>
-            <h3>Against WR = {{ rec_agg|round(2, 'common') }} pts/week</h3>
-            <h3>Against TE = {{ te_agg|round(2, 'common') }} pts/week</h3>
+            <h3>Against QB <br> {{ pass_agg|round(2, 'common') }} pts/week</h3>
+            <h3>Against RB <br> {{ rush_agg|round(2, 'common') }} pts/week</h3>
+            <h3>Against WR <br> {{ rec_agg|round(2, 'common') }} pts/week</h3>
+            <h3>Against TE <br> {{ te_agg|round(2, 'common') }} pts/week</h3>
             <div class='row'>
                 <div class='nfl-column'>
                     <img src="{{ url_for('static', filename='images/{}/{}_QB_FPA.png'.format(team, team)) }}">
