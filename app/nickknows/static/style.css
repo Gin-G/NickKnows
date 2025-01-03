@@ -84,7 +84,6 @@ color: #000000;
 display: block;
 font-size: 0.9em;  /* Slightly smaller font */
 margin: 0 auto;    /* Center tables */
-width: 95%;        /* Take up most but not all of container */
 overflow-x: scroll;
 white-space: nowrap;
 }
@@ -343,7 +342,7 @@ padding: 4px 8px;
 .nfl-column {
 padding: 4px 8px;
 width: 100%;
-max-width: 800px; /* Maximum width for readability */
+max-width: 95%; /* Maximum width for readability */
 margin: 0 auto;
 }
 
