@@ -80,10 +80,12 @@ background-color: #FFFFFF;
 border: 4px solid black;
 border-collapse: collapse;
 color: #000000;
+display: block;
 font-size: 0.9em;  /* Slightly smaller font */
 margin: 0 auto;    /* Center tables */
 width: 95%;        /* Take up most but not all of container */
-table-layout: fixed; /* More predictable column widths */
+overflow-x: scroll;
+white-space: nowrap;
 }
 
 /* Add responsive table container */
@@ -444,7 +446,6 @@ a#social-media {
   table {
     font-size: 0.8em;
     width: 100%;
-    overflow-x: auto;
   }
   
   table td {
