@@ -588,9 +588,8 @@ def generate_team_graphs(team, weekly_data_dict):
         player_totals = data
         
         # Create and save plot
-        player_totals.plot.bar(x='player_display_name', y='fantasy_points_ppr', xlabel='')
+        player_totals.plot.barh(x='player_display_name', y='fantasy_points_ppr', ylabel='')
         plt.title(f'{team} vs {pos}s Fantasy Points')
-        plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
         folder_path = '/NickKnows/app/nickknows/static/images/' + team + '/'
         if not os.path.exists(folder_path):
