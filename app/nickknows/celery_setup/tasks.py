@@ -594,7 +594,7 @@ def generate_team_graphs(team, weekly_data_dict):
         plt.yticks(fontsize=8)  # You can adjust this number to your needs
 
         # Add spacing between bars by adjusting the height ratio
-        plt.gca().set_aspect(0.3) 
+        plt.gca().set_aspect(0) 
         plt.tight_layout()
         folder_path = '/NickKnows/app/nickknows/static/images/' + team + '/'
         if not os.path.exists(folder_path):
