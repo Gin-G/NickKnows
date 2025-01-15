@@ -50,15 +50,20 @@
                     <img src="{{ url_for('static', filename='images/{}/{}_WR_FPA.png'.format(team, team)) }}">
                     <img src="{{ url_for('static', filename='images/{}/{}_TE_FPA.png'.format(team, team)) }}">
             <h2>Results</h2>
-            {{ team_fpa | safe }}<br>
+            <div class="table-wrapper">
+            {{ team_fpa | safe }}</div><br>
             <h2>QB Stats</h2>
-            {{ pass_data | safe }}<br>
+            <div class="table-wrapper">
+                {{ pass_data | safe }}</div><br>
             <h2>RB Stats</h2>
-            {{ rush_data | safe }}<br>
+            <div class="table-wrapper">
+                {{ rush_data | safe }}</div><br>
             <h2>WR Stats</h2>
-            {{ rec_data | safe }}<br>
+            <div class="table-wrapper">
+                {{ rec_data | safe }</div>}<br>
             <h2>TE Stats</h2>
-            {{ te_data | safe }}<br>
+            <div class="table-wrapper">
+                {{ te_data | safe }}</div><br>
     </body>
     </head>
 </html>

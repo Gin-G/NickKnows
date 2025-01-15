@@ -588,9 +588,6 @@ def generate_team_graphs(team, weekly_data_dict):
         player_totals = data
         
         # Create and save plot
-        # Create figure with specific size
-        plt.figure(figsize=(10, max(6, len(player_totals) * 0.4)))  # Adjust height based on number of players
-
         # Create the horizontal bar plot
         player_totals.plot.barh(x='player_display_name', y='fantasy_points_ppr', ylabel='')
 

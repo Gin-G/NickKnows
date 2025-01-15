@@ -88,6 +88,12 @@ table {
   white-space: nowrap;
   }
 
+/* Add a wrapper div around your table */
+.table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
 /* Add responsive table container */
 .table-container {
 width: 100%;
