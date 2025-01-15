@@ -588,14 +588,30 @@ def generate_team_graphs(team, weekly_data_dict):
         player_totals = data
         
         # Create and save plot
-        player_totals.plot.barh(x='player_display_name', y='fantasy_points_ppr', ylabel='')
-        plt.title(f'{team} vs {pos}s Fantasy Points')
-        # Decrease font size of y-axis labels (player names)
-        plt.yticks(fontsize=8)  # You can adjust this number to your needs
+        # Create figure with specific size
+        plt.figure(figsize=(10, max(6, len(player_totals) * 0.4)))  # Adjust height based on number of players
 
-        # Add spacing between bars by adjusting the height ratio
-        plt.gca().set_aspect(0) 
+        # Create the horizontal bar plot
+        player_totals.plot.barh(x='player_display_name', y='fantasy_points_ppr', ylabel='')
+
+        # Customize the plot
+        plt.title(f'{team} vs {pos}s Fantasy Points')
+        plt.yticks(fontsize=8)
+
+        # Add more space for labels
+        plt.margins(y=0.02)  # Adjust vertical margins
+
+        # Adjust layout
+        plt.subplots_adjust(left=0.3)  # Increase space for y-axis labels
         plt.tight_layout()
+
+        # Make bars thicker
+        ax = plt.gca()
+        ax.set_aspect('auto')
+        ax.set_ylim(-0.5, len(player_totals)-0.5)  # Adjust plot limits to fit bars
+
+        # Optional: Add grid lines for better readability
+        plt.grid(axis='x', linestyle='--', alpha=0.7)
         folder_path = '/NickKnows/app/nickknows/static/images/' + team + '/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
