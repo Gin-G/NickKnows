@@ -5,7 +5,7 @@ webapp:
   path: /
   replicaCount: 1
   container: 
-    image: docker.io/ncging/nick-knows:2025-01-16.02.59
+    image: docker.io/ncging/nick-knows:2025-01-16.03.10
     imagePullPolicy: Always
     port: 8000
   storage:
