@@ -595,17 +595,16 @@ def generate_team_graphs(team, weekly_data_dict):
         num_players = len(player_totals)
         
         # Calculate figure height based on number of players
-        # Each player needs about 1 inch of height for proper spacing
         fig_height = max(MIN_HEIGHT, min(MAX_HEIGHT, num_players * 0.8))
         
         # Create figure with calculated dimensions
-        plt.figure(figsize=(WIDTH, fig_height))
+        fig, ax = plt.subplots(figsize=(WIDTH, fig_height))
         
         # Create the horizontal bar plot
-        ax = player_totals.plot.barh(x='player_display_name', 
-                                   y='fantasy_points_ppr', 
-                                   ylabel='',
-                                   height=BAR_HEIGHT)  # Set consistent bar height
+        player_totals.plot.barh(x='player_display_name', 
+                               y='fantasy_points_ppr', 
+                               ylabel='',
+                               ax=ax)  # Pass the axis object
         
         # Customize the plot
         plt.title(f'{team} vs {pos}s Fantasy Points')
@@ -620,6 +619,11 @@ def generate_team_graphs(team, weekly_data_dict):
         
         # Set consistent spacing between bars
         ax.set_ylim(-0.5, num_players - 0.5)
+        
+        # Adjust bar height using container
+        bars = ax.containers[0]
+        for bar in bars:
+            bar.set_height(BAR_HEIGHT)
         
         # Optional: Add grid lines for better readability
         plt.grid(axis='x', linestyle='--', alpha=0.7)
