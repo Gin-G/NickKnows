@@ -582,41 +582,60 @@ def generate_team_graphs(team, weekly_data_dict):
         'TE': weekly_team_data[weekly_team_data['position'] == 'TE']
     }
     
+    # Calculate standard bar height and figure dimensions
+    BAR_HEIGHT = 0.6  # Standard height for each bar
+    MIN_HEIGHT = 4    # Minimum figure height in inches
+    MAX_HEIGHT = 12   # Maximum figure height in inches
+    WIDTH = 10        # Standard figure width in inches
+    
     # Generate graphs for each position
     for pos, data in positions.items():
         # Group by player and sum their fantasy points
         player_totals = data
+        num_players = len(player_totals)
         
-        # Create and save plot
+        # Calculate figure height based on number of players
+        # Each player needs about 1 inch of height for proper spacing
+        fig_height = max(MIN_HEIGHT, min(MAX_HEIGHT, num_players * 0.8))
+        
+        # Create figure with calculated dimensions
+        plt.figure(figsize=(WIDTH, fig_height))
+        
         # Create the horizontal bar plot
-        player_totals.plot.barh(x='player_display_name', y='fantasy_points_ppr', ylabel='')
-
+        ax = player_totals.plot.barh(x='player_display_name', 
+                                   y='fantasy_points_ppr', 
+                                   ylabel='',
+                                   height=BAR_HEIGHT)  # Set consistent bar height
+        
         # Customize the plot
         plt.title(f'{team} vs {pos}s Fantasy Points')
         plt.yticks(fontsize=8)
-
-        # Add more space for labels
-        plt.margins(y=0.02)  # Adjust vertical margins
-
+        
+        # Calculate appropriate margins based on number of bars
+        margin = BAR_HEIGHT / (2 * num_players)
+        plt.margins(y=margin)
+        
         # Adjust layout
-        plt.subplots_adjust(left=0.3)  # Increase space for y-axis labels
-        plt.tight_layout()
-
-        # Make bars thicker
-        ax = plt.gca()
-        ax.set_aspect('auto')
-        ax.set_ylim(-0.5, len(player_totals)-0.5)  # Adjust plot limits to fit bars
-
+        plt.subplots_adjust(left=0.3)
+        
+        # Set consistent spacing between bars
+        ax.set_ylim(-0.5, num_players - 0.5)
+        
         # Optional: Add grid lines for better readability
         plt.grid(axis='x', linestyle='--', alpha=0.7)
+        
+        # Save the plot
         folder_path = '/NickKnows/app/nickknows/static/images/' + team + '/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
-        plt.savefig(f'/NickKnows/app/nickknows/static/images/{team}/{team}_{pos}_FPA.png', bbox_inches='tight')
+            
+        plt.savefig(f'/NickKnows/app/nickknows/static/images/{team}/{team}_{pos}_FPA.png', 
+                    bbox_inches='tight',
+                    dpi=100)
         plt.close()
         
         logger.info(f"Generated {pos} plot for {team} with {len(player_totals)} players")
-
+        
 @celery.task()
 def process_team_data(team):
     try:
