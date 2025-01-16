@@ -1,4 +1,3 @@
-from turtle import position
 from flask import render_template, url_for, redirect, flash, request
 from nickknows import app
 from ..celery_setup.tasks import process_team_data, update_fpa_data, update_PBP_data, update_roster_data, update_sched_data, update_week_data, update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10, update_team_schedule, update_weekly_team_data
@@ -11,109 +10,75 @@ from IPython.display import HTML
 import os
 import time
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
 from celery.utils.log import get_task_logger
-
+from datetime import datetime
 logger = get_task_logger(__name__)
 pd.options.mode.chained_assignment = None
 
 AVAILABLE_YEARS = list(range(2020, 2025)) 
 
-# Cache for file modification checks
-@lru_cache(maxsize=128)
-def needs_update(file_path, cache_duration=7 * 24 * 60 * 60):
-    if not os.path.exists(file_path):
-        return True
-    return (time.time() - os.path.getmtime(file_path)) > cache_duration
-
-# Helper to load and format dataframe
-def load_and_format_df(file_path):
-    if os.path.exists(file_path):
-        df = pd.read_csv(file_path, index_col=0)
-        return df.style.hide(axis="index").format(precision=0)
-    return None
-
 @app.route('/NFL')
 def NFL():
     selected_year = request.args.get('year', max(AVAILABLE_YEARS))
-    base_path = os.path.join(os.getcwd(), 'nickknows', 'nfl', 'data', str(selected_year))
+    base_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year)
     
-    # Define all file paths
-    files = {
-        'pbp': f'{base_path}_pbp_data.csv',
-        'roster': f'{base_path}_rosters.csv',
-        'qb_yards': f'{base_path}_qb_yards_top10_data.csv',
-        'qb_tds': f'{base_path}_qb_tds_top10_data.csv',
-        'rb_yards': f'{base_path}_rb_yds_top10_data.csv',
-        'rb_tds': f'{base_path}_rb_tds_top10_data.csv',
-        'rec_yards': f'{base_path}_rec_yds_top10_data.csv',
-        'rec_tds': f'{base_path}_rec_tds_top10_data.csv'
-    }
-    
-    # Check which files need updates
-    update_tasks = []
-    for file_type, file_path in files.items():
-        if needs_update(file_path):
-            if file_type == 'pbp':
-                update_tasks.append(update_PBP_data)
-            elif file_type == 'roster':
-                update_tasks.append(update_roster_data)
-            elif file_type == 'qb_yards':
-                update_tasks.append(update_qb_yards_top10)
-            # ... add other update tasks as needed
-    
-    # Launch updates in background if needed
-    if update_tasks:
-        for task in update_tasks:
-            task.delay()
-        flash('Some data is updating in the background. Refresh the page in a few minutes.')
-    
-    try:
-        # Load all dataframes concurrently
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            future_to_file = {executor.submit(load_and_format_df, path): name 
-                            for name, path in files.items()}
-            
-            # Collect results
-            data = {}
-            for future in future_to_file:
-                name = future_to_file[future]
-                try:
-                    data[name] = future.result()
-                except Exception as e:
-                    print(f"Error loading {name}: {e}")
-                    data[name] = None
-        
-        # If we have all required data, render the template with it
-        if all(data.values()):
-            return render_template('nfl-home.html',
-                pass_yards_data=data['qb_yards'].to_html(classes="table"),
-                pass_td_data=data['qb_tds'].to_html(),
-                rush_yards_data=data['rb_yards'].to_html(),
-                rush_td_data=data['rb_tds'].to_html(),
-                rec_yards_data=data['rec_yards'].to_html(),
-                rec_td_data=data['rec_tds'].to_html(),
-                years=AVAILABLE_YEARS,
-                selected_year=selected_year)
-    
-    except Exception as e:
-        # If anything fails, trigger all updates
+    # Check if update is needed
+    last_update = os.environ.get('NFL_DATA_LAST_UPDATE')
+    current_time = datetime.now()
+    update_needed = not last_update or (current_time - datetime.fromisoformat(last_update)).days >= 7
+
+    if update_needed:
+        # Trigger all updates at once
         update_tasks = [
-            update_PBP_data, update_roster_data, update_sched_data,
-            update_week_data, update_qb_yards_top10, update_qb_tds_top10,
-            update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10,
-            update_rec_tds_top10
+            update_PBP_data, update_roster_data, update_sched_data, update_week_data,
+            update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10,
+            update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10
         ]
         for task in update_tasks:
             task.delay()
-        flash('Updating data in background')
-    
-    # Fallback render without data
-    return render_template('nfl-home.html',
-                         years=AVAILABLE_YEARS,
-                         selected_year=selected_year)
+        os.environ['NFL_DATA_LAST_UPDATE'] = current_time.isoformat()
+        flash('Data is updating in the background. Refresh the page in a bit')
+        return render_template('nfl-home.html', years=AVAILABLE_YEARS, selected_year=selected_year)
 
+    try:
+        # File paths
+        files = {
+            'pass_agg': f'{base_path}_qb_yards_top10_data.csv',
+            'pass_td_agg': f'{base_path}_qb_tds_top10_data.csv',
+            'rush_yds_agg': f'{base_path}_rb_yds_top10_data.csv',
+            'rush_td_agg': f'{base_path}_rb_tds_top10_data.csv',
+            'rec_yds_agg': f'{base_path}_rec_yds_top10_data.csv',
+            'rec_td_agg': f'{base_path}_rec_tds_top10_data.csv'
+        }
+
+        # Load data
+        data = {}
+        for name, path in files.items():
+            if os.path.exists(path):
+                df = pd.read_csv(path, index_col=0)
+                data[name] = df.style.hide(axis="index").format(precision=0)
+            else:
+                raise FileNotFoundError(f"Missing file: {path}")
+
+        # Render template with all data
+        return render_template(
+            'nfl-home.html',
+            pass_yards_data=data['pass_agg'].to_html(classes="table"),
+            pass_td_data=data['pass_td_agg'].to_html(),
+            rush_yards_data=data['rush_yds_agg'].to_html(),
+            rush_td_data=data['rush_td_agg'].to_html(),
+            rec_yards_data=data['rec_yds_agg'].to_html(),
+            rec_td_data=data['rec_td_agg'].to_html(),
+            years=AVAILABLE_YEARS,
+            selected_year=selected_year
+        )
+
+    except Exception as e:
+        # Reset update time to force refresh on next load
+        os.environ.pop('NFL_DATA_LAST_UPDATE', None)
+        flash('Error loading data. Updates scheduled.')
+        return render_template('nfl-home.html', years=AVAILABLE_YEARS, selected_year=selected_year)
+    
 @app.route('/NFL/update')
 def NFLupdate():
     update_PBP_data.delay()
