@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.webapp.name }}-gpu-worker
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.webapp.name }}-gpu-worker
+    group: {{ .Values.webapp.group }}
+    component: worker
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.webapp.name }}-gpu-worker
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.webapp.name }}-gpu-worker
+    spec:
+      containers:
+      - name: {{ .Values.webapp.name }}-gpu-worker
+        image: {{ .Values.webapp.container.image }}
+        nodeSelector:
+          gpu: "true"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 1000m
+            memory: 10Gi
+            nvidia.com/gpu: 1
+        imagePullPolicy: {{ .Values.webapp.container.imagePullPolicy }}
+        args:
+            - celery
+            - -A
+            - nickknows.celery
+            - worker
+            - --loglevel=info
+            - --events
+            - --task-events
+            - -Q
+            - gpu_tasks
+            - -n
+            - gpu_worker@%h
+        volumeMounts:
+        - name: data-volume
+          mountPath: /NickKnows/app/nickknows/nfl/data
+        - name: images-volume
+          mountPath: /NickKnows/app/nickknows/static/images
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.webapp.name }}-pvc
+      - name: images-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.webapp.name }}-images-pvc
+    
