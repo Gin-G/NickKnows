@@ -8,7 +8,7 @@ metadata:
     group: {{ .Values.webapp.group }}
     component: worker
 spec:
-  replicas: {{ .Values.worker.replicaCount }}
+  replicas: 1
   selector:
     matchLabels:
       app: {{ .Values.webapp.name }}-gpu-worker
