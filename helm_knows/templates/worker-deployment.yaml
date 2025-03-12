@@ -47,8 +47,8 @@ spec:
       volumes:
       - name: data-volume
         persistentVolumeClaim:
-          claimName: {{ .Values.webapp.name }}-pvc
+          claimName: {{ .Values.webapp.name }}-pvc-rook
       - name: images-volume
         persistentVolumeClaim:
-          claimName: {{ .Values.webapp.name }}-images-pvc
+          claimName: {{ .Values.webapp.name }}-images-pvc-rook
     
