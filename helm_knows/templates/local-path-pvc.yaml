@@ -9,7 +9,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: local-path
+  storageClassName: rook-ceph-block
   resources:
     requests:
       storage: {{ .Values.webapp.storage.size | default "1Gi" }}
