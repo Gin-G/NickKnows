@@ -1,0 +1,17 @@
+# This workflow checksout the most recent code, builds a container image for Flask, 
+# and pushes it to docker.io before updating the Helm chart and pushing the changes back to the code repository
+name: Test container
+
+on: 
+  push:
+    branches:
+      - main
+
+jobs:
+  test-container:
+    runs-on: gh-arc-nickknows-scale-set
+    container:
+      image: docker.io/ncging/nick-knows:latest
+    steps:
+      - name: Check out the code repository
+        uses: actions/checkout@v4
