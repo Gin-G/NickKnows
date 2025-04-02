@@ -12,3 +12,6 @@ jobs:
     runs-on: gh-arc-nickknows-scale-set
     container:
       image: docker.io/ncging/nick-knows:latest
+    steps:
+      - name: Check out the code repository
+        uses: actions/checkout@v4
