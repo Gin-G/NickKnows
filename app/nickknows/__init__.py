@@ -8,7 +8,6 @@ REDIS_ENV = os.environ.get('REDIS_ENV', 'redis')
 app = Flask(__name__)
 app.config["CELERY_BROKER_URL"] = 'redis://' + REDIS_ENV + ':6379'
 app.config["CELERY_RESULT_BACKEND"] = 'redis://' + REDIS_ENV + ':6379'
-#app.config["CELERY_BROKER_URL"] = 'redis://localhost:6379'
 app.config["SECRET_KEY"] = "celery blooody nick ski movie music know nfl"
 celery = Celery(app.name, broker=app.config["CELERY_BROKER_URL"])
 celery.conf.update(app.config)
