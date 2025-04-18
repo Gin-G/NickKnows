@@ -5,8 +5,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   accessModes:
-    - ReadWriteOnce
-  storageClassName: rook-ceph-block
+    - ReadWriteMany
+  storageClassName: rook-cephfs
   resources:
     requests:
       storage: {{ .Values.webapp.storage.size | default "1Gi" }}
