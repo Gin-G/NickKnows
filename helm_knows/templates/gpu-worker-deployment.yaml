@@ -20,8 +20,6 @@ spec:
       containers:
       - name: {{ .Values.webapp.name }}-gpu-worker
         image: {{ .Values.webapp.container.image }}
-        nodeSelector:
-          gpu: "true"
         resources:
           requests:
             cpu: 100m
