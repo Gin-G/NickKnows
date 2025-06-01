@@ -460,105 +460,139 @@ a#social-media {
   }
 }
 
-/* Horizontal scroll option */
-.scroll-container {
-  display: flex;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  gap: 20px;
-  padding: 20px;
-  margin: 20px 0;
-  /* Hide scrollbar but keep functionality */
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  /* Infinite scroll container */
+  .scroll-wrapper {
+    overflow: hidden;
+    margin: 20px 0;
+    position: relative;
 }
 
-.scroll-container::-webkit-scrollbar {
-  display: none;
+.scroll-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    animation: infiniteScroll 40s linear infinite;
+    width: calc(100% * 2); /* Double width to accommodate duplicates */
+}
+
+/* Pause animation on hover */
+.scroll-container:hover {
+    animation-play-state: paused;
+}
+
+/* Infinite scroll animation */
+@keyframes infiniteScroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%); /* Move by half since we duplicate content */
+    }
 }
 
 /* Individual scroll items */
 .scroll-item {
-  flex: 0 0 auto;
-  width: 300px;
-  height: 200px;
-  position: relative;
-  border-radius: 10px;
-  overflow: hidden;
-  transition: transform 0.3s ease;
+    flex: 0 0 auto;
+    width: 300px;
+    height: 200px;
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
 }
 
 .scroll-item:hover {
-  transform: translateY(-5px);
+    transform: translateY(-5px);
 }
 
 .scroll-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 10px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
 }
 
 /* Optional: Add subtle overlay with section name */
 .scroll-item::after {
-  content: attr(data-section);
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(transparent, rgba(0,0,0,0.7));
-  color: white;
-  padding: 20px 15px 15px;
-  font-weight: bold;
-  font-size: 16px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+    content: attr(data-section);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    color: white;
+    padding: 20px 15px 15px;
+    font-weight: bold;
+    font-size: 16px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .scroll-item:hover::after {
-  opacity: 1;
+    opacity: 1;
 }
 
-/* Navigation dots/arrows (optional) */
-.scroll-nav {
-  text-align: center;
-  margin: 20px 0;
+/* Control buttons */
+.scroll-controls {
+    text-align: center;
+    margin: 20px 0;
 }
 
-.scroll-arrow {
-  background: #393f44;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  margin: 0 10px;
-  cursor: pointer;
-  font-size: 18px;
-  transition: background-color 0.3s ease;
+.scroll-control-btn {
+    background: #393f44;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    margin: 0 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
 }
 
-.scroll-arrow:hover {
-  background: #7393B3;
+.scroll-control-btn:hover {
+    background: #7393B3;
+}
+
+.scroll-control-btn.active {
+    background: #7393B3;
 }
 
 /* Mobile adjustments */
 @media screen and (max-width: 768px) {
-  .scroll-item {
-      width: 250px;
-      height: 180px;
-  }
-  
-  .scroll-container {
-      padding: 15px;
-      gap: 15px;
-  }
+    .scroll-item {
+        width: 250px;
+        height: 180px;
+    }
+    
+    .scroll-container {
+        padding: 15px;
+        gap: 15px;
+        animation-duration: 35s; /* Slightly faster on mobile */
+    }
 }
 
 /* Small mobile */
 @media screen and (max-width: 480px) {
-  .scroll-item {
-      width: 200px;
-      height: 150px;
-  }
+    .scroll-item {
+        width: 200px;
+        height: 150px;
+    }
+    
+    .scroll-container {
+        animation-duration: 30s; /* Even faster on small screens */
+    }
+}
+
+/* Speed variations */
+.scroll-container.slow {
+    animation-duration: 60s;
+}
+
+.scroll-container.medium {
+    animation-duration: 40s;
+}
+
+.scroll-container.fast {
+    animation-duration: 20s;
 }

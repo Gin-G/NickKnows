@@ -25,7 +25,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
     <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    
+ 
     <script>
         $(function(){
             $('#header').load("{{ url_for('header') }}")
@@ -34,19 +34,42 @@
             $('#nick_nav').load("{{ url_for('nick_navbar') }}")
         })
         
-        // Optional: Smooth scroll navigation
-        function scrollLeft() {
-            document.querySelector('.scroll-container').scrollBy({
-                left: -300,
-                behavior: 'smooth'
-            });
+        // Infinite scroll controls
+        let scrollContainer;
+        let isPaused = false;
+        
+        $(document).ready(function() {
+            scrollContainer = document.querySelector('.scroll-container');
+        });
+        
+        function pauseScroll() {
+            if (!isPaused) {
+                scrollContainer.style.animationPlayState = 'paused';
+                document.querySelector('.pause-btn').textContent = 'Resume';
+                document.querySelector('.pause-btn').classList.add('active');
+                isPaused = true;
+            } else {
+                scrollContainer.style.animationPlayState = 'running';
+                document.querySelector('.pause-btn').textContent = 'Pause';
+                document.querySelector('.pause-btn').classList.remove('active');
+                isPaused = false;
+            }
         }
         
-        function scrollRight() {
-            document.querySelector('.scroll-container').scrollBy({
-                left: 300,
-                behavior: 'smooth'
+        function setScrollSpeed(speed) {
+            // Remove existing speed classes
+            scrollContainer.classList.remove('slow', 'medium', 'fast');
+            
+            // Remove active class from all speed buttons
+            document.querySelectorAll('.speed-btn').forEach(btn => {
+                btn.classList.remove('active');
             });
+            
+            // Add new speed class and active state
+            if (speed !== 'medium') {
+                scrollContainer.classList.add(speed);
+            }
+            document.querySelector(`.speed-btn[onclick="setScrollSpeed('${speed}')"]`).classList.add('active');
         }
     </script>
 </head>
@@ -56,45 +79,85 @@
     
     <br>
     
-    <!-- Optional navigation arrows -->
-    <div class="scroll-nav">
-        <button class="scroll-arrow" onclick="scrollLeft()">‹</button>
-        <button class="scroll-arrow" onclick="scrollRight()">›</button>
+    <!-- Scroll control buttons -->
+    <div class="scroll-controls">
+        <button class="scroll-control-btn pause-btn" onclick="pauseScroll()">Pause</button>
+        <button class="scroll-control-btn speed-btn" onclick="setScrollSpeed('slow')">Slow</button>
+        <button class="scroll-control-btn speed-btn active" onclick="setScrollSpeed('medium')">Medium</button>
+        <button class="scroll-control-btn speed-btn" onclick="setScrollSpeed('fast')">Fast</button>
     </div>
     
-    <!-- Horizontal scroll container -->
-    <div class="scroll-container">
-        <a href="{{url_for('skiing')}}" class="scroll-item" data-section="Skiing">
-            <img src="{{url_for('static', filename='ski.jpg')}}" alt="Skiing section">
-        </a>
-        
-        <a href="{{url_for('arcade')}}" class="scroll-item" data-section="Arcade">
-            <img src="{{url_for('static', filename='arcade_finish.jpg')}}" alt="Arcade section">
-        </a>
-        
-        <a href="{{url_for('guitar')}}" class="scroll-item" data-section="Guitar">
-            <img src="{{url_for('static', filename='guitar.jpg')}}" alt="Guitar section">
-        </a>
-        
-        <a href="{{url_for('lemans')}}" class="scroll-item" data-section="Le Mans">
-            <img src="{{url_for('static', filename='lemans_trunk.jpg')}}" alt="Le Mans section">
-        </a>
-        
-        <a href="{{url_for('values')}}" class="scroll-item" data-section="Values">
-            <img src="{{url_for('static', filename='koda_samson.jpeg')}}" alt="Values section">
-        </a>
-        
-        <a href="{{url_for('fart')}}" class="scroll-item" data-section="Projects">
-            <img src="{{url_for('static', filename='sew.jpg')}}" alt="Projects section">
-        </a>
-        
-        <a href="{{url_for('NFL')}}" class="scroll-item" data-section="NFL">
-            <img src="{{url_for('static', filename='football.jpg')}}" alt="NFL section">
-        </a>
-        
-        <a href="{{url_for('job_parse')}}" class="scroll-item" data-section="Resume">
-            <img src="{{url_for('static', filename='resume.png')}}" alt="Resume section">
-        </a>
+    <!-- Infinite scroll wrapper -->
+    <div class="scroll-wrapper">
+        <div class="scroll-container medium">
+            
+            <!-- First set of items -->
+            <a href="{{url_for('skiing')}}" class="scroll-item" data-section="Skiing">
+                <img src="{{url_for('static', filename='ski.jpg')}}" alt="Skiing section">
+            </a>
+            
+            <a href="{{url_for('arcade')}}" class="scroll-item" data-section="Arcade">
+                <img src="{{url_for('static', filename='arcade_finish.jpg')}}" alt="Arcade section">
+            </a>
+            
+            <a href="{{url_for('guitar')}}" class="scroll-item" data-section="Guitar">
+                <img src="{{url_for('static', filename='guitar.jpg')}}" alt="Guitar section">
+            </a>
+            
+            <a href="{{url_for('lemans')}}" class="scroll-item" data-section="Le Mans">
+                <img src="{{url_for('static', filename='lemans_trunk.jpg')}}" alt="Le Mans section">
+            </a>
+            
+            <a href="{{url_for('values')}}" class="scroll-item" data-section="Values">
+                <img src="{{url_for('static', filename='koda_samson.jpeg')}}" alt="Values section">
+            </a>
+            
+            <a href="{{url_for('fart')}}" class="scroll-item" data-section="Projects">
+                <img src="{{url_for('static', filename='sew.jpg')}}" alt="Projects section">
+            </a>
+            
+            <a href="{{url_for('NFL')}}" class="scroll-item" data-section="NFL">
+                <img src="{{url_for('static', filename='football.jpg')}}" alt="NFL section">
+            </a>
+            
+            <a href="{{url_for('job_parse')}}" class="scroll-item" data-section="Resume">
+                <img src="{{url_for('static', filename='resume.png')}}" alt="Resume section">
+            </a>
+            
+            <!-- Duplicate set for infinite effect -->
+            <a href="{{url_for('skiing')}}" class="scroll-item" data-section="Skiing">
+                <img src="{{url_for('static', filename='ski.jpg')}}" alt="Skiing section">
+            </a>
+            
+            <a href="{{url_for('arcade')}}" class="scroll-item" data-section="Arcade">
+                <img src="{{url_for('static', filename='arcade_finish.jpg')}}" alt="Arcade section">
+            </a>
+            
+            <a href="{{url_for('guitar')}}" class="scroll-item" data-section="Guitar">
+                <img src="{{url_for('static', filename='guitar.jpg')}}" alt="Guitar section">
+            </a>
+            
+            <a href="{{url_for('lemans')}}" class="scroll-item" data-section="Le Mans">
+                <img src="{{url_for('static', filename='lemans_trunk.jpg')}}" alt="Le Mans section">
+            </a>
+            
+            <a href="{{url_for('values')}}" class="scroll-item" data-section="Values">
+                <img src="{{url_for('static', filename='koda_samson.jpeg')}}" alt="Values section">
+            </a>
+            
+            <a href="{{url_for('fart')}}" class="scroll-item" data-section="Projects">
+                <img src="{{url_for('static', filename='sew.jpg')}}" alt="Projects section">
+            </a>
+            
+            <a href="{{url_for('NFL')}}" class="scroll-item" data-section="NFL">
+                <img src="{{url_for('static', filename='football.jpg')}}" alt="NFL section">
+            </a>
+            
+            <a href="{{url_for('job_parse')}}" class="scroll-item" data-section="Resume">
+                <img src="{{url_for('static', filename='resume.png')}}" alt="Resume section">
+            </a>
+            
+        </div>
     </div>
     
 </body>
