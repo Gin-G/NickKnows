@@ -460,11 +460,11 @@ a#social-media {
   }
 }
 
-  /* Infinite scroll container */
-  .scroll-wrapper {
-    overflow: hidden;
-    margin: 20px 0;
-    position: relative;
+/* Infinite scroll container */
+.scroll-wrapper {
+  overflow: hidden;
+  margin: 20px 0;
+  position: relative;
 }
 
 .scroll-container {
@@ -473,6 +473,7 @@ a#social-media {
     padding: 20px;
     animation: infiniteScroll 40s linear infinite;
     width: calc(100% * 2); /* Double width to accommodate duplicates */
+    height: 50%;
 }
 
 /* Pause animation on hover */
