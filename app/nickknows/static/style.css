@@ -473,7 +473,7 @@ a#social-media {
     padding: 20px;
     animation: infiniteScroll 40s linear infinite;
     width: calc(100% * 2); /* Double width to accommodate duplicates */
-    height: 500px;
+    height: 1000px;
 }
 
 /* Pause animation on hover */
