@@ -465,6 +465,7 @@ a#social-media {
   overflow: hidden;
   margin: 20px 0;
   position: relative;
+  height: 600px; /* Set explicit height for the wrapper */
 }
 
 .scroll-container {
@@ -473,7 +474,8 @@ a#social-media {
     padding: 20px;
     animation: infiniteScroll 40s linear infinite;
     width: calc(100% * 2); /* Double width to accommodate duplicates */
-    height: 1000px;
+    height: 100%; /* Use full height of wrapper */
+    min-height: 600px; /* Ensure minimum height */
 }
 
 /* Pause animation on hover */
@@ -495,7 +497,7 @@ a#social-media {
 .scroll-item {
     flex: 0 0 auto;
     width: 300px;
-    height: 200px;
+    height: 400px; /* Increased from 200px to 400px */
     position: relative;
     border-radius: 10px;
     overflow: hidden;
@@ -561,9 +563,13 @@ a#social-media {
 
 /* Mobile adjustments */
 @media screen and (max-width: 768px) {
+    .scroll-wrapper {
+        height: 400px; /* Reduced height for mobile */
+    }
+    
     .scroll-item {
         width: 250px;
-        height: 180px;
+        height: 300px; /* Proportionally adjusted for mobile */
     }
     
     .scroll-container {
@@ -575,9 +581,13 @@ a#social-media {
 
 /* Small mobile */
 @media screen and (max-width: 480px) {
+    .scroll-wrapper {
+        height: 300px; /* Further reduced for small screens */
+    }
+    
     .scroll-item {
         width: 200px;
-        height: 150px;
+        height: 250px; /* Adjusted for small screens */
     }
     
     .scroll-container {
