@@ -12,3 +12,5 @@ webapp:
     size: 2Gi
 worker:
   replicaCount: 2
+gpuWorker:
+  replicaCount: 0
