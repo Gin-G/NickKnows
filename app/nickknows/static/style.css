@@ -496,8 +496,8 @@ a#social-media {
 /* Individual scroll items */
 .scroll-item {
     flex: 0 0 auto;
-    width: 300px;
-    height: 400px; /* Increased from 200px to 400px */
+    width: 500px;
+    height: 500px; /* Increased from 200px to 400px */
     position: relative;
     border-radius: 10px;
     overflow: hidden;
