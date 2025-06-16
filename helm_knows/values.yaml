@@ -11,6 +11,6 @@ webapp:
   storage:
     size: 2Gi
 worker:
-  replicaCount: 2
+  replicaCount: 1
 gpuWorker:
   replicaCount: 0
