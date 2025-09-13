@@ -10,6 +10,9 @@
         const currentMonth = new Date().getMonth() + 1; // 1-based month
         const currentDay = new Date().getDate();
         
+        // Known problematic years (from GitHub issues)
+        const knownUnavailable = [2025, 2026]; // Per GitHub issue #144
+        
         let endYear;
         // Be very conservative about including the current year's data
         if (currentMonth >= 10) {  // October or later - current season data should be available
@@ -20,9 +23,12 @@
             endYear = currentYear - 1;
         }
         
+        // Generate year range and filter out known problematic years
         const years = [];
         for (let year = 2020; year <= endYear; year++) {
-            years.push(year);
+            if (!knownUnavailable.includes(year)) {
+                years.push(year);
+            }
         }
         return years;
     }

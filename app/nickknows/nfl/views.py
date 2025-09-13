@@ -180,7 +180,7 @@ def roster(team,fullname):
             keep='first'
         )
 
-        url = str('<a href="http://nickknows.ging.nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
+        url = str('<a href="https://www.nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
         team_roster['player_name'] = url
         team_roster.rename(columns={
             'depth_chart_position':'Position',

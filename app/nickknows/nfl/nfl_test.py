@@ -2,7 +2,6 @@ import nfl_data_py as nfl
 import os
 import pandas as pd
 import numpy as np
-import dask.dataframe as dd
 
 '''
 Working with the schedule data
@@ -69,11 +68,11 @@ stadium = schedule['stadium']
 Working with weekly data
 """
 
-year = 2023
+year = 2024
 
 weekly_data_prep = nfl.import_weekly_data([year],['player_display_name','recent_team'])
 
-roster_data = nfl.import_rosters([year])
+roster_data = nfl.import_weekly_rosters([year])
 
 print(weekly_data_prep.head(10))
 
