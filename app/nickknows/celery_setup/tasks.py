@@ -34,10 +34,29 @@ def get_selected_year():
 
 def format_nfl_season(year):
     """Format NFL season as 'YYYY-YYYY Season' (e.g., '2024-2025 Season')"""
-    return f"{year-1}-{year} Season"available_years), type=int)
-        return selected if selected in available_years else max(available_years)
-    except:
-        return max(available_years)
+    return f"{year-1}-{year} Season"
+
+def is_data_likely_available(year):
+    """Check if NFL data is likely to be available for a given year based on nfl_data_py capabilities"""
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+    
+    # Per GitHub issue #144: https://github.com/nflverse/nfl_data_py/issues/144
+    known_unavailable = [2025, 2026]
+    if year in known_unavailable:
+        return False
+    
+    if year < current_year:
+        return year >= 1999
+    
+    if year == current_year:
+        if current_month >= 10: 
+            return True
+        elif current_month == 9:  
+            return datetime.now().day >= 15
+        else:  
+            return False
+    return False
 
 @celery.task()
 def update_PBP_data(year=None):
