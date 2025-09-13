@@ -6,6 +6,22 @@
     <div class="nav-links" id="navLinks">
         <a href="{{url_for('NFL')}}">NFL Home</a>
         <a href="{{url_for('schedule')}}">Schedule</a>
+        
+        <!-- Year Selection Dropdown -->
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown(this)">
+                Season <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
+                <!-- These will be populated by JavaScript or server-side -->
+                <a href="{{url_for('NFL', year=2024)}}">2024 Season</a>
+                <a href="{{url_for('NFL', year=2023)}}">2023 Season</a>
+                <a href="{{url_for('NFL', year=2022)}}">2022 Season</a>
+                <a href="{{url_for('NFL', year=2021)}}">2021 Season</a>
+                <a href="{{url_for('NFL', year=2020)}}">2020 Season</a>
+            </div>
+        </div>
+        
         <div class="dropdown">
             <button class="dropbtn" onclick="toggleDropdown(this)">
                 Rosters <i class="fa fa-caret-down"></i>
@@ -174,3 +190,63 @@
         <a id="social-media" href="https://www.instagram.com/nickco7/"><img src="{{ url_for('static', filename='ig.jpg') }}" height="35px" width="35px"></a>
     </div>
 </nav>
+
+<script>
+function toggleDropdown(button) {
+    const dropdown = button.parentElement;
+    const dropdownContent = dropdown.querySelector('.dropdown-content');
+    dropdownContent.classList.toggle('show');
+    
+    // Close other dropdowns
+    document.querySelectorAll('.dropdown-content').forEach(content => {
+        if (content !== dropdownContent) {
+            content.classList.remove('show');
+        }
+    });
+}
+
+// Close dropdowns when clicking outside
+window.onclick = function(event) {
+    if (!event.target.matches('.dropbtn')) {
+        const dropdowns = document.getElementsByClassName("dropdown-content");
+        for (let i = 0; i < dropdowns.length; i++) {
+            const openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) {
+                openDropdown.classList.remove('show');
+            }
+        }
+    }
+}
+
+// Preserve year parameter in URLs when navigating
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentYear = urlParams.get('year');
+    
+    if (currentYear) {
+        // Update all team links to include the current year
+        const teamLinks = document.querySelectorAll('a[href*="/NFL/Team/"], a[href*="/NFL/Roster/"]');
+        teamLinks.forEach(link => {
+            const url = new URL(link.href);
+            url.searchParams.set('year', currentYear);
+            link.href = url.toString();
+        });
+        
+        // Update schedule link
+        const scheduleLink = document.querySelector('a[href*="/NFL/schedule/"]');
+        if (scheduleLink) {
+            const url = new URL(scheduleLink.href);
+            url.searchParams.set('year', currentYear);
+            scheduleLink.href = url.toString();
+        }
+        
+        // Update FPA link
+        const fpaLink = document.querySelector('a[href*="/NFL/FPA"]');
+        if (fpaLink) {
+            const url = new URL(fpaLink.href);
+            url.searchParams.set('year', currentYear);
+            fpaLink.href = url.toString();
+        }
+    }
+});
+</script>

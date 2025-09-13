@@ -7,55 +7,108 @@ import numpy as np
 from flask import flash, request
 import matplotlib.pyplot as plt
 from celery.utils.log import get_task_logger
+from datetime import datetime
+
 logger = get_task_logger(__name__)
 
 # Add at top of file with other constants
 SITE_DOMAIN = "https://nickknows.ging.nickknows.net"
-AVAILABLE_YEARS = list(range(2020, 2025)) 
-selected_year = max(AVAILABLE_YEARS)  # Default to the latest year
+
+def get_available_years():
+    """Get available NFL years from 2020 to current year + 1"""
+    current_year = datetime.now().year
+    # NFL season typically runs Sep-Feb, so include next year if we're in NFL season
+    end_year = current_year + 1 if datetime.now().month >= 9 else current_year
+    return list(range(2020, end_year + 1))
+
+def get_selected_year():
+    """Get selected year from context or default to latest available"""
+    available_years = get_available_years()
+    # Try to get from Flask request context, fallback to max year
+    try:
+        from flask import request
+        selected = request.args.get('year', max(available_years), type=int)
+        return selected if selected in available_years else max(available_years)
+    except:
+        return max(available_years)
 
 @celery.task()
-def update_PBP_data():
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
-    if selected_year == 2024:
-        pbp_data = nfl.import_pbp_data([selected_year], include_participation=False)
+def update_PBP_data(year=None):
+    """Update play-by-play data for specified year"""
+    if year is None:
+        year = get_selected_year()
+    
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    logger.info(f"Updating PBP data for {year}")
+    
+    if year == 2024:
+        pbp_data = nfl.import_pbp_data([year], include_participation=False)
     else:
-        pbp_data = nfl.import_pbp_data([selected_year])
+        pbp_data = nfl.import_pbp_data([year])
     pbp_data.to_csv(file_path)
+    logger.info(f"PBP data for {year} saved to {file_path}")
 
 @celery.task()
-def update_roster_data():
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
-    roster_data = nfl.import_weekly_rosters([selected_year])
+def update_roster_data(year=None):
+    """Update roster data for specified year"""
+    if year is None:
+        year = get_selected_year()
+        
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+    logger.info(f"Updating roster data for {year}")
+    
+    roster_data = nfl.import_weekly_rosters([year])
     roster_data.to_csv(rfile_path)
+    logger.info(f"Roster data for {year} saved to {rfile_path}")
 
 @celery.task()
-def update_sched_data():
-    scfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
-    schedule = nfl.import_schedules([selected_year])
+def update_sched_data(year=None):
+    """Update schedule data for specified year"""
+    if year is None:
+        year = get_selected_year()
+        
+    scfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
+    logger.info(f"Updating schedule data for {year}")
+    
+    schedule = nfl.import_schedules([year])
     schedule.to_csv(scfile_path)
+    logger.info(f"Schedule data for {year} saved to {scfile_path}")
 
 @celery.task()
-def update_week_data():
-    wefile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_weekly_data.csv'
-    weekly_data = nfl.import_weekly_data([selected_year])
+def update_week_data(year=None):
+    """Update weekly data for specified year"""
+    if year is None:
+        year = get_selected_year()
+        
+    wefile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
+    logger.info(f"Updating weekly data for {year}")
+    
+    weekly_data = nfl.import_weekly_data([year])
     weekly_data.to_csv(wefile_path)
+    logger.info(f"Weekly data for {year} saved to {wefile_path}")
 
 @celery.task()
-def update_qb_yards_top10():
-    qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_qb_yards_top10_data.csv'
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
+def update_qb_yards_top10(year=None):
+    """Update QB yards top 10 for specified year"""
+    if year is None:
+        year = get_selected_year()
+        
+    qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_yards_top10_data.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    
     if os.path.exists(file_path):
         pbp_data = pd.read_csv(file_path, index_col=0)
     else:
-        update_PBP_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+        update_PBP_data.delay(year)
+        return f"PBP data for {year} not found, updating in background"
+        
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
         roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
-        update_roster_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
+        update_roster_data.delay(year)
+        return f"Roster data for {year} not found, updating in background"
+        
     try:
         # Filter for regular season passing plays
         pbp_data = pbp_data[
@@ -101,25 +154,34 @@ def update_qb_yards_top10():
 
         # Save to CSV
         pass_agg.to_csv(qb10file_path)
-    except:
-        update_PBP_data.delay()
-        update_roster_data.delay()
+        logger.info(f"QB yards top 10 for {year} saved to {qb10file_path}")
+    except Exception as e:
+        logger.error(f"Error updating QB yards top 10 for {year}: {str(e)}")
+        update_PBP_data.delay(year)
+        update_roster_data.delay(year)
 
 @celery.task()
-def update_qb_tds_top10():
-    qbtd10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_qb_tds_top10_data.csv'
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
+def update_qb_tds_top10(year=None):
+    """Update QB TDs top 10 for specified year"""
+    if year is None:
+        year = get_selected_year()
+        
+    qbtd10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_tds_top10_data.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    
     if os.path.exists(file_path):
-            pbp_data = pd.read_csv(file_path, index_col=0)
+        pbp_data = pd.read_csv(file_path, index_col=0)
     else:
-        update_PBP_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+        update_PBP_data.delay(year)
+        return f"PBP data for {year} not found, updating in background"
+        
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
-            roster_data = pd.read_csv(rfile_path, index_col=0)
+        roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
-        update_roster_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
+        update_roster_data.delay(year)
+        return f"Roster data for {year} not found, updating in background"
+        
     try:
         # Filter for regular season passing touchdowns
         pass_td_data = pbp_data[
@@ -164,25 +226,34 @@ def update_qb_tds_top10():
         # Get top 10
         pass_td_agg = pass_td_agg.head(10)
         pass_td_agg.to_csv(qbtd10file_path)
-    except:
-        update_PBP_data.delay()
-        update_roster_data.delay()
+        logger.info(f"QB TDs top 10 for {year} saved to {qbtd10file_path}")
+    except Exception as e:
+        logger.error(f"Error updating QB TDs top 10 for {year}: {str(e)}")
+        update_PBP_data.delay(year)
+        update_roster_data.delay(year)
 
 @celery.task()
-def update_rb_yards_top10():
-    rbyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rb_yds_top10_data.csv' 
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
+def update_rb_yards_top10(year=None):
+    """Update RB yards top 10 for specified year"""
+    if year is None:
+        year = get_selected_year()
+        
+    rbyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_yds_top10_data.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    
     if os.path.exists(file_path):
         pbp_data = pd.read_csv(file_path, index_col=0)
     else:
-        update_PBP_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+        update_PBP_data.delay(year)
+        return f"PBP data for {year} not found, updating in background"
+        
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
         roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
-        update_roster_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
+        update_roster_data.delay(year)
+        return f"Roster data for {year} not found, updating in background"
+        
     try:
         # Filter for regular season rushing plays
         pbp_data = pbp_data[
@@ -228,27 +299,36 @@ def update_rb_yards_top10():
 
         # Save to CSV
         rush_yds_agg.to_csv(rbyds10)
-    except:
-        update_PBP_data.delay()
-        update_roster_data.delay()
+        logger.info(f"RB yards top 10 for {year} saved to {rbyds10}")
+    except Exception as e:
+        logger.error(f"Error updating RB yards top 10 for {year}: {str(e)}")
+        update_PBP_data.delay(year)
+        update_roster_data.delay(year)
 
 @celery.task()
-def update_rb_tds_top10():
-    rbtds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rb_tds_top10_data.csv' 
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
+def update_rb_tds_top10(year=None):
+    """Update RB TDs top 10 for specified year"""
+    if year is None:
+        year = get_selected_year()
+        
+    rbtds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rb_tds_top10_data.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    
     if os.path.exists(file_path):
         pbp_data = pd.read_csv(file_path, index_col=0)
     else:
-        update_PBP_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+        update_PBP_data.delay(year)
+        return f"PBP data for {year} not found, updating in background"
+        
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
         roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
-        update_roster_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
+        update_roster_data.delay(year)
+        return f"Roster data for {year} not found, updating in background"
+        
     try:
-# Filter for regular season rushing plays
+        # Filter for regular season rushing plays
         pbp_data = pbp_data[
             (pbp_data["season_type"] == "REG") &
             (pbp_data["two_point_attempt"] == False) &
@@ -293,28 +373,36 @@ def update_rb_tds_top10():
 
         # Save to CSV
         rush_td_agg.to_csv(rbtds10)
-    except:
-        update_PBP_data.delay()
-        update_roster_data.delay()
+        logger.info(f"RB TDs top 10 for {year} saved to {rbtds10}")
+    except Exception as e:
+        logger.error(f"Error updating RB TDs top 10 for {year}: {str(e)}")
+        update_PBP_data.delay(year)
+        update_roster_data.delay(year)
 
 @celery.task()
-def update_rec_yds_top10():
-    recyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rec_yds_top10_data.csv' 
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
+def update_rec_yds_top10(year=None):
+    """Update receiving yards top 10 for specified year"""
+    if year is None:
+        year = get_selected_year()
+        
+    recyds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_yds_top10_data.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    
     if os.path.exists(file_path):
         pbp_data = pd.read_csv(file_path, index_col=0)
     else:
-        update_PBP_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+        update_PBP_data.delay(year)
+        return f"PBP data for {year} not found, updating in background"
+        
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
         roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
-        update_roster_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
+        update_roster_data.delay(year)
+        return f"Roster data for {year} not found, updating in background"
+        
     try:
-# For receiving yards:
-# Filter for regular season passing plays
+        # Filter for regular season passing plays
         pbp_data = pbp_data[
             (pbp_data["season_type"] == "REG") &
             (pbp_data["two_point_attempt"] == False) &
@@ -358,28 +446,36 @@ def update_rec_yds_top10():
 
         # Save to CSV
         rec_yds_agg.to_csv(recyds10)
-    except:
-        update_PBP_data.delay()
-        update_roster_data.delay()
+        logger.info(f"Receiving yards top 10 for {year} saved to {recyds10}")
+    except Exception as e:
+        logger.error(f"Error updating receiving yards top 10 for {year}: {str(e)}")
+        update_PBP_data.delay(year)
+        update_roster_data.delay(year)
 
 @celery.task()
-def update_rec_tds_top10():
-    rectds10 = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rec_tds_top10_data.csv' 
-    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_pbp_data.csv'
+def update_rec_tds_top10(year=None):
+    """Update receiving TDs top 10 for specified year"""
+    if year is None:
+        year = get_selected_year()
+        
+    rectds10 = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rec_tds_top10_data.csv'
+    file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
+    
     if os.path.exists(file_path):
         pbp_data = pd.read_csv(file_path, index_col=0)
     else:
-        update_PBP_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
-    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+        update_PBP_data.delay(year)
+        return f"PBP data for {year} not found, updating in background"
+        
+    rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
         roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
-        update_roster_data.delay()
-        #flash('Data is updating in the background. Refresh the page in a bit')
+        update_roster_data.delay(year)
+        return f"Roster data for {year} not found, updating in background"
+        
     try:
-# For receiving touchdowns:
-# Filter for regular season passing touchdown plays
+        # Filter for regular season passing touchdown plays
         pbp_data = pbp_data[
             (pbp_data["season_type"] == "REG") &
             (pbp_data["two_point_attempt"] == False) &
@@ -424,33 +520,43 @@ def update_rec_tds_top10():
 
         # Save to CSV
         rec_td_agg.to_csv(rectds10)
-    except:
-        update_PBP_data.delay()
-        update_roster_data.delay()
+        logger.info(f"Receiving TDs top 10 for {year} saved to {rectds10}")
+    except Exception as e:
+        logger.error(f"Error updating receiving TDs top 10 for {year}: {str(e)}")
+        update_PBP_data.delay(year)
+        update_roster_data.delay(year)
         
 @celery.task()
-def update_team_stats(team):
+def update_team_stats(team, year=None):
+    """Update team stats for specified team and year"""
+    if year is None:
+        year = get_selected_year()
+        
     # Open Schedule data
-    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
+    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
     schedule = pd.read_csv(sched_path, index_col=0)
     team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
     if os.path.exists(team_dir):
         pass
     else:
         os.mkdir(os.getcwd() + '/nickknows/nfl/data/' + team + '/')
-    team_stats = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_stats.csv' 
-    team_schedule = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv' 
+        
+    team_stats = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_stats.csv'
+    team_schedule = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv'
+    
     #Replace game_id with a link that has Away vs. Home instead
     url = (f'<a href="{SITE_DOMAIN}/NFL/PbP/' + 
            schedule['game_id'] + '">' + 
            schedule['away_team'] + ' vs. ' + 
            schedule['home_team'] + '</a>')
     schedule['game_id'] = url
+    
     #Create a full schedule for the team selected
     home_team_schedule = schedule.loc[schedule['home_team'] == team]
     away_team_schedule = schedule.loc[schedule['away_team'] == team]
     full_schedule = [home_team_schedule, away_team_schedule]
     full_schedule = pd.concat(full_schedule)
+    
     #Drop any games that haven't been played
     full_schedule = full_schedule.dropna(subset=['away_score'])
     full_schedule = full_schedule.sort_values(by=['week'])
@@ -465,26 +571,33 @@ def update_team_stats(team):
     op_team.to_csv(team_schedule)
     op_team = op_team["op_team"].to_list()
     weekly_team_data = pd.DataFrame()
-    for team in op_team:
-        week = op_team.index(team) + 1
-        rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+    
+    for opponent in op_team:
+        week = op_team.index(opponent) + 1
+        rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
         roster_data = pd.read_csv(rost_path, index_col=0)
-        team_roster = roster_data.loc[roster_data['team'] == team]
+        team_roster = roster_data.loc[roster_data['team'] == opponent]
         players = team_roster['player_name'].to_list()
         for player in players:
-            week_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_weekly_data.csv'
+            week_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
             weekly_data = pd.read_csv(week_path, index_col=0)
             player_data = weekly_data.loc[weekly_data['player_display_name'] == player]
             player_data = player_data.loc[player_data['week'] == week]
             weekly_team_data = [weekly_team_data, player_data]
             weekly_team_data = pd.concat(weekly_team_data)
+    
     weekly_team_data.to_csv(team_stats)
+    logger.info(f"Team stats for {team} ({year}) saved to {team_stats}")
 
 @celery.task()
-def update_team_schedule(team):
+def update_team_schedule(team, year=None):
+    """Update team schedule for specified team and year"""
+    if year is None:
+        year = get_selected_year()
+        
     # Open Schedule data
-    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
-    team_sched_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
+    sched_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
+    team_sched_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv'
     team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
     if not os.path.exists(team_dir):
         os.mkdir(team_dir)
@@ -510,10 +623,16 @@ def update_team_schedule(team):
     full_schedule = full_schedule.dropna(subset=['away_score'])
     full_schedule = full_schedule.sort_values(by=['week'])
     full_schedule.to_csv(team_sched_path)
-    update_weekly_team_data.delay(team)
+    
+    logger.info(f"Team schedule for {team} ({year}) saved to {team_sched_path}")
+    update_weekly_team_data.delay(team, year)
 
 @celery.task()
-def update_weekly_team_data(team):
+def update_weekly_team_data(team, year=None):
+    """Update weekly team data for specified team and year"""
+    if year is None:
+        year = get_selected_year()
+        
     try:
         # Setup directories
         team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
@@ -521,9 +640,9 @@ def update_weekly_team_data(team):
             os.mkdir(team_dir)
 
         # Read files
-        file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_schedule.csv'
-        rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
-        week_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_weekly_data.csv'
+        file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_schedule.csv'
+        rost_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
+        week_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
 
         # Load data
         full_schedule = pd.read_csv(file_path, index_col=0)
@@ -545,7 +664,7 @@ def update_weekly_team_data(team):
             week = row['week']
             opponent = row['opponent']
             
-            logger.info(f"Processing {opponent} week {week}")
+            logger.info(f"Processing {opponent} week {week} for team {team} ({year})")
             
             # Get opponent roster
             team_roster = roster_data[roster_data['team'] == opponent]
@@ -561,17 +680,21 @@ def update_weekly_team_data(team):
             weekly_team_data = pd.concat([weekly_team_data, player_data])
 
         # Save processed data
-        output_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
+        output_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_data.csv'
         weekly_team_data.to_csv(output_path)
         
-        logger.info(f"Completed weekly team data update for {team}")
+        logger.info(f"Completed weekly team data update for {team} ({year})")
         return True
         
     except Exception as e:
-        logger.error(f"Error processing {team}: {str(e)}")
+        logger.error(f"Error processing {team} for {year}: {str(e)}")
         raise
 
-def generate_team_graphs(team, weekly_data_dict):
+def generate_team_graphs(team, weekly_data_dict, year=None):
+    """Generate team graphs for specified year"""
+    if year is None:
+        year = get_selected_year()
+        
     weekly_team_data = pd.DataFrame.from_records(weekly_data_dict)
     
     # Process each position's data
@@ -594,6 +717,9 @@ def generate_team_graphs(team, weekly_data_dict):
         player_totals = data
         num_players = len(player_totals)
         
+        if num_players == 0:
+            continue
+        
         # Calculate figure height based on number of players
         fig_height = max(MIN_HEIGHT, min(MAX_HEIGHT, num_players * 0.8))
         
@@ -607,7 +733,7 @@ def generate_team_graphs(team, weekly_data_dict):
                                ax=ax)  # Pass the axis object
         
         # Customize the plot
-        plt.title(f'{team} vs {pos}s Fantasy Points')
+        plt.title(f'{team} vs {pos}s Fantasy Points ({year})')
         plt.yticks(fontsize=8)
         
         # Calculate appropriate margins based on number of bars
@@ -633,24 +759,28 @@ def generate_team_graphs(team, weekly_data_dict):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
             
-        plt.savefig(f'/NickKnows/app/nickknows/static/images/{team}/{team}_{pos}_FPA.png', 
+        plt.savefig(f'/NickKnows/app/nickknows/static/images/{team}/{team}_{pos}_FPA_{year}.png', 
                     bbox_inches='tight',
                     dpi=100)
         plt.close()
         
-        logger.info(f"Generated {pos} plot for {team} with {len(player_totals)} players")
-        
+        logger.info(f"Generated {pos} plot for {team} ({year}) with {len(player_totals)} players")
+
 @celery.task()
-def process_team_data(team):
+def process_team_data(team, year=None):
+    """Process team data for specified team and year"""
+    if year is None:
+        year = get_selected_year()
+        
     try:
-        data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(selected_year) + '_' + team + '_data.csv'
+        data_file_path = os.getcwd() + '/nickknows/nfl/data/' + team + '/' + str(year) + '_' + team + '_data.csv'
         weekly_team_data = pd.read_csv(data_file_path, index_col=0)
         
         # Group by week and position first to get position totals per week
         weekly_position_totals = weekly_team_data.groupby(['week', 'position'])['fantasy_points_ppr'].sum().reset_index()
         
         # Generate plots using existing function
-        generate_team_graphs(team, weekly_team_data)
+        generate_team_graphs(team, weekly_team_data, year)
 
         # Calculate mean fantasy points against per position
         pass_agg = weekly_position_totals[weekly_position_totals['position'] == 'QB'].groupby('week')['fantasy_points_ppr'].first().mean()
@@ -666,17 +796,71 @@ def process_team_data(team):
             'TE': te_agg
         }
     except Exception as e:
-        logger.error(f"Error processing team {team}: {str(e)}")
+        logger.error(f"Error processing team {team} for {year}: {str(e)}")
         raise
 
 @celery.task()
-def update_fpa_data(results):
-    logger.info(f"Updating FPA data with {len(results)} teams")
+def update_fpa_data(results, year=None):
+    """Update FPA data for specified year"""
+    if year is None:
+        year = get_selected_year()
+        
+    logger.info(f"Updating FPA data with {len(results)} teams for {year}")
     try:
-        fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
+        fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_FPA.csv'
         df = pd.DataFrame(results)
         df.to_csv(fpa_path)
-        return f"Updated FPA data for {len(results)} teams"
+        logger.info(f"Updated FPA data for {len(results)} teams for {year}")
+        return f"Updated FPA data for {len(results)} teams for {year}"
     except Exception as e:
-        logger.error(f"Error updating FPA data: {str(e)}")
+        logger.error(f"Error updating FPA data for {year}: {str(e)}")
         raise
+
+# Wrapper functions to pass year parameter to existing tasks
+@celery.task()
+def update_all_data_for_year(year):
+    """Update all NFL data for a specific year"""
+    logger.info(f"Starting full data update for {year}")
+    
+    # Update base data
+    update_PBP_data.delay(year)
+    update_roster_data.delay(year)
+    update_sched_data.delay(year)
+    update_week_data.delay(year)
+    
+    # Wait a bit for base data to process
+    time.sleep(30)
+    
+    # Update aggregated stats
+    update_qb_yards_top10.delay(year)
+    update_qb_tds_top10.delay(year)
+    update_rb_yards_top10.delay(year)
+    update_rb_tds_top10.delay(year)
+    update_rec_yds_top10.delay(year)
+    update_rec_tds_top10.delay(year)
+    
+    logger.info(f"Completed scheduling all updates for {year}")
+
+@celery.task()
+def update_all_team_fpa_for_year(year):
+    """Update FPA data for all teams for a specific year"""
+    teams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
+    
+    logger.info(f"Starting FPA update for all teams for {year}")
+    
+    # Create chains for each team that include graph generation
+    team_chains = []
+    for team in teams:
+        team_chains.append(
+            chain(
+                update_team_schedule.si(team, year),
+                update_weekly_team_data.si(team, year),
+                process_team_data.si(team, year)
+            )
+        )
+    
+    # Execute all chains in parallel and collect results
+    chord(team_chains)(update_fpa_data.s(year))
+    
+    logger.info(f"Completed scheduling FPA updates for all teams for {year}")
+    return f"FPA update scheduled for all teams for {year}"

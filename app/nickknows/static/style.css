@@ -607,3 +607,138 @@ a#social-media {
 .scroll-container.fast {
     animation-duration: 20s;
 }
+
+/* Add these styles to your existing style.css */
+
+/* Year Selector Styles */
+.year-selector {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px auto;
+    max-width: 400px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.year-selector label {
+    color: #333;
+    font-weight: bold;
+    margin-right: 15px;
+}
+
+.year-selector select {
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 2px solid #007bff;
+    border-radius: 6px;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.year-selector select:hover {
+    border-color: #0056b3;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.2);
+}
+
+.year-selector select:focus {
+    outline: none;
+    border-color: #0056b3;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+}
+
+/* Flash Messages */
+.flash-message {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 12px 20px;
+    margin: 15px 0;
+    border-radius: 6px;
+    border-left: 4px solid #28a745;
+}
+
+.flash-message.error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    border-left-color: #dc3545;
+}
+
+.flash-message.warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    border-left-color: #ffc107;
+}
+
+/* Update Button Styling */
+.update-button {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.update-button:hover {
+    background: linear-gradient(45deg, #0056b3, #004085);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.update-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Dropdown improvements for season selector */
+.dropdown .dropbtn.season-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.dropdown .dropbtn.season-btn:hover {
+    background-color: #218838;
+}
+
+/* Enhanced responsive design */
+@media screen and (max-width: 768px) {
+    .year-selector {
+        margin: 10px 20px;
+        padding: 12px;
+    }
+    
+    .year-selector label {
+        display: block;
+        margin-bottom: 8px;
+        margin-right: 0;
+    }
+    
+    .year-selector select {
+        width: 100%;
+        font-size: 14px;
+    }
+}
+
+/* Loading indicator for data updates */
+.loading-indicator {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

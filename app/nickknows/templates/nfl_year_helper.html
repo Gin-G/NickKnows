@@ -1,0 +1,170 @@
+<!-- Include this in all NFL pages: app/nickknows/templates/nfl_year_helper.html -->
+<script>
+// NFL Year Management Helper
+(function() {
+    'use strict';
+    
+    // Get available years dynamically (this should match your Python function)
+    function getAvailableYears() {
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1; // 1-based month
+        const endYear = currentMonth >= 9 ? currentYear + 1 : currentYear;
+        const years = [];
+        for (let year = 2020; year <= endYear; year++) {
+            years.push(year);
+        }
+        return years;
+    }
+    
+    // Get current year from URL or default to latest
+    function getCurrentYear() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const availableYears = getAvailableYears();
+        const selectedYear = parseInt(urlParams.get('year'));
+        
+        if (selectedYear && availableYears.includes(selectedYear)) {
+            return selectedYear;
+        }
+        return Math.max(...availableYears);
+    }
+    
+    // Update all NFL links to preserve year parameter
+    function updateNFLLinks(year) {
+        const nflLinks = document.querySelectorAll('a[href*="/NFL"]');
+        nflLinks.forEach(link => {
+            const url = new URL(link.href, window.location.origin);
+            
+            // Skip if it's already got a year parameter or is an external link
+            if (url.hostname !== window.location.hostname) return;
+            
+            // Add year parameter to NFL routes
+            if (url.pathname.startsWith('/NFL')) {
+                url.searchParams.set('year', year);
+                link.href = url.toString();
+            }
+        });
+    }
+    
+    // Update season dropdown in navbar
+    function updateSeasonDropdown() {
+        const seasonDropdown = document.querySelector('.dropdown .dropdown-content');
+        if (seasonDropdown && seasonDropdown.innerHTML.includes('Season')) {
+            const availableYears = getAvailableYears();
+            const currentYear = getCurrentYear();
+            
+            // Clear existing season links
+            const seasonLinks = seasonDropdown.querySelectorAll('a[href*="year="]');
+            seasonLinks.forEach(link => link.remove());
+            
+            // Add new season links
+            availableYears.reverse().forEach(year => {
+                const link = document.createElement('a');
+                link.href = `/NFL?year=${year}`;
+                link.textContent = `${year} Season`;
+                if (year === currentYear) {
+                    link.style.fontWeight = 'bold';
+                    link.style.backgroundColor = '#e9ecef';
+                }
+                seasonDropdown.insertBefore(link, seasonDropdown.firstChild);
+            });
+        }
+    }
+    
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentYear = getCurrentYear();
+        updateNFLLinks(currentYear);
+        updateSeasonDropdown();
+        
+        // Store current year for other scripts
+        window.currentNFLYear = currentYear;
+        
+        // Update page title if it contains year information
+        const titleElement = document.querySelector('h1');
+        if (titleElement && titleElement.textContent.includes('NFL') && !titleElement.textContent.includes(currentYear)) {
+            titleElement.textContent = titleElement.textContent.replace('NFL', `NFL ${currentYear}`);
+        }
+    });
+    
+    // Export functions for use by other scripts
+    window.NFLYearHelper = {
+        getCurrentYear: getCurrentYear,
+        getAvailableYears: getAvailableYears,
+        updateNFLLinks: updateNFLLinks
+    };
+})();
+
+// Add loading indicator for form submissions
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form[action*="update"], form[action*="Update"]');
+    forms.forEach(form => {
+        form.addEventListener('submit', function() {
+            const submitButton = form.querySelector('input[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.value = submitButton.value + ' ⏳';
+                
+                // Re-enable after 10 seconds in case something goes wrong
+                setTimeout(() => {
+                    submitButton.disabled = false;
+                    submitButton.value = submitButton.value.replace(' ⏳', '');
+                }, 10000);
+            }
+        });
+    });
+});
+</script>
+
+<style>
+/* Additional styles for year consistency */
+.current-year-badge {
+    background-color: #007bff;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin-left: 8px;
+}
+
+.year-navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.year-navigation a {
+    padding: 6px 12px;
+    background-color: #f8f9fa;
+    color: #007bff;
+    text-decoration: none;
+    border-radius: 4px;
+    border: 1px solid #007bff;
+    transition: all 0.2s ease;
+}
+
+.year-navigation a:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.year-navigation a.current {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+@media screen and (max-width: 768px) {
+    .year-navigation {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .year-navigation a {
+        text-align: center;
+        margin: 2px 0;
+    }
+}
+</style>

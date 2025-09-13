@@ -10,6 +10,16 @@
         const navLinks = document.getElementById('navLinks');
         navLinks.classList.toggle('active');
     }
+    
+    // Auto-submit form when year is changed
+    document.addEventListener('DOMContentLoaded', function() {
+        const yearSelect = document.getElementById('yearSelect');
+        if (yearSelect) {
+            yearSelect.addEventListener('change', function() {
+                document.getElementById('yearForm').submit();
+            });
+        }
+    });
     </script>
     
     <!-- Google tag (gtag.js) -->
@@ -42,50 +52,70 @@
     <body>
         <div id="header"></div>
         <div id="nfl_navbar"></div>
-        <h1>NFL Stat Leaders</h1>
+        
+        <!-- Year Selection Form -->
+        <div class="year-selector" style="text-align: center; margin: 20px 0;">
+            <form id="yearForm" method="get" action="{{ url_for('NFL') }}">
+                <label for="yearSelect" style="font-size: 18px; font-weight: bold; margin-right: 10px;">Select NFL Season:</label>
+                <select name="year" id="yearSelect" style="padding: 8px; font-size: 16px; border-radius: 5px; border: 2px solid #333;">
+                    {% for year in years %}
+                        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }} Season</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+        
+        <h1>NFL Stat Leaders - {{ selected_year }} Season</h1>
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
-                    {{ message }}<br>
+                    <div class="flash-message" style="background-color: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                        {{ message }}
+                    </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
-                <form action="{{ url_for('NFLupdate') }}">
-                    <input type="submit" value="Update Data" style="font-size: 20px;border-radius: 5px;">
-                </form>
-                <div class='nfl-row'>
-                    <div class='nfl-column'>
-                        <h2>Passing Yards</h2>
-                            {{pass_yards_data | safe}}
-                    </div>
-                    <div class='nfl-column'>
-                        <h2>Passing TD</h2>
-                            {{pass_td_data | safe}}
-                    </div>
-                </div>
-                <div class='nfl-row'>
-                    <div class='nfl-column'>
-                        <h2>Rushing Yards</h2>
-                            {{rush_yards_data | safe}}
-                    </div>
-                    <div class='nfl-column'>
-                        <h2>Rushing TD</h2>
-                            {{rush_td_data | safe}}
-                    </div>
-                </div>
-                <div class='nfl-row'>
-                    <div class='nfl-column'>
-                        <h2>Receiving Yards</h2>
-                            {{rec_yards_data | safe}}
-                    </div>
-                    <div class='nfl-column'>
-                        <h2>Receiving TD</h2>
-                            {{rec_td_data | safe}}
-                    </div>
-                </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <form action="{{ url_for('NFLupdate') }}">
+                <input type="hidden" name="year" value="{{ selected_year }}">
+                <input type="submit" value="Update {{ selected_year }} Data" style="font-size: 20px;border-radius: 5px; padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer;">
+            </form>
+        </div>
+        
+        <div class='nfl-row'>
+            <div class='nfl-column'>
+                <h2>Passing Yards</h2>
+                {{pass_yards_data | safe}}
+            </div>
+            <div class='nfl-column'>
+                <h2>Passing TD</h2>
+                {{pass_td_data | safe}}
+            </div>
+        </div>
+        <div class='nfl-row'>
+            <div class='nfl-column'>
+                <h2>Rushing Yards</h2>
+                {{rush_yards_data | safe}}
+            </div>
+            <div class='nfl-column'>
+                <h2>Rushing TD</h2>
+                {{rush_td_data | safe}}
+            </div>
+        </div>
+        <div class='nfl-row'>
+            <div class='nfl-column'>
+                <h2>Receiving Yards</h2>
+                {{rec_yards_data | safe}}
+            </div>
+            <div class='nfl-column'>
+                <h2>Receiving TD</h2>
+                {{rec_td_data | safe}}
+            </div>
+        </div>
         <div class="big-bold" style="display: inline-block; text-align: center;">
             <p>
-            Use this site to browse NFL data.
+            Use this site to browse NFL data for the {{ selected_year }} season.
             </p>
         </div>
         <br>
