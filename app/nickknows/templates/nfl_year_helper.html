@@ -8,7 +8,18 @@
     function getAvailableYears() {
         const currentYear = new Date().getFullYear();
         const currentMonth = new Date().getMonth() + 1; // 1-based month
-        const endYear = currentMonth >= 9 ? currentYear + 1 : currentYear;
+        const currentDay = new Date().getDate();
+        
+        let endYear;
+        // Be very conservative about including the current year's data
+        if (currentMonth >= 10) {  // October or later - current season data should be available
+            endYear = currentYear;
+        } else if (currentMonth >= 9) {  // September - check if it's late September
+            endYear = currentDay >= 15 ? currentYear : currentYear - 1;
+        } else {  // Before September - use previous year
+            endYear = currentYear - 1;
+        }
+        
         const years = [];
         for (let year = 2020; year <= endYear; year++) {
             years.push(year);
@@ -90,7 +101,8 @@
     window.NFLYearHelper = {
         getCurrentYear: getCurrentYear,
         getAvailableYears: getAvailableYears,
-        updateNFLLinks: updateNFLLinks
+        updateNFLLinks: updateNFLLinks,
+        formatNFLSeason: formatNFLSeason
     };
 })();
 

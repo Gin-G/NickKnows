@@ -12,7 +12,7 @@ from datetime import datetime
 logger = get_task_logger(__name__)
 
 # Add at top of file with other constants
-SITE_DOMAIN = "https://nickknows.ging.nickknows.net"
+SITE_DOMAIN = "https://www.nickknows.net"
 
 def get_available_years():
     """Get available NFL years from 2020 to current year + 1"""
@@ -32,6 +32,13 @@ def get_selected_year():
     except:
         return max(available_years)
 
+def format_nfl_season(year):
+    """Format NFL season as 'YYYY-YYYY Season' (e.g., '2024-2025 Season')"""
+    return f"{year-1}-{year} Season"available_years), type=int)
+        return selected if selected in available_years else max(available_years)
+    except:
+        return max(available_years)
+
 @celery.task()
 def update_PBP_data(year=None):
     """Update play-by-play data for specified year"""
@@ -39,14 +46,15 @@ def update_PBP_data(year=None):
         year = get_selected_year()
     
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
-    logger.info(f"Updating PBP data for {year}")
+    season_display = format_nfl_season(year)
+    logger.info(f"Updating PBP data for {season_display}")
     
     if year == 2024:
         pbp_data = nfl.import_pbp_data([year], include_participation=False)
     else:
         pbp_data = nfl.import_pbp_data([year])
     pbp_data.to_csv(file_path)
-    logger.info(f"PBP data for {year} saved to {file_path}")
+    logger.info(f"PBP data for {season_display} saved to {file_path}")
 
 @celery.task()
 def update_roster_data(year=None):
@@ -55,11 +63,12 @@ def update_roster_data(year=None):
         year = get_selected_year()
         
     rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
-    logger.info(f"Updating roster data for {year}")
+    season_display = format_nfl_season(year)
+    logger.info(f"Updating roster data for {season_display}")
     
     roster_data = nfl.import_weekly_rosters([year])
     roster_data.to_csv(rfile_path)
-    logger.info(f"Roster data for {year} saved to {rfile_path}")
+    logger.info(f"Roster data for {season_display} saved to {rfile_path}")
 
 @celery.task()
 def update_sched_data(year=None):
@@ -68,11 +77,12 @@ def update_sched_data(year=None):
         year = get_selected_year()
         
     scfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_schedule.csv'
-    logger.info(f"Updating schedule data for {year}")
+    season_display = format_nfl_season(year)
+    logger.info(f"Updating schedule data for {season_display}")
     
     schedule = nfl.import_schedules([year])
     schedule.to_csv(scfile_path)
-    logger.info(f"Schedule data for {year} saved to {scfile_path}")
+    logger.info(f"Schedule data for {season_display} saved to {scfile_path}")
 
 @celery.task()
 def update_week_data(year=None):
@@ -81,11 +91,12 @@ def update_week_data(year=None):
         year = get_selected_year()
         
     wefile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_weekly_data.csv'
-    logger.info(f"Updating weekly data for {year}")
+    season_display = format_nfl_season(year)
+    logger.info(f"Updating weekly data for {season_display}")
     
     weekly_data = nfl.import_weekly_data([year])
     weekly_data.to_csv(wefile_path)
-    logger.info(f"Weekly data for {year} saved to {wefile_path}")
+    logger.info(f"Weekly data for {season_display} saved to {wefile_path}")
 
 @celery.task()
 def update_qb_yards_top10(year=None):
@@ -93,6 +104,7 @@ def update_qb_yards_top10(year=None):
     if year is None:
         year = get_selected_year()
         
+    season_display = format_nfl_season(year)
     qb10file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_qb_yards_top10_data.csv'
     file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
     
@@ -100,14 +112,14 @@ def update_qb_yards_top10(year=None):
         pbp_data = pd.read_csv(file_path, index_col=0)
     else:
         update_PBP_data.delay(year)
-        return f"PBP data for {year} not found, updating in background"
+        return f"PBP data for {season_display} not found, updating in background"
         
     rfile_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_rosters.csv'
     if os.path.exists(rfile_path):
         roster_data = pd.read_csv(rfile_path, index_col=0)
     else:
         update_roster_data.delay(year)
-        return f"Roster data for {year} not found, updating in background"
+        return f"Roster data for {season_display} not found, updating in background"
         
     try:
         # Filter for regular season passing plays
@@ -154,9 +166,9 @@ def update_qb_yards_top10(year=None):
 
         # Save to CSV
         pass_agg.to_csv(qb10file_path)
-        logger.info(f"QB yards top 10 for {year} saved to {qb10file_path}")
+        logger.info(f"QB yards top 10 for {season_display} saved to {qb10file_path}")
     except Exception as e:
-        logger.error(f"Error updating QB yards top 10 for {year}: {str(e)}")
+        logger.error(f"Error updating QB yards top 10 for {season_display}: {str(e)}")
         update_PBP_data.delay(year)
         update_roster_data.delay(year)
 
@@ -818,9 +830,52 @@ def update_fpa_data(results, year=None):
 
 # Wrapper functions to pass year parameter to existing tasks
 @celery.task()
+def check_data_availability(year=None):
+    """Check if data is available for a given year and return status"""
+    if year is None:
+        year = get_selected_year()
+    
+    season_display = format_nfl_season(year)
+    
+    # Test with a simple API call to see if data exists
+    try:
+        # Try to get just schedule data (lightest call) to test availability
+        test_data = nfl.import_schedules([year])
+        if test_data.empty:
+            return {
+                'year': year,
+                'season_display': season_display,
+                'available': False,
+                'message': f'No schedule data available for {season_display}'
+            }
+        else:
+            return {
+                'year': year,
+                'season_display': season_display,
+                'available': True,
+                'message': f'Data available for {season_display} ({len(test_data)} games in schedule)'
+            }
+    except Exception as e:
+        return {
+            'year': year,
+            'season_display': season_display,
+            'available': False,
+            'message': f'Error checking {season_display}: {str(e)}'
+        }
+
+@celery.task()
 def update_all_data_for_year(year):
-    """Update all NFL data for a specific year"""
-    logger.info(f"Starting full data update for {year}")
+    """Update all NFL data for a specific year with availability checking"""
+    season_display = format_nfl_season(year)
+    logger.info(f"Starting full data update for {season_display}")
+    
+    # First check if data is available
+    availability = check_data_availability(year)
+    if not availability['available']:
+        logger.warning(f"Skipping update for {season_display}: {availability['message']}")
+        return availability['message']
+    
+    logger.info(f"Data confirmed available for {season_display}, proceeding with updates")
     
     # Update base data
     update_PBP_data.delay(year)
@@ -839,7 +894,8 @@ def update_all_data_for_year(year):
     update_rec_yds_top10.delay(year)
     update_rec_tds_top10.delay(year)
     
-    logger.info(f"Completed scheduling all updates for {year}")
+    logger.info(f"Completed scheduling all updates for {season_display}")
+    return f"Successfully scheduled all updates for {season_display}"
 
 @celery.task()
 def update_all_team_fpa_for_year(year):

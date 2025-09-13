@@ -14,11 +14,12 @@
             </button>
             <div class="dropdown-content">
                 <!-- These will be populated by JavaScript or server-side -->
-                <a href="{{url_for('NFL', year=2024)}}">2024 Season</a>
-                <a href="{{url_for('NFL', year=2023)}}">2023 Season</a>
-                <a href="{{url_for('NFL', year=2022)}}">2022 Season</a>
-                <a href="{{url_for('NFL', year=2021)}}">2021 Season</a>
-                <a href="{{url_for('NFL', year=2020)}}">2020 Season</a>
+                <a href="{{url_for('NFL', year=2025)}}">2024-2025 Season</a>
+                <a href="{{url_for('NFL', year=2024)}}">2023-2024 Season</a>
+                <a href="{{url_for('NFL', year=2023)}}">2022-2023 Season</a>
+                <a href="{{url_for('NFL', year=2022)}}">2021-2022 Season</a>
+                <a href="{{url_for('NFL', year=2021)}}">2020-2021 Season</a>
+                <a href="{{url_for('NFL', year=2020)}}">2019-2020 Season</a>
             </div>
         </div>
         
@@ -146,7 +147,7 @@
         </button>
         <div class="dropdown-content">
             <a href="{{url_for('FPAupdate')}}">Update All Teams</a>
-            <a href="{{url_for('fpa')}}">All Teams</a>
+            <a href="{{url_for('fpa', year=selected_year)}}">All Teams</a>
             <a href="{{url_for('team_fpa', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
             <a href="{{url_for('team_fpa', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
             <a href="{{url_for('team_fpa', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>

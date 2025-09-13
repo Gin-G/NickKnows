@@ -136,6 +136,7 @@ def schedule():
     try:
         available_years = get_available_years()
         selected_year = get_selected_year()
+        season_display = get_season_display_name(selected_year)
         week = int(request.args.get('week', '1'))
         available_weeks = range(1, 19) if selected_year >= 2021 else range(1, 18)
         file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
@@ -157,7 +158,8 @@ def schedule():
                              weeks = available_weeks, 
                              week = week, 
                              years=available_years, 
-                             selected_year=selected_year)
+                             selected_year=selected_year,
+                             season_display=season_display)
     except FileNotFoundError as e:
         flash(str(e))
         return redirect(url_for('NFL'))
