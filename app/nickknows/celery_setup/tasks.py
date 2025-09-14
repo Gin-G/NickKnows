@@ -14,23 +14,21 @@ logger = get_task_logger(__name__)
 # Add at top of file with other constants
 SITE_DOMAIN = "https://www.nickknows.net"
 
+current_season = 2025
+
 def get_available_years():
-    """Get available NFL years from 2020 to current year + 1"""
-    current_year = datetime.now().year
-    # NFL season typically runs Sep-Feb, so include next year if we're in NFL season
-    end_year = current_year + 1 if datetime.now().month >= 9 else current_year
-    return list(range(2020, end_year + 1))
+    """Get available NFL years from 2020 to current available year"""
+    return list(range(2020, current_season + 1 ))
 
 def get_selected_year():
     """Get selected year from context or default to latest available"""
     available_years = get_available_years()
-    # Try to get from Flask request context, fallback to max year
     try:
         from flask import request
         selected = request.args.get('year', max(available_years), type=int)
         return selected if selected in available_years else max(available_years)
     except:
-        return max(available_years)
+        return max(available_years)  # This will be 2024
 
 def format_nfl_season(year):
     """Format NFL season as 'YYYY-YYYY Season' (e.g., '2024-2025 Season')"""

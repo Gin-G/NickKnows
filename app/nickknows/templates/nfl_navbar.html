@@ -219,35 +219,63 @@ window.onclick = function(event) {
     }
 }
 
-// Preserve year parameter in URLs when navigating
-document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentYear = urlParams.get('year');
+// Function to get current selected year
+function getCurrentYear() {
+    const yearSelect = document.getElementById('yearSelect');
+    return yearSelect ? yearSelect.value : new URLSearchParams(window.location.search).get('year') || '2024';
+}
+
+// Function to update all navbar links with the selected year
+function updateAllLinksWithYear(selectedYear) {
+    // Update NFL Home link
+    const nflHomeLink = document.getElementById('nfl-home-link');
+    if (nflHomeLink) {
+        const url = new URL(nflHomeLink.href);
+        url.searchParams.set('year', selectedYear);
+        nflHomeLink.href = url.toString();
+    }
     
-    if (currentYear) {
-        // Update all team links to include the current year
-        const teamLinks = document.querySelectorAll('a[href*="/NFL/Team/"], a[href*="/NFL/Roster/"]');
-        teamLinks.forEach(link => {
-            const url = new URL(link.href);
-            url.searchParams.set('year', currentYear);
-            link.href = url.toString();
-        });
-        
-        // Update schedule link
-        const scheduleLink = document.querySelector('a[href*="/NFL/schedule/"]');
-        if (scheduleLink) {
-            const url = new URL(scheduleLink.href);
-            url.searchParams.set('year', currentYear);
-            scheduleLink.href = url.toString();
-        }
-        
-        // Update FPA link
-        const fpaLink = document.querySelector('a[href*="/NFL/FPA"]');
-        if (fpaLink) {
-            const url = new URL(fpaLink.href);
-            url.searchParams.set('year', currentYear);
-            fpaLink.href = url.toString();
-        }
+    // Update Schedule link
+    const scheduleLink = document.getElementById('schedule-link');
+    if (scheduleLink) {
+        const url = new URL(scheduleLink.href);
+        url.searchParams.set('year', selectedYear);
+        scheduleLink.href = url.toString();
+    }
+    
+    // Update all team links
+    const teamLinks = document.querySelectorAll('a[href*="/NFL/Team/"], a[href*="/NFL/Roster/"]');
+    teamLinks.forEach(link => {
+        const url = new URL(link.href);
+        url.searchParams.set('year', selectedYear);
+        link.href = url.toString();
+    });
+    
+    // Update FPA links
+    const fpaLinks = document.querySelectorAll('a[href*="/NFL/FPA"]');
+    fpaLinks.forEach(link => {
+        const url = new URL(link.href);
+        url.searchParams.set('year', selectedYear);
+        link.href = url.toString();
+    });
+    
+    // Navigate to NFL home with new year
+    window.location.href = `{{ url_for('NFL') }}?year=${selectedYear}`;
+}
+
+// Initialize links with current year on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const currentYear = getCurrentYear();
+    updateAllLinksWithYear(currentYear);
+    
+    // Set the year selector to the current year if it exists in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlYear = urlParams.get('year');
+    const yearSelect = document.getElementById('yearSelect');
+    
+    if (urlYear && yearSelect) {
+        yearSelect.value = urlYear;
+        updateAllLinksWithYear(urlYear);
     }
 });
 </script>

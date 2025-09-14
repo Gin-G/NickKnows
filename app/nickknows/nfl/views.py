@@ -15,13 +15,12 @@ from datetime import datetime
 logger = get_task_logger(__name__)
 pd.options.mode.chained_assignment = None
 
-# Dynamic year calculation
 def get_available_years():
-    """Get available NFL years from 2020 to current year + 1"""
-    current_year = datetime.now().year
-    # NFL season typically runs Sep-Feb, so include next year if we're in NFL season
-    end_year = current_year + 1 if datetime.now().month >= 9 else current_year
-    return list(range(2020, end_year + 1))
+    """Get available NFL years - only include years where data is actually available"""
+    current_year = 2025
+    start_year = 2020
+    
+    return list(range(start_year, current_year + 1))
 
 def get_selected_year():
     """Get selected year from request args or default to latest available"""

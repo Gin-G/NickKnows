@@ -69,7 +69,7 @@ Working with weekly data
 """
 
 year = 2024
-
+print(f"Importing NFL data for {year}...")
 weekly_data_prep = nfl.import_weekly_data([year],['player_display_name','recent_team'])
 
 roster_data = nfl.import_weekly_rosters([year])
