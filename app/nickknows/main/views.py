@@ -12,7 +12,12 @@ def header():
 
 @app.route('/templates/nfl_navbar.html')
 def nfl_navbar():
-    return render_template('nfl_navbar.html')
+    try:
+        from nickknows.nfl.views import get_selected_year
+        selected_year = get_selected_year()
+    except:
+        selected_year = 2024
+    return render_template('nfl_navbar.html', selected_year=selected_year)
 
 @app.route('/templates/nick_navbar.html')
 def nick_navbar():
