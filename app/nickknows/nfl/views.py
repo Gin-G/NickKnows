@@ -315,6 +315,99 @@ def fpa():
         flash(str(e))
         return render_template('nfl-home.html', years=available_years, selected_year=selected_year)
 
+@app.route('/NFL/Team/Schedule/<team>/<fullname>')
+def team_schedule(team, fullname):
+    try:
+        selected_year = get_selected_year()
+        available_years = get_available_years()
+        team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
+        file_path = team_dir + str(selected_year) + '_' + team + '_schedule.csv'
+        
+        if not os.path.exists(file_path):
+            update_team_schedule.delay(team, selected_year)
+            flash(f'Team schedule for {fullname} is updating. Please refresh in a moment.')
+            return redirect(url_for('NFL', year=selected_year))
+        
+        team_schedule_data = pd.read_csv(file_path, index_col=0)
+        team_schedule_data = team_schedule_data.style.hide(axis="index")
+        
+        return render_template('team-schedule.html', 
+                             team_schedule=team_schedule_data.to_html(classes="table", escape=False), 
+                             fullname=fullname)
+    except Exception as e:
+        flash(f'Error loading team schedule: {str(e)}')
+        return redirect(url_for('NFL'))
+
+@app.route('/NFL/Team/Results/<team>/<fullname>')
+def team_results(team, fullname):
+    try:
+        selected_year = get_selected_year()
+        team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
+        file_path = team_dir + str(selected_year) + '_' + team + '_data.csv'
+        
+        if not os.path.exists(file_path):
+            update_weekly_team_data.delay(team, selected_year)
+            flash(f'Team results for {fullname} are updating. Please refresh in a moment.')
+            return redirect(url_for('NFL'))
+        
+        team_data = pd.read_csv(file_path, index_col=0)
+        team_data = team_data.style.hide(axis="index")
+        
+        return render_template('team-results.html', 
+                             team_results=team_data.to_html(classes="table"), 
+                             fullname=fullname)
+    except Exception as e:
+        flash(f'Error loading team results: {str(e)}')
+        return redirect(url_for('NFL'))
+
+@app.route('/NFL/Team/FPA/<team>/<fullname>')
+def team_fpa(team, fullname):
+    try:
+        selected_year = get_selected_year()
+        team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
+        file_path = team_dir + str(selected_year) + '_' + team + '_data.csv'
+        
+        if not os.path.exists(file_path):
+            process_team_data.delay(team, selected_year)
+            flash(f'Team FPA data for {fullname} is updating. Please refresh in a moment.')
+            return redirect(url_for('NFL'))
+        
+        team_data = pd.read_csv(file_path, index_col=0)
+        
+        # Calculate position aggregates
+        pass_agg = team_data[team_data['position'] == 'QB']['fantasy_points_ppr'].mean()
+        rush_agg = team_data[team_data['position'] == 'RB']['fantasy_points_ppr'].mean()
+        rec_agg = team_data[team_data['position'] == 'WR']['fantasy_points_ppr'].mean()
+        te_agg = team_data[team_data['position'] == 'TE']['fantasy_points_ppr'].mean()
+        
+        # Break down by position for detailed tables
+        pass_data = team_data[team_data['position'] == 'QB'].style.hide(axis="index")
+        rush_data = team_data[team_data['position'] == 'RB'].style.hide(axis="index")
+        rec_data = team_data[team_data['position'] == 'WR'].style.hide(axis="index")
+        te_data = team_data[team_data['position'] == 'TE'].style.hide(axis="index")
+        
+        # Overall team FPA summary
+        team_fpa_summary = pd.DataFrame({
+            'Position': ['QB', 'RB', 'WR', 'TE'],
+            'Avg Fantasy Points Against': [pass_agg, rush_agg, rec_agg, te_agg]
+        }).style.hide(axis="index")
+        
+        return render_template('team-fpa.html',
+                             team_fpa=team_fpa_summary.to_html(classes="table"),
+                             pass_data=pass_data.to_html(classes="table"),
+                             rush_data=rush_data.to_html(classes="table"),
+                             rec_data=rec_data.to_html(classes="table"),
+                             te_data=te_data.to_html(classes="table"),
+                             pass_agg=pass_agg,
+                             rush_agg=rush_agg,
+                             rec_agg=rec_agg,
+                             te_agg=te_agg,
+                             fullname=fullname,
+                             team=team)
+    except Exception as e:
+        flash(f'Error loading team FPA data: {str(e)}')
+        return redirect(url_for('NFL'))
+
 # Helper functions remain the same
 def total_highlight(df, col1, col2):
     mask = df[col1] > df[col2]
