@@ -53,18 +53,6 @@
         <div id="header"></div>
         <div id="nfl_navbar"></div>
         
-        <!-- Year Selection Form -->
-        <div class="year-selector" style="text-align: center; margin: 20px 0;">
-            <form id="yearForm" method="get" action="{{ url_for('NFL') }}">
-                <label for="yearSelect" style="font-size: 18px; font-weight: bold; margin-right: 10px;">Select NFL Season:</label>
-                <select name="year" id="yearSelect" style="padding: 8px; font-size: 16px; border-radius: 5px; border: 2px solid #333;">
-                    {% for year in years %}
-                        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }} Season</option>
-                    {% endfor %}
-                </select>
-            </form>
-        </div>
-        
         <h1>NFL Stat Leaders - {{ selected_year }} Season</h1>
         {% with messages = get_flashed_messages() %}
             {% if messages %}
