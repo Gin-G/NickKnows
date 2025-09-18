@@ -17,16 +17,21 @@ pd.options.mode.chained_assignment = None
 
 def get_available_years():
     """Get available NFL years - only include years where data is actually available"""
-    current_year = 2025
+    # Fixed to not include 2025 since data isn't available yet
     start_year = 2020
+    end_year = 2024  # Current available data
     
-    return list(range(start_year, current_year + 1))
+    return list(range(start_year, end_year + 1))
 
 def get_selected_year():
     """Get selected year from request args or default to latest available"""
     available_years = get_available_years()
     selected = request.args.get('year', max(available_years), type=int)
     return selected if selected in available_years else max(available_years)
+
+def get_season_display_name(year):
+    """Format NFL season display name"""
+    return f"{year} Season"
 
 @app.route('/NFL')
 def NFL():
@@ -40,14 +45,21 @@ def NFL():
     update_needed = not last_update or (current_time - datetime.fromisoformat(last_update)).days >= 7
 
     if update_needed:
-        # Trigger all updates at once
+        # Trigger all updates with selected year
         update_tasks = [
-            update_PBP_data, update_roster_data, update_sched_data, update_week_data,
-            update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10,
-            update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10
+            (update_PBP_data, selected_year), 
+            (update_roster_data, selected_year), 
+            (update_sched_data, selected_year), 
+            (update_week_data, selected_year),
+            (update_qb_yards_top10, selected_year), 
+            (update_qb_tds_top10, selected_year), 
+            (update_rb_yards_top10, selected_year),
+            (update_rb_tds_top10, selected_year), 
+            (update_rec_yds_top10, selected_year), 
+            (update_rec_tds_top10, selected_year)
         ]
-        for task in update_tasks:
-            task.delay()
+        for task, year in update_tasks:
+            task.delay(year)
         os.environ[f'NFL_DATA_LAST_UPDATE_{selected_year}'] = current_time.isoformat()
         flash('Data is updating in the background. Refresh the page in a bit')
         return render_template('nfl-home.html', years=available_years, selected_year=selected_year)
@@ -94,17 +106,18 @@ def NFL():
 @app.route('/NFL/update')
 def NFLupdate():
     selected_year = get_selected_year()
-    update_PBP_data.delay()
-    update_roster_data.delay()
-    update_sched_data.delay()
-    update_week_data.delay()
+    # Pass year to all update tasks
+    update_PBP_data.delay(selected_year)
+    update_roster_data.delay(selected_year)
+    update_sched_data.delay(selected_year)
+    update_week_data.delay(selected_year)
     time.sleep(30)
-    update_qb_yards_top10.delay()
-    update_qb_tds_top10.delay()
-    update_rb_yards_top10.delay()
-    update_rb_tds_top10.delay()
-    update_rec_yds_top10.delay()
-    update_rec_tds_top10.delay()
+    update_qb_yards_top10.delay(selected_year)
+    update_qb_tds_top10.delay(selected_year)
+    update_rb_yards_top10.delay(selected_year)
+    update_rb_tds_top10.delay(selected_year)
+    update_rec_yds_top10.delay(selected_year)
+    update_rec_tds_top10.delay(selected_year)
     flash('All data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL', year=selected_year))
 
@@ -113,19 +126,19 @@ def FPAupdate():
     selected_year = get_selected_year()
     teams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
     
-    # Create chains for each team that include graph generation
+    # Create chains for each team that include graph generation with year
     team_chains = []
     for team in teams:
         team_chains.append(
             chain(
-                update_team_schedule.si(team),
-                update_weekly_team_data.si(team),
-                process_team_data.si(team)
+                update_team_schedule.si(team, selected_year),
+                update_weekly_team_data.si(team, selected_year),
+                process_team_data.si(team, selected_year)
             )
         )
     
     # Execute all chains in parallel and collect results
-    chord(team_chains)(update_fpa_data.s())
+    chord(team_chains)(update_fpa_data.s(selected_year))
     
     flash('All team data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL', year=selected_year))
@@ -141,8 +154,12 @@ def schedule():
         file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
         schedule = pd.read_csv(file_path, index_col=0)
         week_schedule = schedule.loc[schedule['week'] == int(week)]
-        url = str('<a href="http://nickknows.net/NFL/PbP/') + week_schedule['game_id'] + str('">') + week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + str('</a>')
+        
+        # Update URL to include year parameter
+        url = f'<a href="https://www.nickknows.net/NFL/PbP/{week_schedule["game_id"]}?year={selected_year}">' + \
+              week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + '</a>'
         week_schedule['game_id'] = url
+        
         week_schedule.loc[week_schedule["overtime"] == 0, "overtime"] = "No"
         week_schedule.loc[week_schedule["overtime"] == 1, "overtime"] = "Yes"
         week_schedule.loc[week_schedule["div_game"] == 0, "div_game"] = "No"
@@ -160,8 +177,8 @@ def schedule():
                              selected_year=selected_year,
                              season_display=season_display)
     except FileNotFoundError as e:
-        flash(str(e))
-        return redirect(url_for('NFL'))
+        flash(f'Schedule data for {selected_year} not found. Please update data.')
+        return redirect(url_for('NFL', year=selected_year))
 
 @app.route('/NFL/Roster/<team>/<fullname>')
 def roster(team,fullname):
@@ -173,14 +190,16 @@ def roster(team,fullname):
         team_roster = roster_data.loc[roster_data['team'] == team]
 
         # Drop duplicates based on player identifying information
-        # Keep the first occurrence of each player
         team_roster = team_roster.drop_duplicates(
             subset=['player_name', 'jersey_number'], 
             keep='first'
         )
 
-        url = str('<a href="https://www.nickknows.net/NFL/Player/') + team_roster['player_name'] + str('">') + team_roster['player_name'] + str('</a>')
+        # Update player links to include year
+        url = f'<a href="https://www.nickknows.net/NFL/Player/{team_roster["player_name"]}?year={selected_year}">' + \
+              team_roster['player_name'] + '</a>'
         team_roster['player_name'] = url
+        
         team_roster.rename(columns={
             'depth_chart_position':'Position',
             'jersey_number':'Number',
@@ -209,15 +228,14 @@ def roster(team,fullname):
 
         team_roster = team_roster.format(precision=0, na_rep="Undrafted")
         return render_template('rosters.html', 
-                             team_roster = team_roster.to_html(classes="table"), 
+                             team_roster = team_roster.to_html(classes="table", escape=False), 
                              team = fullname,
                              years=available_years,
                              selected_year=selected_year)
     except FileNotFoundError as e:
-        flash(str(e))
-        return redirect(url_for('NFL'))
+        flash(f'Roster data for {fullname} ({selected_year}) not found. Please update data.')
+        return redirect(url_for('NFL', year=selected_year))
 
-# Add year context to all other NFL routes similarly...
 @app.route('/NFL/PbP/<game>')
 def game_pbp(game):
     try:
@@ -238,8 +256,8 @@ def game_pbp(game):
                              years=available_years,
                              selected_year=selected_year)
     except FileNotFoundError as e:
-        flash(str(e))
-        return redirect(url_for('NFL'))
+        flash(f'Play-by-play data for {selected_year} not found.')
+        return redirect(url_for('NFL', year=selected_year))
 
 @app.route('/NFL/Player/<name>')
 def player_stats(name):
@@ -265,21 +283,23 @@ def player_stats(name):
                              years=available_years,
                              selected_year=selected_year)
     except IndexError:
-        file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
-        weekly_data = pd.read_csv(file_path, index_col=0)
-        player_data = weekly_data.loc[weekly_data['player_name'] == name]
-        headshot = '<img src="' + player_data['headshot_url'] + '" width="360" >'
-        headshot = headshot.unique()
-        position = player_data['position'].unique()
-        return render_template('player-stats.html', 
-                             player_stats = 'No Player Stats', 
-                             name = name, 
-                             headshot = headshot[0], 
-                             position = position[0],
-                             years=available_years,
-                             selected_year=selected_year)
-
-# Continue with other routes following the same pattern...
+        try:
+            file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+            weekly_data = pd.read_csv(file_path, index_col=0)
+            player_data = weekly_data.loc[weekly_data['player_name'] == name]
+            headshot = '<img src="' + player_data['headshot_url'] + '" width="360" >'
+            headshot = headshot.unique()
+            position = player_data['position'].unique()
+            return render_template('player-stats.html', 
+                                 player_stats = 'No Player Stats', 
+                                 name = name, 
+                                 headshot = headshot[0], 
+                                 position = position[0],
+                                 years=available_years,
+                                 selected_year=selected_year)
+        except:
+            flash(f'Player data for {name} in {selected_year} not found.')
+            return redirect(url_for('NFL', year=selected_year))
 
 @app.route('/NFL/FPA')
 def fpa():
@@ -311,8 +331,8 @@ def fpa():
                              years=available_years,
                              selected_year=selected_year)
     except Exception as e:
-        flash(str(e))
-        return render_template('nfl-home.html', years=available_years, selected_year=selected_year)
+        flash(f'FPA data for {selected_year} not found. Please update team data.')
+        return redirect(url_for('NFL', year=selected_year))
 
 @app.route('/NFL/Team/Schedule/<team>/<fullname>')
 def team_schedule(team, fullname):
@@ -324,7 +344,7 @@ def team_schedule(team, fullname):
         
         if not os.path.exists(file_path):
             update_team_schedule.delay(team, selected_year)
-            flash(f'Team schedule for {fullname} is updating. Please refresh in a moment.')
+            flash(f'Team schedule for {fullname} ({selected_year}) is updating. Please refresh in a moment.')
             return redirect(url_for('NFL', year=selected_year))
         
         team_schedule_data = pd.read_csv(file_path, index_col=0)
@@ -332,52 +352,58 @@ def team_schedule(team, fullname):
         
         return render_template('team-schedule.html', 
                              team_schedule=team_schedule_data.to_html(classes="table", escape=False), 
-                             fullname=fullname)
+                             fullname=fullname,
+                             years=available_years,
+                             selected_year=selected_year)
     except Exception as e:
-        flash(f'Error loading team schedule: {str(e)}')
-        return redirect(url_for('NFL'))
+        flash(f'Error loading team schedule for {fullname} ({selected_year}): {str(e)}')
+        return redirect(url_for('NFL', year=selected_year))
 
 @app.route('/NFL/Team/Results/<team>/<fullname>')
 def team_results(team, fullname):
     try:
         selected_year = get_selected_year()
+        available_years = get_available_years()
         team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
         file_path = team_dir + str(selected_year) + '_' + team + '_data.csv'
         
         if not os.path.exists(file_path):
             update_weekly_team_data.delay(team, selected_year)
-            flash(f'Team results for {fullname} are updating. Please refresh in a moment.')
-            return redirect(url_for('NFL'))
+            flash(f'Team results for {fullname} ({selected_year}) are updating. Please refresh in a moment.')
+            return redirect(url_for('NFL', year=selected_year))
         
         team_data = pd.read_csv(file_path, index_col=0)
         team_data = team_data.style.hide(axis="index")
         
         return render_template('team-results.html', 
                              team_results=team_data.to_html(classes="table"), 
-                             fullname=fullname)
+                             fullname=fullname,
+                             years=available_years,
+                             selected_year=selected_year)
     except Exception as e:
-        flash(f'Error loading team results: {str(e)}')
-        return redirect(url_for('NFL'))
+        flash(f'Error loading team results for {fullname} ({selected_year}): {str(e)}')
+        return redirect(url_for('NFL', year=selected_year))
 
 @app.route('/NFL/Team/FPA/<team>/<fullname>')
 def team_fpa(team, fullname):
     try:
         selected_year = get_selected_year()
+        available_years = get_available_years()
         team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
         file_path = team_dir + str(selected_year) + '_' + team + '_data.csv'
         
         if not os.path.exists(file_path):
             process_team_data.delay(team, selected_year)
-            flash(f'Team FPA data for {fullname} is updating. Please refresh in a moment.')
-            return redirect(url_for('NFL'))
+            flash(f'Team FPA data for {fullname} ({selected_year}) is updating. Please refresh in a moment.')
+            return redirect(url_for('NFL', year=selected_year))
         
         team_data = pd.read_csv(file_path, index_col=0)
         
-        # Calculate position aggregates
-        pass_agg = team_data[team_data['position'] == 'QB']['fantasy_points_ppr'].mean()
-        rush_agg = team_data[team_data['position'] == 'RB']['fantasy_points_ppr'].mean()
-        rec_agg = team_data[team_data['position'] == 'WR']['fantasy_points_ppr'].mean()
-        te_agg = team_data[team_data['position'] == 'TE']['fantasy_points_ppr'].mean()
+        # Calculate position aggregates with error handling
+        pass_agg = team_data[team_data['position'] == 'QB']['fantasy_points_ppr'].mean() if len(team_data[team_data['position'] == 'QB']) > 0 else 0
+        rush_agg = team_data[team_data['position'] == 'RB']['fantasy_points_ppr'].mean() if len(team_data[team_data['position'] == 'RB']) > 0 else 0
+        rec_agg = team_data[team_data['position'] == 'WR']['fantasy_points_ppr'].mean() if len(team_data[team_data['position'] == 'WR']) > 0 else 0
+        te_agg = team_data[team_data['position'] == 'TE']['fantasy_points_ppr'].mean() if len(team_data[team_data['position'] == 'TE']) > 0 else 0
         
         # Break down by position for detailed tables
         pass_data = team_data[team_data['position'] == 'QB'].style.hide(axis="index")
@@ -402,12 +428,14 @@ def team_fpa(team, fullname):
                              rec_agg=rec_agg,
                              te_agg=te_agg,
                              fullname=fullname,
-                             team=team)
+                             team=team,
+                             years=available_years,
+                             selected_year=selected_year)
     except Exception as e:
-        flash(f'Error loading team FPA data: {str(e)}')
-        return redirect(url_for('NFL'))
+        flash(f'Error loading team FPA data for {fullname} ({selected_year}): {str(e)}')
+        return redirect(url_for('NFL', year=selected_year))
 
-# Helper functions remain the same
+# Helper functions
 def total_highlight(df, col1, col2):
     mask = df[col1] > df[col2]
     omask = df[col1] < df[col2]

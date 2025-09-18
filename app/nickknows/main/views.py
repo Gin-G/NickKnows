@@ -13,11 +13,13 @@ def header():
 @app.route('/templates/nfl_navbar.html')
 def nfl_navbar():
     try:
-        from nickknows.nfl.views import get_selected_year
+        from nickknows.nfl.views import get_selected_year, get_available_years
         selected_year = get_selected_year()
+        available_years = get_available_years()
     except:
-        selected_year = 2024
-    return render_template('nfl_navbar.html', selected_year=selected_year)
+        selected_year = 2025
+        available_years = [2020, 2021, 2022, 2023, 2024, 2025]
+    return render_template('nfl_navbar.html', selected_year=selected_year, available_years=available_years)
 
 @app.route('/templates/nick_navbar.html')
 def nick_navbar():
