@@ -53,12 +53,6 @@ margin: 20px 5%;
     margin-right: 20px; /* Add spacing between items */
 }
 
-.scroll-item img {
-    height: 200px; /* Set consistent image height */
-    width: auto;
-    object-fit: cover;
-}
-
 /* Enable manual dragging */
 .scroll-wrapper {
     cursor: grab;
@@ -812,25 +806,4 @@ a#social-media {
     100% {
         transform: translateX(-50%); /* Move half the content width */
     }
-}
-
-.scroll-item {
-    flex-shrink: 0;
-    margin-right: 20px; /* Add spacing between items */
-}
-
-.scroll-item img {
-    height: 200px; /* Set consistent image height */
-    width: auto;
-    object-fit: cover;
-}
-
-/* Enable manual dragging */
-.scroll-wrapper {
-    cursor: grab;
-    user-select: none;
-}
-
-.scroll-wrapper:active {
-    cursor: grabbing;
 }
