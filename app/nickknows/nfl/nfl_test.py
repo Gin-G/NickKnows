@@ -68,18 +68,15 @@ stadium = schedule['stadium']
 Working with weekly data
 """
 
-year = 2024
-print(f"Importing NFL data for {year}...")
-weekly_data_prep = nfl.import_weekly_data([year],['player_display_name','recent_team'])
-
-roster_data = nfl.import_weekly_rosters([year])
-
-print(weekly_data_prep.head(10))
+year = 2025
 
 #file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
 #pbp_data = nfl.import_pbp_data([year])
 #pbp_data.to_csv(file_path)
 #print(pbp_data.head(10))
+
+snaps = nfl.import_snap_counts([year])
+print(snaps)
 '''
 ### All weekly columns
 player_name
