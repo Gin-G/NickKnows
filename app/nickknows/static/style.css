@@ -685,7 +685,7 @@ a#social-media {
 /* Small mobile */
 @media screen and (max-width: 480px) {
   .scroll-item img {
-      height: 120px;
+      height: 280px;
   }
   
   .scroll-container {
