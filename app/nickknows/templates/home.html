@@ -33,44 +33,6 @@
         $(function(){
             $('#nick_nav').load("{{ url_for('nick_navbar') }}")
         })
-        
-        // Infinite scroll controls
-        let scrollContainer;
-        let isPaused = false;
-        
-        $(document).ready(function() {
-            scrollContainer = document.querySelector('.scroll-container');
-        });
-        
-        function pauseScroll() {
-            if (!isPaused) {
-                scrollContainer.style.animationPlayState = 'paused';
-                document.querySelector('.pause-btn').textContent = 'Resume';
-                document.querySelector('.pause-btn').classList.add('active');
-                isPaused = true;
-            } else {
-                scrollContainer.style.animationPlayState = 'running';
-                document.querySelector('.pause-btn').textContent = 'Pause';
-                document.querySelector('.pause-btn').classList.remove('active');
-                isPaused = false;
-            }
-        }
-        
-        function setScrollSpeed(speed) {
-            // Remove existing speed classes
-            scrollContainer.classList.remove('slow', 'medium', 'fast');
-            
-            // Remove active class from all speed buttons
-            document.querySelectorAll('.speed-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Add new speed class and active state
-            if (speed !== 'medium') {
-                scrollContainer.classList.add(speed);
-            }
-            document.querySelector(`.speed-btn[onclick="setScrollSpeed('${speed}')"]`).classList.add('active');
-        }
     </script>
 </head>
 <body>
@@ -79,17 +41,9 @@
     
     <br>
     
-    <!-- Scroll control buttons -->
-    <div class="scroll-controls">
-        <button class="scroll-control-btn pause-btn" onclick="pauseScroll()">Pause</button>
-        <button class="scroll-control-btn speed-btn" onclick="setScrollSpeed('slow')">Slow</button>
-        <button class="scroll-control-btn speed-btn active" onclick="setScrollSpeed('medium')">Medium</button>
-        <button class="scroll-control-btn speed-btn" onclick="setScrollSpeed('fast')">Fast</button>
-    </div>
-    
     <!-- Infinite scroll wrapper -->
     <div class="scroll-wrapper">
-        <div class="scroll-container medium">
+        <div class="scroll-container">
             
             <!-- First set of items -->
             <a href="{{url_for('skiing')}}" class="scroll-item" data-section="Skiing">

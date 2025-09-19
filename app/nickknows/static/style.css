@@ -22,6 +22,51 @@ width : 90%;
 color: #FFFFFF;
 text-align: left;
 margin: 20px 5%;
+}.scroll-wrapper {
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    width: 100%;
+}
+
+.scroll-container {
+    display: inline-flex;
+    animation: scroll 30s linear infinite; /* Adjust speed here */
+    will-change: transform;
+}
+
+.scroll-container:hover {
+    animation-play-state: paused; /* Pause on hover for better UX */
+}
+
+@keyframes scroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%); /* Move half the content width */
+    }
+}
+
+.scroll-item {
+    flex-shrink: 0;
+    margin-right: 20px; /* Add spacing between items */
+}
+
+.scroll-item img {
+    height: 200px; /* Set consistent image height */
+    width: auto;
+    object-fit: cover;
+}
+
+/* Enable manual dragging */
+.scroll-wrapper {
+    cursor: grab;
+    user-select: none;
+}
+
+.scroll-wrapper:active {
+    cursor: grabbing;
 }
 
 img {
@@ -741,4 +786,51 @@ a#social-media {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.scroll-wrapper {
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    width: 100%;
+}
+
+.scroll-container {
+    display: inline-flex;
+    animation: scroll 30s linear infinite; /* Adjust speed here */
+    will-change: transform;
+}
+
+.scroll-container:hover {
+    animation-play-state: paused; /* Pause on hover for better UX */
+}
+
+@keyframes scroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%); /* Move half the content width */
+    }
+}
+
+.scroll-item {
+    flex-shrink: 0;
+    margin-right: 20px; /* Add spacing between items */
+}
+
+.scroll-item img {
+    height: 200px; /* Set consistent image height */
+    width: auto;
+    object-fit: cover;
+}
+
+/* Enable manual dragging */
+.scroll-wrapper {
+    cursor: grab;
+    user-select: none;
+}
+
+.scroll-wrapper:active {
+    cursor: grabbing;
 }
