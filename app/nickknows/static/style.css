@@ -692,3 +692,9 @@ a#social-media {
       animation-duration: 20s;
   }
 }
+
+.selected-year {
+    background-color: #007bff !important;
+    color: white !important;
+    font-weight: bold;
+}

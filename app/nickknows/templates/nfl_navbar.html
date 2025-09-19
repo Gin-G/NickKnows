@@ -7,19 +7,22 @@
         <a href="{{url_for('NFL')}}">NFL Home</a>
         <a href="{{url_for('schedule')}}">Schedule</a>
         
-        <!-- Year Selection Dropdown -->
         <div class="dropdown">
             <button class="dropbtn" onclick="toggleDropdown(this)">
-                Season <i class="fa fa-caret-down"></i>
+                {{ selected_year }} Season <i class="fa fa-caret-down"></i>
             </button>
             <div class="dropdown-content">
-                <!-- These will be populated by JavaScript or server-side -->
-                <a href="{{url_for('NFL', year=2025)}}">2024-2025 Season</a>
-                <a href="{{url_for('NFL', year=2024)}}">2023-2024 Season</a>
-                <a href="{{url_for('NFL', year=2023)}}">2022-2023 Season</a>
-                <a href="{{url_for('NFL', year=2022)}}">2021-2022 Season</a>
-                <a href="{{url_for('NFL', year=2021)}}">2020-2021 Season</a>
-                <a href="{{url_for('NFL', year=2020)}}">2019-2020 Season</a>
+                {% for year in available_years %}
+                    <a href="{{ url_for('set_nfl_year', year=year) }}" 
+                    {% if year == selected_year %}class="selected-year"{% endif %}>
+                        {% if year == 2025 %}2024-2025 Season{% endif %}
+                        {% if year == 2024 %}2023-2024 Season{% endif %}
+                        {% if year == 2023 %}2022-2023 Season{% endif %}
+                        {% if year == 2022 %}2021-2022 Season{% endif %}
+                        {% if year == 2021 %}2020-2021 Season{% endif %}
+                        {% if year == 2020 %}2019-2020 Season{% endif %}
+                    </a>
+                {% endfor %}
             </div>
         </div>
         
@@ -260,56 +263,4 @@ window.onclick = function(event) {
         }
     }
 }
-
-// Function to get current selected year
-function getCurrentYear() {
-    const yearSelect = document.getElementById('yearSelect');
-    return yearSelect ? yearSelect.value : '2024';
-}
-
-// Function to update all navbar links with the selected year
-function updateAllLinksWithYear(selectedYear) {
-    // Update NFL Home link
-    const nflHomeLink = document.getElementById('nfl-home-link');
-    if (nflHomeLink) {
-        const url = new URL(nflHomeLink.href);
-        url.searchParams.set('year', selectedYear);
-        nflHomeLink.href = url.toString();
-    }
-    
-    // Update Schedule link
-    const scheduleLink = document.getElementById('schedule-link');
-    if (scheduleLink) {
-        const url = new URL(scheduleLink.href);
-        url.searchParams.set('year', selectedYear);
-        scheduleLink.href = url.toString();
-    }
-    
-    // Update all team links (now with class selector)
-    const teamLinks = document.querySelectorAll('.team-link');
-    teamLinks.forEach(link => {
-        const url = new URL(link.href);
-        url.searchParams.set('year', selectedYear);
-        link.href = url.toString();
-    });
-}
-
-// Handle year change - update links and navigate
-function handleYearChange(selectedYear) {
-    updateAllLinksWithYear(selectedYear);
-    // Navigate to NFL home with new year
-    window.location.href = `{{ url_for('NFL') }}?year=${selectedYear}`;
-}
-
-// Initialize links with current year on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlYear = urlParams.get('year') || '2024';
-    const yearSelect = document.getElementById('yearSelect');
-    
-    if (yearSelect) {
-        yearSelect.value = urlYear;
-        updateAllLinksWithYear(urlYear);
-    }
-});
 </script>

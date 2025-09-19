@@ -1,4 +1,4 @@
-from flask import render_template, url_for, redirect, flash, request
+from flask import render_template, url_for, redirect, flash, request, session
 from nickknows import app
 from ..celery_setup.tasks import process_team_data, update_fpa_data, update_PBP_data, update_roster_data, update_sched_data, update_week_data, update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10, update_team_schedule, update_weekly_team_data, update_snap_count_data, get_snap_count_summary
 from celery import chain, chord
@@ -18,21 +18,42 @@ pd.options.mode.chained_assignment = None
 
 def get_available_years():
     """Get available NFL years - only include years where data is actually available"""
-    # Fixed to not include 2025 since data isn't available yet
     start_year = 2020
-    end_year = 2024  # Current available data
-    
+    end_year = 2025
     return list(range(start_year, end_year + 1))
 
 def get_selected_year():
-    """Get selected year from request args or default to latest available"""
+    """Get selected year from session, request args, or default to latest available"""
     available_years = get_available_years()
-    selected = request.args.get('year', max(available_years), type=int)
-    return selected if selected in available_years else max(available_years)
+    
+    year_from_request = request.args.get('year', type=int)
+    if year_from_request and year_from_request in available_years:
+        session['selected_nfl_year'] = year_from_request
+        return year_from_request
+    
+    year_from_session = session.get('selected_nfl_year')
+    if year_from_session and year_from_session in available_years:
+        return year_from_session
+    
+    default_year = max(available_years)
+    session['selected_nfl_year'] = default_year
+    return default_year
 
 def get_season_display_name(year):
     """Format NFL season display name"""
     return f"{year} Season"
+
+@app.route('/NFL/set_year/<int:year>')
+def set_nfl_year(year):
+    """Set the NFL year in session and redirect back to referrer or NFL home"""
+    available_years = get_available_years()
+    if year in available_years:
+        session['selected_nfl_year'] = year
+        flash(f'Season set to {year}')
+    else:
+        flash(f'Invalid year: {year}')
+    
+    return redirect(request.referrer or url_for('NFL'))
 
 @app.route('/NFL')
 def NFL():
