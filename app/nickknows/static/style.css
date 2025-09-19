@@ -22,45 +22,6 @@ width : 90%;
 color: #FFFFFF;
 text-align: left;
 margin: 20px 5%;
-}.scroll-wrapper {
-    overflow: hidden;
-    white-space: nowrap;
-    position: relative;
-    width: 100%;
-}
-
-.scroll-container {
-    display: inline-flex;
-    animation: scroll 30s linear infinite; /* Adjust speed here */
-    will-change: transform;
-}
-
-.scroll-container:hover {
-    animation-play-state: paused; /* Pause on hover for better UX */
-}
-
-@keyframes scroll {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-50%); /* Move half the content width */
-    }
-}
-
-.scroll-item {
-    flex-shrink: 0;
-    margin-right: 20px; /* Add spacing between items */
-}
-
-/* Enable manual dragging */
-.scroll-wrapper {
-    cursor: grab;
-    user-select: none;
-}
-
-.scroll-wrapper:active {
-    cursor: grabbing;
 }
 
 img {
@@ -402,145 +363,53 @@ a#social-media {
   padding: 7.5px 6px;
 }
 
-/* Mobile-specific rules */
-@media screen and (max-width: 768px) {
-  .navbar-toggle {
-    display: block;
-    position: relative;
-    z-index: 100;
-    float: left;
-    color: white;
-    font-size: 24px;
-    padding: 12px;
-    margin-right: 15px;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-
-  .navbar-toggle i {
-    width: 24px;
-    height: 24px;
-  }
-
-  /* Hide nav-links by default on mobile */
-  .nav-links {
-    display: none;
-    width: fit-content;
-    position: absolute;
-    top: 265px;
-    left: 0;
-    background-color: #393f44;
-    padding: 10px 0;
-    z-index: 99;
-  }
-
-  /* When nav-links has 'active' class, show it */
-  .nav-links.active {
-    display: block;
-  }
-
-  /* Make all links and dropdowns stack vertically */
-  .nav-links a,
-  .nav-links\ {
-    float: none;
-    display: block;
-    width: fit-content;
-    text-align: left;
-    padding: 12px 20px;
-  }
-
-  .dropdown {
-    float: none;
-    display: block;
-    width: fit-content;
-    text-align: left;
-    padding: 0px 20px;
-  }
-
-  /* Adjust dropdown button styling */
-  .dropdown .dropbtn {
-    width: fit-content;
-    text-align: left;
-  }
-
-  /* Position dropdown content for mobile */
-  .dropdown-content {
-    position: absolute;
-    box-shadow: none;
-    width: fit-content;
+/* Scroll Container - Clean Implementation */
+.scroll-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
     white-space: nowrap;
-    left: 25%;
-  }
-
-  /* Style dropdown links */
-  .dropdown-content a {
-    padding: 6px 15px; /* Extra padding-left to show hierarchy */
-  }
-
-  /* Show dropdown content when parent is active */
-  .dropdown.active .dropdown-content {
-    display: block;
-  }
-
-  .nfl-row {
-      flex-direction: column;
-      gap: 10px;
-  }
-
-  table {
-    font-size: 0.9em;
-    width: auto;
-  }
-  
-  table td {
-    padding: 2px 6px;
-    width: nowrap;
-  }
+    position: relative;
+    width: 100%;
+    margin: 20px 0;
+    cursor: grab;
+    user-select: none;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
 }
 
-/* Infinite scroll container */
-.scroll-wrapper {
-  overflow: hidden;
-  margin: 20px 0;
-  position: relative;
-  height: 600px; /* Set explicit height for the wrapper */
+.scroll-wrapper::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.scroll-wrapper.active {
+    cursor: grabbing;
 }
 
 .scroll-container {
-    display: flex;
-    gap: 20px;
-    padding: 20px;
-    animation: infiniteScroll 40s linear infinite;
-    width: calc(100% * 2); /* Double width to accommodate duplicates */
-    height: 100%; /* Use full height of wrapper */
-    min-height: 600px; /* Ensure minimum height */
+    display: inline-flex;
+    animation: scroll 30s linear infinite;
+    will-change: transform;
 }
 
-/* Pause animation on hover */
 .scroll-container:hover {
     animation-play-state: paused;
 }
 
-/* Infinite scroll animation */
-@keyframes infiniteScroll {
+@keyframes scroll {
     0% {
         transform: translateX(0);
     }
     100% {
-        transform: translateX(-50%); /* Move by half since we duplicate content */
+        transform: translateX(-50%);
     }
 }
 
-/* Individual scroll items */
 .scroll-item {
-    flex: 0 0 auto;
-    width: 500px;
-    height: 500px; /* Increased from 200px to 400px */
-    position: relative;
-    border-radius: 10px;
-    overflow: hidden;
+    flex-shrink: 0;
+    margin-right: 20px;
+    pointer-events: auto;
     transition: transform 0.3s ease;
+    position: relative;
 }
 
 .scroll-item:hover {
@@ -548,13 +417,14 @@ a#social-media {
 }
 
 .scroll-item img {
-    width: 100%;
-    height: 100%;
+    height: 200px;
+    width: auto;
     object-fit: cover;
     border-radius: 10px;
+    pointer-events: none;
 }
 
-/* Optional: Add subtle overlay with section name */
+/* Optional: Add section name overlay */
 .scroll-item::after {
     content: attr(data-section);
     position: absolute;
@@ -573,81 +443,6 @@ a#social-media {
 .scroll-item:hover::after {
     opacity: 1;
 }
-
-/* Control buttons */
-.scroll-controls {
-    text-align: center;
-    margin: 20px 0;
-}
-
-.scroll-control-btn {
-    background: #393f44;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    padding: 10px 20px;
-    margin: 0 10px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
-}
-
-.scroll-control-btn:hover {
-    background: #7393B3;
-}
-
-.scroll-control-btn.active {
-    background: #7393B3;
-}
-
-/* Mobile adjustments */
-@media screen and (max-width: 768px) {
-    .scroll-wrapper {
-        height: 400px; /* Reduced height for mobile */
-    }
-    
-    .scroll-item {
-        width: 250px;
-        height: 300px; /* Proportionally adjusted for mobile */
-    }
-    
-    .scroll-container {
-        padding: 15px;
-        gap: 15px;
-        animation-duration: 35s; /* Slightly faster on mobile */
-    }
-}
-
-/* Small mobile */
-@media screen and (max-width: 480px) {
-    .scroll-wrapper {
-        height: 300px; /* Further reduced for small screens */
-    }
-    
-    .scroll-item {
-        width: 200px;
-        height: 250px; /* Adjusted for small screens */
-    }
-    
-    .scroll-container {
-        animation-duration: 30s; /* Even faster on small screens */
-    }
-}
-
-/* Speed variations */
-.scroll-container.slow {
-    animation-duration: 60s;
-}
-
-.scroll-container.medium {
-    animation-duration: 40s;
-}
-
-.scroll-container.fast {
-    animation-duration: 20s;
-}
-
-/* Add these styles to your existing style.css */
 
 /* Year Selector Styles */
 .year-selector {
@@ -746,25 +541,6 @@ a#social-media {
     background-color: #218838;
 }
 
-/* Enhanced responsive design */
-@media screen and (max-width: 768px) {
-    .year-selector {
-        margin: 10px 20px;
-        padding: 12px;
-    }
-    
-    .year-selector label {
-        display: block;
-        margin-bottom: 8px;
-        margin-right: 0;
-    }
-    
-    .year-selector select {
-        width: 100%;
-        font-size: 14px;
-    }
-}
-
 /* Loading indicator for data updates */
 .loading-indicator {
     display: inline-block;
@@ -782,28 +558,136 @@ a#social-media {
     100% { transform: rotate(360deg); }
 }
 
-.scroll-wrapper {
-    overflow: hidden;
-    white-space: nowrap;
+/* Mobile-specific rules */
+@media screen and (max-width: 768px) {
+  .navbar-toggle {
+    display: block;
     position: relative;
-    width: 100%;
+    z-index: 100;
+    float: left;
+    color: white;
+    font-size: 24px;
+    padding: 12px;
+    margin-right: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .navbar-toggle i {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Hide nav-links by default on mobile */
+  .nav-links {
+    display: none;
+    width: fit-content;
+    position: absolute;
+    top: 265px;
+    left: 0;
+    background-color: #393f44;
+    padding: 10px 0;
+    z-index: 99;
+  }
+
+  /* When nav-links has 'active' class, show it */
+  .nav-links.active {
+    display: block;
+  }
+
+  /* Make all links and dropdowns stack vertically */
+  .nav-links a,
+  .nav-links\ {
+    float: none;
+    display: block;
+    width: fit-content;
+    text-align: left;
+    padding: 12px 20px;
+  }
+
+  .dropdown {
+    float: none;
+    display: block;
+    width: fit-content;
+    text-align: left;
+    padding: 0px 20px;
+  }
+
+  /* Adjust dropdown button styling */
+  .dropdown .dropbtn {
+    width: fit-content;
+    text-align: left;
+  }
+
+  /* Position dropdown content for mobile */
+  .dropdown-content {
+    position: absolute;
+    box-shadow: none;
+    width: fit-content;
+    white-space: nowrap;
+    left: 25%;
+  }
+
+  /* Style dropdown links */
+  .dropdown-content a {
+    padding: 6px 15px; /* Extra padding-left to show hierarchy */
+  }
+
+  /* Show dropdown content when parent is active */
+  .dropdown.active .dropdown-content {
+    display: block;
+  }
+
+  .nfl-row {
+      flex-direction: column;
+      gap: 10px;
+  }
+
+  table {
+    font-size: 0.9em;
+    width: auto;
+  }
+  
+  table td {
+    padding: 2px 6px;
+    width: nowrap;
+  }
+
+  /* Mobile scroll adjustments */
+  .scroll-item img {
+      height: 150px;
+  }
+  
+  .scroll-container {
+      animation-duration: 25s;
+  }
+
+  /* Mobile year selector */
+  .year-selector {
+      margin: 10px 20px;
+      padding: 12px;
+  }
+  
+  .year-selector label {
+      display: block;
+      margin-bottom: 8px;
+      margin-right: 0;
+  }
+  
+  .year-selector select {
+      width: 100%;
+      font-size: 14px;
+  }
 }
 
-.scroll-container {
-    display: inline-flex;
-    animation: scroll 30s linear infinite; /* Adjust speed here */
-    will-change: transform;
-}
-
-.scroll-container:hover {
-    animation-play-state: paused; /* Pause on hover for better UX */
-}
-
-@keyframes scroll {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-50%); /* Move half the content width */
-    }
+/* Small mobile */
+@media screen and (max-width: 480px) {
+  .scroll-item img {
+      height: 120px;
+  }
+  
+  .scroll-container {
+      animation-duration: 20s;
+  }
 }

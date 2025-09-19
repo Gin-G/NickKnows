@@ -33,6 +33,66 @@
         $(function(){
             $('#nick_nav').load("{{ url_for('nick_navbar') }}")
         })
+        
+        // Manual drag scrolling functionality
+        $(document).ready(function() {
+            const scrollWrapper = document.querySelector('.scroll-wrapper');
+            const scrollContainer = document.querySelector('.scroll-container');
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+            let animationPaused = false;
+
+            scrollWrapper.addEventListener('mousedown', (e) => {
+                isDown = true;
+                scrollWrapper.classList.add('active');
+                startX = e.pageX - scrollWrapper.offsetLeft;
+                scrollLeft = scrollWrapper.scrollLeft;
+                
+                // Pause the animation when dragging starts
+                scrollContainer.style.animationPlayState = 'paused';
+                animationPaused = true;
+            });
+
+            scrollWrapper.addEventListener('mouseleave', () => {
+                isDown = false;
+                scrollWrapper.classList.remove('active');
+            });
+
+            scrollWrapper.addEventListener('mouseup', () => {
+                isDown = false;
+                scrollWrapper.classList.remove('active');
+                
+                // Resume animation after a short delay when user stops dragging
+                setTimeout(() => {
+                    if (!scrollWrapper.matches(':hover')) {
+                        scrollContainer.style.animationPlayState = 'running';
+                        animationPaused = false;
+                    }
+                }, 1000);
+            });
+
+            scrollWrapper.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - scrollWrapper.offsetLeft;
+                const walk = (x - startX) * 2; // Scroll speed multiplier
+                scrollWrapper.scrollLeft = scrollLeft - walk;
+            });
+
+            // Handle hover pause/resume for auto-scroll
+            scrollWrapper.addEventListener('mouseenter', () => {
+                if (!animationPaused) {
+                    scrollContainer.style.animationPlayState = 'paused';
+                }
+            });
+
+            scrollWrapper.addEventListener('mouseleave', () => {
+                if (!animationPaused) {
+                    scrollContainer.style.animationPlayState = 'running';
+                }
+            });
+        });
     </script>
 </head>
 <body>
