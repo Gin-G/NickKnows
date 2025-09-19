@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script>
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+        
+        function filterByPosition(position) {
+            const tables = document.querySelectorAll('.position-table');
+            tables.forEach(table => {
+                if (position === 'all' || table.id === position + '-table') {
+                    table.style.display = 'block';
+                } else {
+                    table.style.display = 'none';
+                }
+            });
+            
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[onclick="filterByPosition('${position}')"]`).classList.add('active');
+        }
+        
+        function sortTable(tableId, columnIndex, isNumeric = false) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.rows);
+            
+            rows.sort((a, b) => {
+                const aVal = a.cells[columnIndex].textContent.trim();
+                const bVal = b.cells[columnIndex].textContent.trim();
+                
+                if (isNumeric) {
+                    return parseFloat(bVal) - parseFloat(aVal); // Descending for numbers
+                } else {
+                    return aVal.localeCompare(bVal); // Ascending for text
+                }
+            });
+            
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+        
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-YMZBTB7JST');
+    </script>
+    
+    <!-- Google Adsense tag (gtag.js) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
+    crossorigin="anonymous"></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script>
+        $(function(){
+            $('#nfl_navbar').load("{{ url_for('nfl_navbar') }}")
+        })
+    </script>
+    <script>
+        $(function(){
+            $('#header').load("{{ url_for('header') }}")
+        })
+    </script>
+    <body>
+        <div id="header"></div>
+        <div id="nfl_navbar"></div>
+        
+        <h1>{{ fullname }} - Snap Counts ({{ selected_year }})</h1>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash-message" style="background-color: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Update Button -->
+        <div style="text-align: center; margin: 20px 0;">
+            <a href="{{ url_for('update_team_snap_counts', team=team) }}" 
+               class="btn" 
+               style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">
+                <i class="fas fa-sync-alt"></i> Update Snap Count Data
+            </a>
+        </div>
+        
+        {% if loading %}
+            <div class="loading-message" style="text-align: center; padding: 40px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; margin: 20px 0;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i>
+                <h3>Loading Snap Count Data...</h3>
+                <p>Data is being processed. Please refresh this page in a moment.</p>
+            </div>
+        {% elif snap_data %}
+            <!-- Summary Statistics -->
+            {% if summary_stats %}
+            <div class="summary-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0;">
+                <div class="stat-card" style="background-color: #e3f2fd; border-radius: 8px; padding: 15px; text-align: center;">
+                    <h3 style="margin: 0; color: #1976d2;">{{ summary_stats.total_players }}</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Total Players</p>
+                </div>
+                <div class="stat-card" style="background-color: #e8f5e8; border-radius: 8px; padding: 15px; text-align: center;">
+                    <h3 style="margin: 0; color: #388e3c;">{{ summary_stats.weeks_available }}</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Weeks Available</p>
+                </div>
+                <div class="stat-card" style="background-color: #fce4ec; border-radius: 8px; padding: 15px; text-align: center;">
+                    <h3 style="margin: 0; color: #c2185b;">{{ summary_stats.positions_represented }}</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Position Groups</p>
+                </div>
+                <div class="stat-card" style="background-color: #fff3e0; border-radius: 8px; padding: 15px; text-align: center;">
+                    <h3 style="margin: 0; color: #f57c00;">{{ "{:,}".format(summary_stats.total_offensive_snaps) }}</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Total Off Snaps</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Position Filter Buttons -->
+            <div class="filter-buttons" style="text-align: center; margin: 20px 0;">
+                <button class="filter-btn active" onclick="filterByPosition('all')" 
+                        style="margin: 5px; padding: 8px 15px; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer;">
+                    All Positions
+                </button>
+                {% for position in snap_data.keys() %}
+                <button class="filter-btn" onclick="filterByPosition('{{ position }}')"
+                        style="margin: 5px; padding: 8px 15px; border: none; border-radius: 5px; background-color: #6c757d; color: white; cursor: pointer;">
+                    {{ position }}
+                </button>
+                {% endfor %}
+            </div>
+            
+            <!-- Position Tables -->
+            {% for position, players in snap_data.items() %}
+            <div class="position-table" id="{{ position }}-table" style="margin: 30px 0;">
+                <h2 style="color: #333; border-bottom: 2px solid #dee2e6; padding-bottom: 10px;">
+                    {{ position }} - {{ players|length }} Player{{ 's' if players|length != 1 else '' }}
+                </h2>
+                
+                <div class="table-wrapper" style="overflow-x: auto;">
+                    <table id="{{ position }}-data-table" class="table" style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6; cursor: pointer;" 
+                                    onclick="sortTable('{{ position }}-data-table', 0)">
+                                    Player Name <i class="fas fa-sort"></i>
+                                </th>
+                                <th style="padding: 12px; text-align: right; border: 1px solid #dee2e6; cursor: pointer;" 
+                                    onclick="sortTable('{{ position }}-data-table', 1, true)">
+                                    Offensive Snaps <i class="fas fa-sort"></i>
+                                </th>
+                                <th style="padding: 12px; text-align: right; border: 1px solid #dee2e6; cursor: pointer;" 
+                                    onclick="sortTable('{{ position }}-data-table', 2, true)">
+                                    Defensive Snaps <i class="fas fa-sort"></i>
+                                </th>
+                                <th style="padding: 12px; text-align: right; border: 1px solid #dee2e6; cursor: pointer;" 
+                                    onclick="sortTable('{{ position }}-data-table', 3, true)">
+                                    ST Snaps <i class="fas fa-sort"></i>
+                                </th>
+                                <th style="padding: 12px; text-align: right; border: 1px solid #dee2e6; cursor: pointer;" 
+                                    onclick="sortTable('{{ position }}-data-table', 4, true)">
+                                    Total Snaps <i class="fas fa-sort"></i>
+                                </th>
+                                <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for player in players %}
+                            <tr style="border-bottom: 1px solid #dee2e6;">
+                                <td style="padding: 10px; border: 1px solid #dee2e6;">
+                                    <strong>{{ player.player }}</strong>
+                                </td>
+                                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">
+                                    {{ "{:,}".format(player.offense_snaps) }}
+                                </td>
+                                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">
+                                    {{ "{:,}".format(player.defense_snaps) }}
+                                </td>
+                                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">
+                                    {{ "{:,}".format(player.st_snaps) }}
+                                </td>
+                                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">
+                                    <strong>{{ "{:,}".format(player.total_snaps) }}</strong>
+                                </td>
+                                <td style="padding: 10px; text-align: center; border: 1px solid #dee2e6;">
+                                    <a href="{{ url_for('player_snap_history', team=team, player_name=player.player) }}" 
+                                       class="btn-small" 
+                                       style="background-color: #28a745; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; font-size: 12px;">
+                                        <i class="fas fa-chart-line"></i> View History
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+            
+        {% else %}
+            <div class="no-data-message" style="text-align: center; padding: 40px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; margin: 20px 0;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px; color: #721c24;"></i>
+                <h3>No Snap Count Data Available</h3>
+                <p>Snap count data for {{ fullname }} ({{ selected_year }}) is not currently available.</p>
+                <p>Click the "Update Snap Count Data" button above to fetch the latest data.</p>
+            </div>
+        {% endif %}
+        
+        <style>
+            .filter-btn:hover {
+                opacity: 0.8;
+            }
+            
+            .filter-btn.active {
+                background-color: #007bff !important;
+            }
+            
+            .table th:hover {
+                background-color: #e9ecef;
+            }
+            
+            .table tbody tr:hover {
+                background-color: #f5f5f5;
+            }
+            
+            .btn-small:hover {
+                background-color: #218838 !important;
+            }
+            
+            @media (max-width: 768px) {
+                .summary-stats {
+                    grid-template-columns: repeat(2, 1fr) !important;
+                }
+                
+                .filter-buttons {
+                    text-align: left;
+                }
+                
+                .filter-btn {
+                    display: block;
+                    width: 100%;
+                    margin: 2px 0 !important;
+                }
+            }
+        </style>
+        
+    </body>
+</html>

@@ -930,3 +930,327 @@ def update_all_team_fpa_for_year(year):
     
     logger.info(f"Completed scheduling FPA updates for all teams for {year}")
     return f"FPA update scheduled for all teams for {year}"
+
+@celery.task()
+def update_snap_count_data(team, year=None):
+    """
+    Update snap count data for a specific team and year.
+    
+    Args:
+        team: Team abbreviation (e.g., 'NE', 'KC', 'BUF')
+        year: Season year (default: current year)
+    
+    Returns:
+        str: Status message
+    """
+    if year is None:
+        year = datetime.now().year
+    
+    logger.info(f"Updating snap count data for {team} - {year}")
+    
+    try:
+        # Create team directory if it doesn't exist
+        team_dir = os.getcwd() + f'/nickknows/nfl/data/{team}/'
+        if not os.path.exists(team_dir):
+            os.makedirs(team_dir)
+        
+        # Load snap count data from NFL API
+        logger.info(f"Loading snap count data for {year}...")
+        df = nfl.import_snap_counts([year])
+        
+        if df.empty:
+            logger.warning(f"No snap count data available for {year}")
+            return f"No snap count data available for {year}"
+        
+        # Filter to specific team
+        team_df = df[df['team'] == team].copy()
+        
+        if team_df.empty:
+            logger.warning(f"No snap count data found for {team} in {year}")
+            return f"No snap count data found for {team} in {year}"
+        
+        # Clean and process the data
+        team_df = team_df.fillna(0)
+        
+        # Ensure numeric columns are properly typed
+        numeric_columns = ['offense_snaps', 'defense_snaps', 'st_snaps', 'offense_pct', 'defense_pct', 'st_pct']
+        for col in numeric_columns:
+            if col in team_df.columns:
+                team_df[col] = pd.to_numeric(team_df[col], errors='coerce').fillna(0)
+        
+        # Calculate total snaps
+        team_df['total_snaps'] = team_df['offense_snaps'] + team_df['defense_snaps'] + team_df['st_snaps']
+        
+        # Sort by week and player name
+        team_df = team_df.sort_values(['week', 'player'])
+        
+        # Save to CSV
+        output_path = os.path.join(team_dir, f'{year}_{team}_snap_counts.csv')
+        team_df.to_csv(output_path, index=False)
+        
+        logger.info(f"Snap count data saved to {output_path}")
+        logger.info(f"Processed {len(team_df)} records for {len(team_df['player'].unique())} players")
+        
+        return f"Successfully updated snap count data for {team} ({year}) - {len(team_df)} records"
+        
+    except Exception as e:
+        logger.error(f"Error updating snap count data for {team} ({year}): {str(e)}")
+        raise
+
+@celery.task()
+def get_snap_count_summary(team, year, position_filter=None):
+    """
+    Get formatted snap count summary for a team.
+    
+    Args:
+        team: Team abbreviation
+        year: Season year
+        position_filter: List of positions to include (optional)
+    
+    Returns:
+        dict: Formatted snap count data
+    """
+    try:
+        logger.info(f"Getting snap count summary for {team} - {year}")
+        
+        # Check if data file exists
+        team_dir = os.getcwd() + f'/nickknows/nfl/data/{team}/'
+        snap_file_path = os.path.join(team_dir, f'{year}_{team}_snap_counts.csv')
+        
+        if not os.path.exists(snap_file_path):
+            # Trigger data update
+            update_snap_count_data.delay(team, year)
+            return {
+                'success': False,
+                'error': f'Snap count data not available for {team} ({year}). Update in progress.',
+                'team': team,
+                'year': year
+            }
+        
+        # Load data
+        df = pd.read_csv(snap_file_path)
+        
+        if df.empty:
+            return {
+                'success': False,
+                'error': f'No snap count data found for {team} ({year})',
+                'team': team,
+                'year': year
+            }
+        
+        # Apply position filter if specified
+        if position_filter:
+            df = df[df['position'].isin(position_filter)]
+        
+        # Group players by position
+        positions = defaultdict(list)
+        weeks = sorted(df['week'].unique()) if 'week' in df.columns else []
+        
+        # Calculate season totals for each player
+        player_totals = df.groupby(['player', 'position']).agg({
+            'offense_snaps': 'sum',
+            'defense_snaps': 'sum',
+            'st_snaps': 'sum',
+            'total_snaps': 'sum'
+        }).reset_index()
+        
+        for _, row in player_totals.iterrows():
+            position = row['position']
+            positions[position].append({
+                'name': row['player'],
+                'offense_snaps': int(row['offense_snaps']),
+                'defense_snaps': int(row['defense_snaps']),
+                'st_snaps': int(row['st_snaps']),
+                'total_snaps': int(row['total_snaps'])
+            })
+        
+        # Sort players within each position by total snaps
+        for position in positions:
+            positions[position].sort(key=lambda x: x['total_snaps'], reverse=True)
+        
+        return {
+            'success': True,
+            'team': team,
+            'year': year,
+            'weeks': weeks,
+            'positions': dict(positions),
+            'summary': {
+                'total_players': len(player_totals),
+                'weeks_available': len(weeks),
+                'position_groups': len(positions),
+                'positions_list': sorted(positions.keys())
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting snap count summary for {team} ({year}): {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'team': team,
+            'year': year
+        }
+
+@celery.task()
+def update_all_teams_snap_counts(year=None):
+    """
+    Update snap count data for all NFL teams.
+    
+    Args:
+        year: Season year (default: current year)
+    
+    Returns:
+        str: Status message
+    """
+    if year is None:
+        year = datetime.now().year
+    
+    teams = ['ARI', 'ATL', 'BAL', 'BUF', 'CAR', 'CHI', 'CIN', 'CLE', 'DAL', 'DEN', 
+             'DET', 'GB', 'HOU', 'IND', 'JAX', 'KC', 'LA', 'LAC', 'LV', 'MIA', 
+             'MIN', 'NE', 'NO', 'NYG', 'NYJ', 'PHI', 'PIT', 'SEA', 'SF', 'TB', 'TEN', 'WAS']
+    
+    logger.info(f"Starting snap count updates for all {len(teams)} teams - {year}")
+    
+    # Schedule updates for all teams
+    for team in teams:
+        update_snap_count_data.delay(team, year)
+    
+    logger.info(f"Scheduled snap count updates for all teams - {year}")
+    return f"Scheduled snap count updates for all {len(teams)} teams ({year})"
+
+@celery.task()
+def get_weekly_snap_breakdown(team, year, week):
+    """
+    Get detailed snap counts for a specific team, year, and week.
+    
+    Args:
+        team: Team abbreviation
+        year: Season year
+        week: Week number
+    
+    Returns:
+        dict: Player snap counts for the specified week
+    """
+    try:
+        logger.info(f"Getting weekly snap breakdown for {team} - {year} Week {week}")
+        
+        # Check if data file exists
+        team_dir = os.getcwd() + f'/nickknows/nfl/data/{team}/'
+        snap_file_path = os.path.join(team_dir, f'{year}_{team}_snap_counts.csv')
+        
+        if not os.path.exists(snap_file_path):
+            return {
+                'success': False,
+                'error': f'Snap count data not available for {team} ({year})',
+                'team': team,
+                'year': year,
+                'week': week
+            }
+        
+        # Load data
+        df = pd.read_csv(snap_file_path)
+        
+        # Filter to specific week
+        week_df = df[df['week'] == week]
+        
+        if week_df.empty:
+            available_weeks = sorted(df['week'].unique()) if 'week' in df.columns else []
+            return {
+                'success': False,
+                'error': f'Week {week} not available. Available weeks: {available_weeks}',
+                'team': team,
+                'year': year,
+                'week': week
+            }
+        
+        # Format player data
+        players = {}
+        for _, row in week_df.iterrows():
+            player_name = row['player']
+            players[player_name] = {
+                'name': player_name,
+                'position': row['position'],
+                'opponent': row['opponent'] if 'opponent' in row else 'Unknown',
+                'offense_snaps': int(row['offense_snaps']) if pd.notna(row['offense_snaps']) else 0,
+                'offense_pct': round(row['offense_pct'] * 100, 1) if pd.notna(row['offense_pct']) else 0.0,
+                'defense_snaps': int(row['defense_snaps']) if pd.notna(row['defense_snaps']) else 0,
+                'defense_pct': round(row['defense_pct'] * 100, 1) if pd.notna(row['defense_pct']) else 0.0,
+                'st_snaps': int(row['st_snaps']) if pd.notna(row['st_snaps']) else 0,
+                'st_pct': round(row['st_pct'] * 100, 1) if pd.notna(row['st_pct']) else 0.0,
+                'total_snaps': int(row['total_snaps']) if pd.notna(row['total_snaps']) else 0
+            }
+        
+        return {
+            'success': True,
+            'team': team,
+            'year': year,
+            'week': week,
+            'players': players,
+            'summary': {
+                'total_players': len(players),
+                'positions': sorted(list(set(p['position'] for p in players.values())))
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting weekly snap breakdown for {team} ({year}) Week {week}: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'team': team,
+            'year': year,
+            'week': week
+        }
+
+@celery.task()
+def check_snap_count_data_availability(year=None):
+    """
+    Check which years have snap count data available.
+    
+    Args:
+        year: Specific year to check (optional)
+    
+    Returns:
+        dict: Available years and their data summary
+    """
+    if year:
+        years_to_check = [year]
+    else:
+        years_to_check = [2025, 2024, 2023, 2022, 2021, 2020]
+    
+    available_years = {}
+    
+    for check_year in years_to_check:
+        try:
+            logger.info(f"Checking snap count data availability for {check_year}")
+            df = nfl.import_snap_counts([check_year])
+            
+            if len(df) > 0:
+                weeks = sorted(df['week'].unique())
+                teams = sorted(df['team'].unique())
+                
+                available_years[check_year] = {
+                    'available': True,
+                    'total_records': len(df),
+                    'teams': len(teams),
+                    'team_list': teams,
+                    'weeks': weeks,
+                    'week_range': f"{weeks[0]}-{weeks[-1]}" if weeks else "No weeks",
+                    'positions': sorted(df['position'].unique().tolist())
+                }
+                
+                logger.info(f"Year {check_year}: {len(df)} records, {len(teams)} teams, weeks {weeks[0]}-{weeks[-1]}")
+            else:
+                available_years[check_year] = {
+                    'available': False,
+                    'error': 'No data returned from API'
+                }
+            
+        except Exception as e:
+            logger.error(f"Error checking {check_year}: {str(e)}")
+            available_years[check_year] = {
+                'available': False,
+                'error': str(e)
+            }
+    
+    return available_years

@@ -1,6 +1,6 @@
 from flask import render_template, url_for, redirect, flash, request
 from nickknows import app
-from ..celery_setup.tasks import process_team_data, update_fpa_data, update_PBP_data, update_roster_data, update_sched_data, update_week_data, update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10, update_team_schedule, update_weekly_team_data
+from ..celery_setup.tasks import process_team_data, update_fpa_data, update_PBP_data, update_roster_data, update_sched_data, update_week_data, update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10, update_team_schedule, update_weekly_team_data, update_snap_count_data, get_snap_count_summary
 from celery import chain, chord
 import nfl_data_py as nfl
 import pandas as pd
@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from IPython.display import HTML
 import os
+import json
 import time
 from pathlib import Path
 from celery.utils.log import get_task_logger
@@ -434,6 +435,347 @@ def team_fpa(team, fullname):
     except Exception as e:
         flash(f'Error loading team FPA data for {fullname} ({selected_year}): {str(e)}')
         return redirect(url_for('NFL', year=selected_year))
+    
+@app.route('/NFL/SnapCounts')
+def snap_counts_home():
+    """Snap counts overview page"""
+    available_years = get_available_years()
+    selected_year = get_selected_year()
+    teams = get_all_teams()
+    
+    return render_template('snap-counts-home.html',
+                         years=available_years,
+                         selected_year=selected_year,
+                         teams=teams)
+
+@app.route('/NFL/SnapCounts/<team>/<fullname>')
+def team_snap_counts(team, fullname):
+    """Team-specific snap counts page"""
+    try:
+        available_years = get_available_years()
+        selected_year = get_selected_year()
+        
+        # Try to load cached snap count data
+        snap_file_path = os.getcwd() + f'/nickknows/nfl/data/{team}/{selected_year}_{team}_snap_counts.csv'
+        
+        if not os.path.exists(snap_file_path):
+            # Trigger data update
+            update_snap_count_data.delay(team, selected_year)
+            flash(f'Snap count data for {fullname} is being updated. Please refresh in a moment.')
+            return render_template('snap-counts-team.html',
+                                 team=team,
+                                 fullname=fullname,
+                                 years=available_years,
+                                 selected_year=selected_year,
+                                 snap_data=None,
+                                 loading=True)
+        
+        # Load and process snap count data
+        snap_data = pd.read_csv(snap_file_path, index_col=0)
+        
+        # Process data for display
+        positions = {}
+        weeks = sorted(snap_data['week'].unique()) if 'week' in snap_data.columns else []
+        
+        for position in ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB']:
+            pos_data = snap_data[snap_data['position'] == position]
+            if not pos_data.empty:
+                positions[position] = pos_data.to_dict('records')
+        
+        # Create summary statistics
+        summary_stats = {
+            'total_players': len(snap_data),
+            'weeks_available': len(weeks),
+            'positions_represented': len(positions),
+            'total_offensive_snaps': snap_data['offense_snaps'].sum(),
+            'total_defensive_snaps': snap_data['defense_snaps'].sum(),
+            'total_st_snaps': snap_data['st_snaps'].sum()
+        }
+        
+        return render_template('snap-counts-team.html',
+                             team=team,
+                             fullname=fullname,
+                             years=available_years,
+                             selected_year=selected_year,
+                             snap_data=positions,
+                             weeks=weeks,
+                             summary_stats=summary_stats,
+                             loading=False)
+                             
+    except Exception as e:
+        logger.error(f"Error loading snap counts for {team}: {str(e)}")
+        flash(f'Error loading snap count data for {fullname}')
+        return redirect(url_for('NFL'))
+
+@app.route('/NFL/SnapCounts/update/<team>')
+def update_team_snap_counts(team):
+    """Trigger snap count data update for a specific team"""
+    selected_year = get_selected_year()
+    update_snap_count_data.delay(team, selected_year)
+    flash(f'Snap count data for {team} is updating in the background.')
+    return redirect(url_for('team_snap_counts', team=team, fullname=get_team_fullname(team)))
+
+@app.route('/NFL/SnapCounts/api/<team>')
+def snap_counts_api(team):
+    """API endpoint for snap count data"""
+    try:
+        selected_year = get_selected_year()
+        position_filter = request.args.get('positions', '').split(',') if request.args.get('positions') else None
+        
+        # Get formatted data
+        result = get_snap_count_summary.delay(team, selected_year, position_filter).get(timeout=30)
+        
+        return json.dumps(result), 200, {'Content-Type': 'application/json'}
+        
+    except Exception as e:
+        return json.dumps({
+            'success': False,
+            'error': str(e),
+            'team': team
+        }), 500, {'Content-Type': 'application/json'}
+
+@app.route('/NFL/SnapCounts/player/<team>/<player_name>')
+def player_snap_history(team, player_name):
+    """Individual player snap count history"""
+    try:
+        available_years = get_available_years()
+        selected_year = get_selected_year()
+        
+        # Load player's snap count history
+        snap_file_path = os.getcwd() + f'/nickknows/nfl/data/{team}/{selected_year}_{team}_snap_counts.csv'
+        
+        if not os.path.exists(snap_file_path):
+            update_snap_count_data.delay(team, selected_year)
+            flash(f'Snap count data is being updated. Please refresh in a moment.')
+            return redirect(url_for('team_snap_counts', team=team, fullname=get_team_fullname(team)))
+        
+        snap_data = pd.read_csv(snap_file_path, index_col=0)
+        player_data = snap_data[snap_data['player'] == player_name]
+        
+        if player_data.empty:
+            flash(f'No snap count data found for {player_name}')
+            return redirect(url_for('team_snap_counts', team=team, fullname=get_team_fullname(team)))
+        
+        # Process weekly data
+        weekly_snaps = []
+        for _, row in player_data.iterrows():
+            weekly_snaps.append({
+                'week': int(row['week']),
+                'opponent': row['opponent'],
+                'offense_snaps': int(row['offense_snaps']) if pd.notna(row['offense_snaps']) else 0,
+                'offense_pct': round(row['offense_pct'] * 100, 1) if pd.notna(row['offense_pct']) else 0.0,
+                'defense_snaps': int(row['defense_snaps']) if pd.notna(row['defense_snaps']) else 0,
+                'defense_pct': round(row['defense_pct'] * 100, 1) if pd.notna(row['defense_pct']) else 0.0,
+                'st_snaps': int(row['st_snaps']) if pd.notna(row['st_snaps']) else 0,
+                'st_pct': round(row['st_pct'] * 100, 1) if pd.notna(row['st_pct']) else 0.0,
+            })
+        
+        weekly_snaps.sort(key=lambda x: x['week'])
+        
+        # Calculate season totals
+        season_totals = {
+            'offense_snaps': sum(w['offense_snaps'] for w in weekly_snaps),
+            'defense_snaps': sum(w['defense_snaps'] for w in weekly_snaps),
+            'st_snaps': sum(w['st_snaps'] for w in weekly_snaps),
+        }
+        season_totals['total_snaps'] = season_totals['offense_snaps'] + season_totals['defense_snaps'] + season_totals['st_snaps']
+        
+        return render_template('player-snap-history.html',
+                             player_name=player_name,
+                             team=team,
+                             fullname=get_team_fullname(team),
+                             position=player_data.iloc[0]['position'],
+                             years=available_years,
+                             selected_year=selected_year,
+                             weekly_snaps=weekly_snaps,
+                             season_totals=season_totals)
+                             
+    except Exception as e:
+        logger.error(f"Error loading player snap history for {player_name}: {str(e)}")
+        flash(f'Error loading snap count data for {player_name}')
+        return redirect(url_for('team_snap_counts', team=team, fullname=get_team_fullname(team)))
+
+
+@app.route('/NFL/SnapCounts/update_all')
+def update_all_snap_counts():
+    """Trigger snap count data update for all teams"""
+    selected_year = get_selected_year()
+    update_all_teams_snap_counts.delay(selected_year)
+    flash(f'Snap count data for all teams is updating in the background for {selected_year} season.')
+    return redirect(url_for('snap_counts_home', year=selected_year))
+
+def get_season_display_name(year):
+    """Format season display name"""
+    return f"{year-1}-{year} Season"
+
+# Add these missing routes that were referenced in the existing code
+
+@app.route('/NFL/Team/<team>/<fullname>')
+def team_schedule(team, fullname):
+    """Team schedule page - this route was referenced but missing"""
+    try:
+        selected_year = get_selected_year()
+        available_years = get_available_years()
+        
+        file_path = os.getcwd() + f'/nickknows/nfl/data/{team}/{selected_year}_{team}_schedule.csv'
+        
+        if not os.path.exists(file_path):
+            update_team_schedule.delay(team, selected_year)
+            flash(f'Schedule data for {fullname} is being updated. Please refresh in a moment.')
+            return render_template('team-schedule.html',
+                                 team=team,
+                                 fullname=fullname,
+                                 years=available_years,
+                                 selected_year=selected_year,
+                                 team_schedule=None)
+        
+        schedule_data = pd.read_csv(file_path, index_col=0)
+        
+        # Format the schedule data for display
+        schedule_data = schedule_data.style.hide(axis="index")
+        schedule_data = schedule_data.format(precision=0)
+        
+        return render_template('team-schedule.html',
+                             team=team,
+                             fullname=fullname,
+                             years=available_years,
+                             selected_year=selected_year,
+                             team_schedule=schedule_data.to_html(classes="table", escape=False))
+                             
+    except Exception as e:
+        logger.error(f"Error loading team schedule for {team}: {str(e)}")
+        flash(f'Error loading schedule for {fullname}')
+        return redirect(url_for('NFL'))
+
+@app.route('/NFL/Results/<team>/<fullname>')
+def team_results(team, fullname):
+    """Team results page - this route was referenced but missing"""
+    try:
+        selected_year = get_selected_year()
+        available_years = get_available_years()
+        
+        file_path = os.getcwd() + f'/nickknows/nfl/data/{team}/{selected_year}_{team}_data.csv'
+        
+        if not os.path.exists(file_path):
+            update_weekly_team_data.delay(team, selected_year)
+            flash(f'Results data for {fullname} is being updated. Please refresh in a moment.')
+            return render_template('team-results.html',
+                                 team=team,
+                                 fullname=fullname,
+                                 years=available_years,
+                                 selected_year=selected_year,
+                                 team_results=None)
+        
+        results_data = pd.read_csv(file_path, index_col=0)
+        
+        # Process and format the results data
+        results_summary = results_data.groupby('position').agg({
+            'fantasy_points_ppr': ['mean', 'sum', 'count']
+        }).round(2)
+        
+        results_summary = results_summary.style.hide(axis="index")
+        
+        return render_template('team-results.html',
+                             team=team,
+                             fullname=fullname,
+                             years=available_years,
+                             selected_year=selected_year,
+                             team_results=results_summary.to_html(classes="table"))
+                             
+    except Exception as e:
+        logger.error(f"Error loading team results for {team}: {str(e)}")
+        flash(f'Error loading results for {fullname}')
+        return redirect(url_for('NFL'))
+
+@app.route('/NFL/FPA/<team>/<fullname>')
+def team_fpa(team, fullname):
+    """Team FPA (Fantasy Points Against) page - this route was referenced but missing"""
+    try:
+        selected_year = get_selected_year()
+        available_years = get_available_years()
+        
+        file_path = os.getcwd() + f'/nickknows/nfl/data/{team}/{selected_year}_{team}_data.csv'
+        
+        if not os.path.exists(file_path):
+            process_team_data.delay(team, selected_year)
+            flash(f'FPA data for {fullname} is being updated. Please refresh in a moment.')
+            return render_template('team-fpa.html',
+                                 team=team,
+                                 fullname=fullname,
+                                 years=available_years,
+                                 selected_year=selected_year)
+        
+        team_data = pd.read_csv(file_path, index_col=0)
+        
+        # Calculate FPA statistics by position
+        fpa_stats = {}
+        positions = ['QB', 'RB', 'WR', 'TE']
+        
+        for pos in positions:
+            pos_data = team_data[team_data['position'] == pos]
+            if not pos_data.empty:
+                fpa_stats[f'{pos.lower()}_agg'] = pos_data['fantasy_points_ppr'].mean()
+                
+                # Format position data for display
+                pos_formatted = pos_data[['player_display_name', 'week', 'fantasy_points_ppr', 'opponent_team']]
+                pos_formatted = pos_formatted.sort_values('fantasy_points_ppr', ascending=False)
+                pos_formatted = pos_formatted.style.hide(axis="index").format({'fantasy_points_ppr': '{:.2f}'})
+                fpa_stats[f'{pos.lower()}_data'] = pos_formatted.to_html(classes="table")
+        
+        # Summary FPA data
+        team_fpa_summary = pd.DataFrame([{
+            'Team': fullname,
+            'QB': fpa_stats.get('qb_agg', 0),
+            'RB': fpa_stats.get('rb_agg', 0), 
+            'WR': fpa_stats.get('wr_agg', 0),
+            'TE': fpa_stats.get('te_agg', 0)
+        }])
+        
+        team_fpa_formatted = team_fpa_summary.style.hide(axis="index").format(precision=2)
+        
+        return render_template('team-fpa.html',
+                             team=team,
+                             fullname=fullname,
+                             years=available_years,
+                             selected_year=selected_year,
+                             team_fpa=team_fpa_formatted.to_html(classes="table"),
+                             pass_agg=fpa_stats.get('qb_agg', 0),
+                             rush_agg=fpa_stats.get('rb_agg', 0),
+                             rec_agg=fpa_stats.get('wr_agg', 0),
+                             te_agg=fpa_stats.get('te_agg', 0),
+                             pass_data=fpa_stats.get('qb_data', 'No data'),
+                             rush_data=fpa_stats.get('rb_data', 'No data'),
+                             rec_data=fpa_stats.get('wr_data', 'No data'),
+                             te_data=fpa_stats.get('te_data', 'No data'))
+                             
+    except Exception as e:
+        logger.error(f"Error loading team FPA for {team}: {str(e)}")
+        flash(f'Error loading FPA data for {fullname}')
+        return redirect(url_for('NFL'))
+    
+# Helper function to get team full names
+def get_team_fullname(team_code):
+    """Convert team code to full name"""
+    team_names = {
+        'ARI': 'Arizona Cardinals', 'ATL': 'Atlanta Falcons', 'BAL': 'Baltimore Ravens',
+        'BUF': 'Buffalo Bills', 'CAR': 'Carolina Panthers', 'CHI': 'Chicago Bears',
+        'CIN': 'Cincinnati Bengals', 'CLE': 'Cleveland Browns', 'DAL': 'Dallas Cowboys',
+        'DEN': 'Denver Broncos', 'DET': 'Detroit Lions', 'GB': 'Green Bay Packers',
+        'HOU': 'Houston Texans', 'IND': 'Indianapolis Colts', 'JAX': 'Jacksonville Jaguars',
+        'KC': 'Kansas City Chiefs', 'LA': 'Los Angeles Rams', 'LAC': 'Los Angeles Chargers',
+        'LV': 'Las Vegas Raiders', 'MIA': 'Miami Dolphins', 'MIN': 'Minnesota Vikings',
+        'NE': 'New England Patriots', 'NO': 'New Orleans Saints', 'NYG': 'New York Giants',
+        'NYJ': 'New York Jets', 'PHI': 'Philadelphia Eagles', 'PIT': 'Pittsburgh Steelers',
+        'SEA': 'Seattle Seahawks', 'SF': 'San Francisco 49ers', 'TB': 'Tampa Bay Buccaneers',
+        'TEN': 'Tennessee Titans', 'WAS': 'Washington Commanders'
+    }
+    return team_names.get(team_code, team_code)
+
+def get_all_teams():
+    """Get list of all NFL teams"""
+    return ['ARI', 'ATL', 'BAL', 'BUF', 'CAR', 'CHI', 'CIN', 'CLE', 'DAL', 'DEN', 
+            'DET', 'GB', 'HOU', 'IND', 'JAX', 'KC', 'LA', 'LAC', 'LV', 'MIA', 
+            'MIN', 'NE', 'NO', 'NYG', 'NYJ', 'PHI', 'PIT', 'SEA', 'SF', 'TB', 'TEN', 'WAS']
 
 # Helper functions
 def total_highlight(df, col1, col2):
