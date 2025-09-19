@@ -418,7 +418,7 @@ a#social-media {
 }
 
 .scroll-item img {
-    height: 200px;
+    height: 600px;
     width: auto;
     object-fit: cover;
     border-radius: 10px;
@@ -657,7 +657,7 @@ a#social-media {
 
   /* Mobile scroll adjustments */
   .scroll-item img {
-      height: 150px;
+      height: 300px;
   }
   
   .scroll-container {
