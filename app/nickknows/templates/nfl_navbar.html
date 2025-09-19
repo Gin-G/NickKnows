@@ -7,15 +7,6 @@
         <a href="{{url_for('NFL')}}" id="nfl-home-link">NFL Home</a>
         <a href="{{url_for('schedule')}}" id="schedule-link">Schedule</a>
         
-<nav class="navbar">
-    <a href="{{url_for('home')}}" class="brand">Home</a>
-    <button class="navbar-toggle" onclick="toggleMenu()">
-        <i class="fas fa-bars" aria-hidden="true"></i>
-    </button>
-    <div class="nav-links" id="navLinks">
-        <a href="{{url_for('NFL')}}" id="nfl-home-link">NFL Home</a>
-        <a href="{{url_for('schedule')}}" id="schedule-link">Schedule</a>
-        
         <!-- Year Selection Form -->
         <div style="display: inline-block; margin: 0 15px;">
             <form id="yearForm" method="get" action="{{ url_for('NFL') }}" style="display: inline-block;">
