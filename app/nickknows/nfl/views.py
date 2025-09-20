@@ -530,13 +530,15 @@ def team_snap_counts(team, fullname):
         # Load and process snap count data
         snap_data = pd.read_csv(snap_file_path, index_col=0)
         
-        # Process data for display
+        # Process data for display - REVERT TO ORIGINAL SIMPLE STRUCTURE
         positions = {}
         weeks = sorted(snap_data['week'].unique()) if 'week' in snap_data.columns else []
         
-        for position in ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB']:
+        # Group by position - keep it simple like before
+        for position in snap_data['position'].unique():
             pos_data = snap_data[snap_data['position'] == position]
             if not pos_data.empty:
+                # Convert to list of records for template
                 positions[position] = pos_data.to_dict('records')
         
         # Create summary statistics
@@ -544,9 +546,9 @@ def team_snap_counts(team, fullname):
             'total_players': len(snap_data),
             'weeks_available': len(weeks),
             'positions_represented': len(positions),
-            'total_offensive_snaps': snap_data['offense_snaps'].sum(),
-            'total_defensive_snaps': snap_data['defense_snaps'].sum(),
-            'total_st_snaps': snap_data['st_snaps'].sum()
+            'total_offensive_snaps': snap_data['offense_snaps'].sum() if 'offense_snaps' in snap_data.columns else 0,
+            'total_defensive_snaps': snap_data['defense_snaps'].sum() if 'defense_snaps' in snap_data.columns else 0,
+            'total_st_snaps': snap_data['st_snaps'].sum() if 'st_snaps' in snap_data.columns else 0
         }
         
         return render_template('snap-counts-team.html',
@@ -563,7 +565,7 @@ def team_snap_counts(team, fullname):
         logger.error(f"Error loading snap counts for {team}: {str(e)}")
         flash(f'Error loading snap count data for {fullname}')
         return redirect(url_for('NFL'))
-
+    
 @app.route('/NFL/SnapCounts/update/<team>')
 def update_team_snap_counts(team):
     """Trigger snap count data update for a specific team"""
