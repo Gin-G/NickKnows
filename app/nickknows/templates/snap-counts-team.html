@@ -11,10 +11,10 @@
             navLinks.classList.toggle('active');
         }
         
-        function filterByPosition(position) {
+        function filterBySection(section) {
             const tables = document.querySelectorAll('.position-table');
             tables.forEach(table => {
-                if (position === 'all' || table.id === position + '-table') {
+                if (section === 'all' || table.id === section + '-table') {
                     table.style.display = 'block';
                 } else {
                     table.style.display = 'none';
@@ -25,7 +25,7 @@
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            document.querySelector(`[onclick="filterByPosition('${position}')"]`).classList.add('active');
+            document.querySelector(`[onclick="filterBySection('${section}')"]`).classList.add('active');
         }
         
         function sortTable(tableId, columnIndex, isNumeric = false) {
@@ -157,139 +157,292 @@
             </div>
             {% endif %}
             
-            <!-- Position Filter Buttons -->
+            <!-- Position Filter Buttons - Updated to match new structure -->
             <div class="filter-buttons" style="text-align: center; margin: 20px 0;">
-                <button class="filter-btn active" onclick="filterByPosition('all')" 
+                <button class="filter-btn active" onclick="filterBySection('all')" 
                         style="margin: 5px; padding: 8px 15px; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer;">
-                    All Positions
+                    All Players
                 </button>
-                {% for position in snap_data.keys() %}
-                <button class="filter-btn" onclick="filterByPosition('{{ position }}')"
-                        style="margin: 5px; padding: 8px 15px; border: none; border-radius: 5px; background-color: #6c757d; color: white; cursor: pointer;">
-                    {{ position }}
+                <button class="filter-btn" onclick="filterBySection('offensive')"
+                        style="margin: 5px; padding: 8px 15px; border: none; border-radius: 5px; background-color: #28a745; color: white; cursor: pointer;">
+                    <i class="fas fa-football-ball"></i> Offensive
                 </button>
-                {% endfor %}
+                <button class="filter-btn" onclick="filterBySection('defensive')"
+                        style="margin: 5px; padding: 8px 15px; border: none; border-radius: 5px; background-color: #dc3545; color: white; cursor: pointer;">
+                    <i class="fas fa-shield-alt"></i> Defensive
+                </button>
+                <button class="filter-btn" onclick="filterBySection('special-teams')"
+                        style="margin: 5px; padding: 8px 15px; border: none; border-radius: 5px; background-color: #ffc107; color: black; cursor: pointer;">
+                    <i class="fas fa-star"></i> Special Teams
+                </button>
             </div>
             
             <!-- Position Tables -->
+            {% set offensive_positions = ['QB', 'RB', 'WR', 'TE', 'OL', 'C', 'G', 'T'] %}
+            {% set defensive_positions = ['LB', 'DT', 'DE', 'CB', 'S', 'FS', 'SS', 'DB', 'NT', 'OLB', 'ILB'] %}
+            {% set special_teams_players = [] %}
+            
+            <!-- Collect players who primarily play special teams -->
             {% for position, players in snap_data.items() %}
-            <div class="position-table" id="{{ position }}-table" style="margin: 30px 0;">
-                <h2 style="color: #333; border-bottom: 2px solid #dee2e6; padding-bottom: 10px;">
-                    {{ position }} - {{ (players | groupby('player') | list) | length }} Player{{ 's' if (players | groupby('player') | list) | length != 1 else '' }}
+                {% for player_name, player_weeks in players | groupby('player') %}
+                    {% set player_weeks_list = player_weeks | list %}
+                    {% set total_offense = player_weeks_list | sum(attribute='offense_snaps') %}
+                    {% set total_defense = player_weeks_list | sum(attribute='defense_snaps') %}
+                    {% set total_st = player_weeks_list | sum(attribute='st_snaps') %}
+                    {% if total_st > total_offense and total_st > total_defense and total_st > 0 %}
+                        {% if special_teams_players.append({'player': player_name, 'position': position, 'weeks': player_weeks_list, 'total_st': total_st, 'total_offense': total_offense, 'total_defense': total_defense}) %}{% endif %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+            
+            <!-- Offensive Players Table -->
+            <div class="position-table" id="offensive-table" style="margin: 30px 0;">
+                <h2 style="color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 10px;">
+                    <i class="fas fa-football-ball"></i> Offensive Players
+                </h2>
+                
+                {% for position in offensive_positions %}
+                    {% if position in snap_data %}
+                    {% set players = snap_data[position] %}
+                    <div style="margin: 20px 0;">
+                        <h3 style="color: #333; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">
+                            {{ position }} - {{ (players | groupby('player') | list) | length }} Player{{ 's' if (players | groupby('player') | list) | length != 1 else '' }}
+                        </h3>
+                        
+                        <div class="table-wrapper" style="overflow-x: auto;">
+                            <table class="table" style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+                                <thead>
+                                    <tr style="background-color: rgba(40, 167, 69, 0.1);">
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Player Name</th>
+                                        <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">Games</th>
+                                        <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">Total Snaps</th>
+                                        <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">Avg/Game</th>
+                                        <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">High Game</th>
+                                        <th style="padding: 10px; text-align: center; border: 1px solid #dee2e6;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for player_name, player_weeks in players | groupby('player') %}
+                                    {% set player_weeks_list = player_weeks | list %}
+                                    {% set total_offense = player_weeks_list | sum(attribute='offense_snaps') %}
+                                    {% set total_games = player_weeks_list | length %}
+                                    {% set high_game = player_weeks_list | map(attribute='offense_snaps') | max %}
+                                    <tr style="border-bottom: 1px solid #dee2e6;" class="player-summary-row">
+                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                            <strong>{{ player_name }}</strong>
+                                        </td>
+                                        <td style="padding: 8px; text-align: right; border: 1px solid #dee2e6;">
+                                            {{ total_games }}
+                                        </td>
+                                        <td style="padding: 8px; text-align: right; border: 1px solid #dee2e6; font-weight: bold;">
+                                            {{ "{:,}".format(total_offense) }}
+                                        </td>
+                                        <td style="padding: 8px; text-align: right; border: 1px solid #dee2e6;">
+                                            {{ "%.1f"|format(total_offense / total_games) if total_games > 0 else '0.0' }}
+                                        </td>
+                                        <td style="padding: 8px; text-align: right; border: 1px solid #dee2e6;">
+                                            {{ high_game }}
+                                        </td>
+                                        <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">
+                                            <a href="{{ url_for('player_snap_history', team=team, player_name=player_name) }}" 
+                                               class="btn-small" 
+                                               style="background-color: #28a745; color: white; padding: 4px 8px; text-decoration: none; border-radius: 3px; font-size: 11px;">
+                                                <i class="fas fa-chart-line"></i> History
+                                            </a>
+                                            <button onclick="toggleWeeklyDetails('off-{{ position }}-{{ loop.index }}')" 
+                                                    class="btn-small" 
+                                                    style="background-color: #007bff; color: white; padding: 4px 8px; border: none; border-radius: 3px; font-size: 11px; margin-left: 3px; cursor: pointer;">
+                                                <i class="fas fa-eye"></i> Weekly
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <!-- Weekly Details Row -->
+                                    <tr id="off-{{ position }}-{{ loop.index }}-details" class="weekly-details" style="display: none; background-color: #f8f9fa;">
+                                        <td colspan="6" style="padding: 10px; border: 1px solid #dee2e6;">
+                                            <h6 style="margin: 0 0 8px 0; color: #333;">{{ player_name }} - Weekly Offensive Snaps</h6>
+                                            <div style="overflow-x: auto;">
+                                                <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+                                                    <thead>
+                                                        <tr style="background-color: #e9ecef;">
+                                                            <th style="padding: 6px; border: 1px solid #dee2e6; text-align: center;">Week</th>
+                                                            <th style="padding: 6px; border: 1px solid #dee2e6; text-align: center;">Opponent</th>
+                                                            <th style="padding: 6px; border: 1px solid #dee2e6; text-align: center;">Snaps</th>
+                                                            <th style="padding: 6px; border: 1px solid #dee2e6; text-align: center;">Snap %</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for week_data in player_weeks_list | sort(attribute='week') %}
+                                                        <tr>
+                                                            <td style="padding: 4px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">{{ week_data.week }}</td>
+                                                            <td style="padding: 4px; border: 1px solid #dee2e6; text-align: center;">{{ week_data.opponent }}</td>
+                                                            <td style="padding: 4px; border: 1px solid #dee2e6; text-align: center;">{{ week_data.offense_snaps }}</td>
+                                                            <td style="padding: 4px; border: 1px solid #dee2e6; text-align: center;">{{ "%.1f"|format(week_data.offense_pct if week_data.offense_pct <= 1.0 else week_data.offense_pct) }}%</td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <!-- Defensive Players Table -->
+            <div class="position-table" id="defensive-table" style="margin: 30px 0;">
+                <h2 style="color: #dc3545; border-bottom: 2px solid #dc3545; padding-bottom: 10px;">
+                    <i class="fas fa-shield-alt"></i> Defensive Players
+                </h2>
+                
+                {% for position in defensive_positions %}
+                    {% if position in snap_data %}
+                    {% set players = snap_data[position] %}
+                    <div style="margin: 20px 0;">
+                        <h3 style="color: #333; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">
+                            {{ position }} - {{ (players | groupby('player') | list) | length }} Player{{ 's' if (players | groupby('player') | list) | length != 1 else '' }}
+                        </h3>
+                        
+                        <div class="table-wrapper" style="overflow-x: auto;">
+                            <table class="table" style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+                                <thead>
+                                    <tr style="background-color: rgba(220, 53, 69, 0.1);">
+                                        <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Player Name</th>
+                                        <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">Games</th>
+                                        <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">Total Snaps</th>
+                                        <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">Avg/Game</th>
+                                        <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">High Game</th>
+                                        <th style="padding: 10px; text-align: center; border: 1px solid #dee2e6;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for player_name, player_weeks in players | groupby('player') %}
+                                    {% set player_weeks_list = player_weeks | list %}
+                                    {% set total_defense = player_weeks_list | sum(attribute='defense_snaps') %}
+                                    {% set total_games = player_weeks_list | length %}
+                                    {% set high_game = player_weeks_list | map(attribute='defense_snaps') | max %}
+                                    <tr style="border-bottom: 1px solid #dee2e6;" class="player-summary-row">
+                                        <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                            <strong>{{ player_name }}</strong>
+                                        </td>
+                                        <td style="padding: 8px; text-align: right; border: 1px solid #dee2e6;">
+                                            {{ total_games }}
+                                        </td>
+                                        <td style="padding: 8px; text-align: right; border: 1px solid #dee2e6; font-weight: bold;">
+                                            {{ "{:,}".format(total_defense) }}
+                                        </td>
+                                        <td style="padding: 8px; text-align: right; border: 1px solid #dee2e6;">
+                                            {{ "%.1f"|format(total_defense / total_games) if total_games > 0 else '0.0' }}
+                                        </td>
+                                        <td style="padding: 8px; text-align: right; border: 1px solid #dee2e6;">
+                                            {{ high_game }}
+                                        </td>
+                                        <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">
+                                            <a href="{{ url_for('player_snap_history', team=team, player_name=player_name) }}" 
+                                               class="btn-small" 
+                                               style="background-color: #dc3545; color: white; padding: 4px 8px; text-decoration: none; border-radius: 3px; font-size: 11px;">
+                                                <i class="fas fa-chart-line"></i> History
+                                            </a>
+                                            <button onclick="toggleWeeklyDetails('def-{{ position }}-{{ loop.index }}')" 
+                                                    class="btn-small" 
+                                                    style="background-color: #007bff; color: white; padding: 4px 8px; border: none; border-radius: 3px; font-size: 11px; margin-left: 3px; cursor: pointer;">
+                                                <i class="fas fa-eye"></i> Weekly
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <!-- Weekly Details Row -->
+                                    <tr id="def-{{ position }}-{{ loop.index }}-details" class="weekly-details" style="display: none; background-color: #f8f9fa;">
+                                        <td colspan="6" style="padding: 10px; border: 1px solid #dee2e6;">
+                                            <h6 style="margin: 0 0 8px 0; color: #333;">{{ player_name }} - Weekly Defensive Snaps</h6>
+                                            <div style="overflow-x: auto;">
+                                                <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+                                                    <thead>
+                                                        <tr style="background-color: #e9ecef;">
+                                                            <th style="padding: 6px; border: 1px solid #dee2e6; text-align: center;">Week</th>
+                                                            <th style="padding: 6px; border: 1px solid #dee2e6; text-align: center;">Opponent</th>
+                                                            <th style="padding: 6px; border: 1px solid #dee2e6; text-align: center;">Snaps</th>
+                                                            <th style="padding: 6px; border: 1px solid #dee2e6; text-align: center;">Snap %</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for week_data in player_weeks_list | sort(attribute='week') %}
+                                                        <tr>
+                                                            <td style="padding: 4px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">{{ week_data.week }}</td>
+                                                            <td style="padding: 4px; border: 1px solid #dee2e6; text-align: center;">{{ week_data.opponent }}</td>
+                                                            <td style="padding: 4px; border: 1px solid #dee2e6; text-align: center;">{{ week_data.defense_snaps }}</td>
+                                                            <td style="padding: 4px; border: 1px solid #dee2e6; text-align: center;">{{ "%.1f"|format(week_data.defense_pct if week_data.defense_pct <= 1.0 else week_data.defense_pct) }}%</td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <!-- Special Teams Players Table -->
+            {% if special_teams_players %}
+            <div class="position-table" id="special-teams-table" style="margin: 30px 0;">
+                <h2 style="color: #ffc107; border-bottom: 2px solid #ffc107; padding-bottom: 10px;">
+                    <i class="fas fa-star"></i> Special Teams Players
                 </h2>
                 
                 <div class="table-wrapper" style="overflow-x: auto;">
-                    <table id="{{ position }}-data-table" class="table" style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <table class="table" style="width: 100%; border-collapse: collapse; margin: 10px 0;">
                         <thead>
-                            <tr style="background-color: #f8f9fa;">
-                                <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6; cursor: pointer;" 
-                                    onclick="sortTable('{{ position }}-data-table', 0)">
-                                    Player Name <i class="fas fa-sort"></i>
-                                </th>
-                                <th style="padding: 12px; text-align: right; border: 1px solid #dee2e6; cursor: pointer;" 
-                                    onclick="sortTable('{{ position }}-data-table', 1, true)">
-                                    Games <i class="fas fa-sort"></i>
-                                </th>
-                                <th style="padding: 12px; text-align: right; border: 1px solid #dee2e6; cursor: pointer;" 
-                                    onclick="sortTable('{{ position }}-data-table', 2, true)">
-                                    Total Offensive <i class="fas fa-sort"></i>
-                                </th>
-                                <th style="padding: 12px; text-align: right; border: 1px solid #dee2e6; cursor: pointer;" 
-                                    onclick="sortTable('{{ position }}-data-table', 3, true)">
-                                    Avg Off/Game <i class="fas fa-sort"></i>
-                                </th>
-                                <th style="padding: 12px; text-align: right; border: 1px solid #dee2e6; cursor: pointer;" 
-                                    onclick="sortTable('{{ position }}-data-table', 4, true)">
-                                    Total Defensive <i class="fas fa-sort"></i>
-                                </th>
-                                <th style="padding: 12px; text-align: right; border: 1px solid #dee2e6; cursor: pointer;" 
-                                    onclick="sortTable('{{ position }}-data-table', 5, true)">
-                                    Avg Def/Game <i class="fas fa-sort"></i>
-                                </th>
-                                <th style="padding: 12px; text-align: right; border: 1px solid #dee2e6; cursor: pointer;" 
-                                    onclick="sortTable('{{ position }}-data-table', 6, true)">
-                                    Total ST <i class="fas fa-sort"></i>
-                                </th>
-                                <th style="padding: 12px; text-align: right; border: 1px solid #dee2e6; cursor: pointer;" 
-                                    onclick="sortTable('{{ position }}-data-table', 7, true)">
-                                    Season Total <i class="fas fa-sort"></i>
-                                </th>
-                                <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">
-                                    Actions
-                                </th>
+                            <tr style="background-color: rgba(255, 193, 7, 0.1);">
+                                <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Player Name</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #dee2e6;">Position</th>
+                                <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">Games</th>
+                                <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">ST Snaps</th>
+                                <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">Avg/Game</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #dee2e6;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for player_name, player_weeks in players | groupby('player') %}
-                            {% set player_weeks_list = player_weeks | list %}
-                            {% set total_offense = player_weeks_list | sum(attribute='offense_snaps') %}
-                            {% set total_defense = player_weeks_list | sum(attribute='defense_snaps') %}
-                            {% set total_st = player_weeks_list | sum(attribute='st_snaps') %}
-                            {% set total_games = player_weeks_list | length %}
-                            {% set season_total = total_offense + total_defense + total_st %}
-                            <tr style="border-bottom: 1px solid #dee2e6;" class="player-summary-row">
-                                <td style="padding: 10px; border: 1px solid #dee2e6;">
-                                    <strong>{{ player_name }}</strong>
+                            {% for st_player in special_teams_players | sort(attribute='total_st', reverse=true) %}
+                            {% set total_games = st_player.weeks | length %}
+                            <tr style="border-bottom: 1px solid #dee2e6;">
+                                <td style="padding: 8px; border: 1px solid #dee2e6;">
+                                    <strong>{{ st_player.player }}</strong>
                                 </td>
-                                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">
+                                <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">
+                                    {{ st_player.position }}
+                                </td>
+                                <td style="padding: 8px; text-align: right; border: 1px solid #dee2e6;">
                                     {{ total_games }}
                                 </td>
-                                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6; background-color: rgba(40, 167, 69, 0.1);">
-                                    {{ "{:,}".format(total_offense) }}
+                                <td style="padding: 8px; text-align: right; border: 1px solid #dee2e6; font-weight: bold;">
+                                    {{ "{:,}".format(st_player.total_st) }}
                                 </td>
-                                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6; background-color: rgba(40, 167, 69, 0.05);">
-                                    {{ "%.1f"|format(total_offense / total_games) if total_games > 0 else '0.0' }}
+                                <td style="padding: 8px; text-align: right; border: 1px solid #dee2e6;">
+                                    {{ "%.1f"|format(st_player.total_st / total_games) if total_games > 0 else '0.0' }}
                                 </td>
-                                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6; background-color: rgba(220, 53, 69, 0.1);">
-                                    {{ "{:,}".format(total_defense) }}
-                                </td>
-                                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6; background-color: rgba(220, 53, 69, 0.05);">
-                                    {{ "%.1f"|format(total_defense / total_games) if total_games > 0 else '0.0' }}
-                                </td>
-                                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6; background-color: rgba(255, 193, 7, 0.1);">
-                                    {{ "{:,}".format(total_st) }}
-                                </td>
-                                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6; font-weight: bold; background-color: #f8f9fa;">
-                                    {{ "{:,}".format(season_total) }}
-                                </td>
-                                <td style="padding: 10px; text-align: center; border: 1px solid #dee2e6;">
-                                    <a href="{{ url_for('player_snap_history', team=team, player_name=player_name) }}" 
+                                <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">
+                                    <a href="{{ url_for('player_snap_history', team=team, player_name=st_player.player) }}" 
                                        class="btn-small" 
-                                       style="background-color: #28a745; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; font-size: 12px;">
+                                       style="background-color: #ffc107; color: black; padding: 4px 8px; text-decoration: none; border-radius: 3px; font-size: 11px;">
                                         <i class="fas fa-chart-line"></i> History
                                     </a>
-                                    <button onclick="toggleWeeklyDetails('{{ position }}-{{ loop.index }}')" 
-                                            class="btn-small" 
-                                            style="background-color: #007bff; color: white; padding: 5px 10px; border: none; border-radius: 3px; font-size: 12px; margin-left: 5px; cursor: pointer;">
-                                        <i class="fas fa-eye"></i> Weekly
-                                    </button>
                                 </td>
                             </tr>
-                            <!-- Weekly Details Row (Hidden by default) -->
-                            <tr id="{{ position }}-{{ loop.index }}-details" class="weekly-details" style="display: none; background-color: #f8f9fa;">
-                                <td colspan="9" style="padding: 15px; border: 1px solid #dee2e6;">
-                                    <h5 style="margin: 0 0 10px 0; color: #333;">{{ player_name }} - Weekly Breakdown</h5>
-                                    <div style="overflow-x: auto;">
-                                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-                                            <thead>
-                                                <tr style="background-color: #e9ecef;">
-                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">Week</th>
-                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">Opponent</th>
-                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">Off Snaps</th>
-                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">Off %</th>
-                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">Def Snaps</th>
-                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">Def %</th>
-                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">ST Snaps</th>
-                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">ST %</th>
-                                                    <th style="padding: 8px; border: 1px solid #dee2e6; text-align: center;">Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for week_data in player_weeks_list | sort(attribute='week') %}
-                                                <tr>
-                                                    <td style="padding: 6px; border: 1px solid #dee2e6; text-align: center; font-weight: bold;">{{ week_data.week }}</td>
-                                                    <td style="padding: 6px; border: 1px solid #dee2e6; text-align: center;">{{ week_data.opponent }}</td>
-                                                    <td style="padding: 6px; border: 1px solid #dee2e6; text-align: center; background-color: rgba(40, 167, 69, 0.1);">{{ week_data.offense_snaps }}</td>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}: 6px; border: 1px solid #dee2e6; text-align: center; background-color: rgba(40, 167, 69, 0.1);">{{ week_data.offense_snaps }}</td>
                                                     <td style="padding: 6px; border: 1px solid #dee2e6; text-align: center; background-color: rgba(40, 167, 69, 0.05);">{{ "%.1f"|format(week_data.offense_pct) }}%</td>
                                                     <td style="padding: 6px; border: 1px solid #dee2e6; text-align: center; background-color: rgba(220, 53, 69, 0.1);">{{ week_data.defense_snaps }}</td>
                                                     <td style="padding: 6px; border: 1px solid #dee2e6; text-align: center; background-color: rgba(220, 53, 69, 0.05);">{{ "%.1f"|format(week_data.defense_pct) }}%</td>
