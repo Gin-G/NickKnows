@@ -619,8 +619,13 @@ def team_snap_counts(team, fullname):
         available_years = get_available_years()
         selected_year = get_selected_year()
         
+        # Ensure team directory exists
+        team_dir = os.getcwd() + f'/nickknows/nfl/data/{team}/'
+        if not os.path.exists(team_dir):
+            os.makedirs(team_dir)
+        
         # Try to load cached snap count data
-        snap_file_path = os.getcwd() + f'/nickknows/nfl/data/{team}/{selected_year}_{team}_snap_counts.csv'
+        snap_file_path = os.path.join(team_dir, f'{selected_year}_{team}_snap_counts.csv')
         
         if not os.path.exists(snap_file_path):
             # Trigger data update
@@ -635,44 +640,94 @@ def team_snap_counts(team, fullname):
                                  loading=True)
         
         # Load and process snap count data
-        snap_data = pd.read_csv(snap_file_path, index_col=0)
-        
-        # Process data for display - REVERT TO ORIGINAL SIMPLE STRUCTURE
-        positions = {}
-        weeks = sorted(snap_data['week'].unique()) if 'week' in snap_data.columns else []
-        
-        # Group by position - keep it simple like before
-        for position in snap_data['position'].unique():
-            pos_data = snap_data[snap_data['position'] == position]
-            if not pos_data.empty:
-                # Convert to list of records for template
-                positions[position] = pos_data.to_dict('records')
-        
-        # Create summary statistics
-        summary_stats = {
-            'total_players': len(snap_data),
-            'weeks_available': len(weeks),
-            'positions_represented': len(positions),
-            'total_offensive_snaps': snap_data['offense_snaps'].sum() if 'offense_snaps' in snap_data.columns else 0,
-            'total_defensive_snaps': snap_data['defense_snaps'].sum() if 'defense_snaps' in snap_data.columns else 0,
-            'total_st_snaps': snap_data['st_snaps'].sum() if 'st_snaps' in snap_data.columns else 0
-        }
-        
+        try:
+            snap_data = pd.read_csv(snap_file_path)
+            
+            # Check if the DataFrame is empty
+            if snap_data.empty:
+                flash(f'No snap count data available for {fullname} in {selected_year}')
+                return render_template('snap-counts-team.html',
+                                     team=team,
+                                     fullname=fullname,
+                                     years=available_years,
+                                     selected_year=selected_year,
+                                     snap_data=None,
+                                     loading=False)
+            
+            # Process data for display - Group by position
+            positions = {}
+            weeks = []
+            
+            # Get available weeks, handling both 'week' column names
+            if 'week' in snap_data.columns:
+                weeks = sorted(snap_data['week'].unique())
+            
+            # Group by position
+            for position in snap_data['position'].unique():
+                pos_data = snap_data[snap_data['position'] == position]
+                if not pos_data.empty:
+                    # Convert to list of records for template, handling missing columns gracefully
+                    position_records = []
+                    for _, row in pos_data.iterrows():
+                        record = {
+                            'player': row.get('player', 'Unknown'),
+                            'week': row.get('week', 0),
+                            'opponent': row.get('opponent', 'Unknown'),
+                            'offense_snaps': int(row.get('offense_snaps', 0)) if pd.notna(row.get('offense_snaps', 0)) else 0,
+                            'offense_pct': round(float(row.get('offense_pct', 0)) * 100, 1) if pd.notna(row.get('offense_pct', 0)) else 0.0,
+                            'defense_snaps': int(row.get('defense_snaps', 0)) if pd.notna(row.get('defense_snaps', 0)) else 0,
+                            'defense_pct': round(float(row.get('defense_pct', 0)) * 100, 1) if pd.notna(row.get('defense_pct', 0)) else 0.0,
+                            'st_snaps': int(row.get('st_snaps', 0)) if pd.notna(row.get('st_snaps', 0)) else 0,
+                            'st_pct': round(float(row.get('st_pct', 0)) * 100, 1) if pd.notna(row.get('st_pct', 0)) else 0.0
+                        }
+                        # Calculate total snaps
+                        record['total_snaps'] = record['offense_snaps'] + record['defense_snaps'] + record['st_snaps']
+                        position_records.append(record)
+                    
+                    positions[position] = position_records
+            
+            # Create summary statistics
+            summary_stats = {
+                'total_players': len(snap_data),
+                'weeks_available': len(weeks),
+                'positions_represented': len(positions),
+                'total_offensive_snaps': int(snap_data.get('offense_snaps', 0).sum()) if 'offense_snaps' in snap_data.columns else 0,
+                'total_defensive_snaps': int(snap_data.get('defense_snaps', 0).sum()) if 'defense_snaps' in snap_data.columns else 0,
+                'total_st_snaps': int(snap_data.get('st_snaps', 0).sum()) if 'st_snaps' in snap_data.columns else 0
+            }
+            
+            return render_template('snap-counts-team.html',
+                                 team=team,
+                                 fullname=fullname,
+                                 years=available_years,
+                                 selected_year=selected_year,
+                                 snap_data=positions,
+                                 weeks=weeks,
+                                 summary_stats=summary_stats,
+                                 loading=False)
+                                 
+        except Exception as csv_error:
+            logger.error(f"Error reading CSV file {snap_file_path}: {str(csv_error)}")
+            flash(f'Error reading snap count data for {fullname}. Data may be corrupted.')
+            return render_template('snap-counts-team.html',
+                                 team=team,
+                                 fullname=fullname,
+                                 years=available_years,
+                                 selected_year=selected_year,
+                                 snap_data=None,
+                                 loading=False)
+                                 
+    except Exception as e:
+        logger.error(f"Error loading snap counts for {team}: {str(e)}")
+        flash(f'Error loading snap count data for {fullname}: {str(e)}')
         return render_template('snap-counts-team.html',
                              team=team,
                              fullname=fullname,
                              years=available_years,
                              selected_year=selected_year,
-                             snap_data=positions,
-                             weeks=weeks,
-                             summary_stats=summary_stats,
+                             snap_data=None,
                              loading=False)
-                             
-    except Exception as e:
-        logger.error(f"Error loading snap counts for {team}: {str(e)}")
-        flash(f'Error loading snap count data for {fullname}')
-        return redirect(url_for('NFL'))
-    
+     
 @app.route('/NFL/SnapCounts/update/<team>')
 def update_team_snap_counts(team):
     """Trigger snap count data update for a specific team"""
