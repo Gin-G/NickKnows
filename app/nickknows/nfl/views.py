@@ -614,7 +614,7 @@ def snap_counts_home():
 
 @app.route('/NFL/SnapCounts/<team>/<fullname>')
 def team_snap_counts(team, fullname):
-    """Team-specific snap counts page"""
+    """Team-specific snap counts page with footballguys-style layout"""
     try:
         available_years = get_available_years()
         selected_year = get_selected_year()
@@ -654,46 +654,106 @@ def team_snap_counts(team, fullname):
                                      snap_data=None,
                                      loading=False)
             
-            # Process data for display - Group by position
-            positions = {}
-            weeks = []
+            # Get all available weeks and sort them
+            all_weeks = sorted(snap_data['week'].unique()) if 'week' in snap_data.columns else []
             
-            # Get available weeks, handling both 'week' column names
-            if 'week' in snap_data.columns:
-                weeks = sorted(snap_data['week'].unique())
+            # Define position groups
+            offensive_positions = ['QB', 'RB', 'WR', 'TE', 'FB', 'C', 'G', 'T', 'OL']
+            defensive_positions = ['DE', 'DT', 'NT', 'LB', 'ILB', 'OLB', 'MLB', 'CB', 'S', 'FS', 'SS', 'DB']
             
-            # Group by position
-            for position in snap_data['position'].unique():
-                pos_data = snap_data[snap_data['position'] == position]
-                if not pos_data.empty:
-                    # Convert to list of records for template, handling missing columns gracefully
-                    position_records = []
-                    for _, row in pos_data.iterrows():
-                        record = {
-                            'player': row.get('player', 'Unknown'),
-                            'week': row.get('week', 0),
-                            'opponent': row.get('opponent', 'Unknown'),
-                            'offense_snaps': int(row.get('offense_snaps', 0)) if pd.notna(row.get('offense_snaps', 0)) else 0,
-                            'offense_pct': round(float(row.get('offense_pct', 0)) * 100, 1) if pd.notna(row.get('offense_pct', 0)) else 0.0,
-                            'defense_snaps': int(row.get('defense_snaps', 0)) if pd.notna(row.get('defense_snaps', 0)) else 0,
-                            'defense_pct': round(float(row.get('defense_pct', 0)) * 100, 1) if pd.notna(row.get('defense_pct', 0)) else 0.0,
-                            'st_snaps': int(row.get('st_snaps', 0)) if pd.notna(row.get('st_snaps', 0)) else 0,
-                            'st_pct': round(float(row.get('st_pct', 0)) * 100, 1) if pd.notna(row.get('st_pct', 0)) else 0.0
-                        }
-                        # Calculate total snaps
-                        record['total_snaps'] = record['offense_snaps'] + record['defense_snaps'] + record['st_snaps']
-                        position_records.append(record)
+            def process_position_group(positions, snap_type):
+                """Process a group of positions for a specific snap type"""
+                group_data = []
+                
+                for position in positions:
+                    pos_data = snap_data[snap_data['position'] == position]
+                    if pos_data.empty:
+                        continue
                     
-                    positions[position] = position_records
+                    # Group by player and create weekly breakdown
+                    for player in pos_data['player'].unique():
+                        player_data = pos_data[pos_data['player'] == player]
+                        
+                        # Create weekly snap breakdown
+                        weekly_snaps = {}
+                        total_snaps = 0
+                        
+                        for week in all_weeks:
+                            week_data = player_data[player_data['week'] == week]
+                            if not week_data.empty:
+                                row = week_data.iloc[0]
+                                if snap_type == 'offense':
+                                    snaps = int(row.get('offense_snaps', 0)) if pd.notna(row.get('offense_snaps', 0)) else 0
+                                    pct = round(float(row.get('offense_pct', 0)) * 100, 1) if pd.notna(row.get('offense_pct', 0)) else 0.0
+                                elif snap_type == 'defense':
+                                    snaps = int(row.get('defense_snaps', 0)) if pd.notna(row.get('defense_snaps', 0)) else 0
+                                    pct = round(float(row.get('defense_pct', 0)) * 100, 1) if pd.notna(row.get('defense_pct', 0)) else 0.0
+                                else:  # special teams
+                                    snaps = int(row.get('st_snaps', 0)) if pd.notna(row.get('st_snaps', 0)) else 0
+                                    pct = round(float(row.get('st_pct', 0)) * 100, 1) if pd.notna(row.get('st_pct', 0)) else 0.0
+                                
+                                weekly_snaps[week] = {'snaps': snaps, 'pct': pct}
+                                total_snaps += snaps
+                            else:
+                                weekly_snaps[week] = {'snaps': 0, 'pct': 0.0}
+                        
+                        # Only include players who actually played
+                        if total_snaps > 0:
+                            group_data.append({
+                                'player': player,
+                                'position': position,
+                                'weekly_snaps': weekly_snaps,
+                                'total_snaps': total_snaps
+                            })
+                
+                # Sort by total snaps descending
+                group_data.sort(key=lambda x: x['total_snaps'], reverse=True)
+                return group_data
+            
+            # Process each group
+            offensive_data = process_position_group(offensive_positions, 'offense')
+            defensive_data = process_position_group(defensive_positions, 'defense')
+            
+            # Special teams - get all players who have ST snaps
+            st_data = []
+            st_players = snap_data[snap_data['st_snaps'] > 0]['player'].unique() if 'st_snaps' in snap_data.columns else []
+            
+            for player in st_players:
+                player_data = snap_data[snap_data['player'] == player]
+                position = player_data['position'].iloc[0] if not player_data.empty else 'Unknown'
+                
+                weekly_snaps = {}
+                total_snaps = 0
+                
+                for week in all_weeks:
+                    week_data = player_data[player_data['week'] == week]
+                    if not week_data.empty:
+                        row = week_data.iloc[0]
+                        snaps = int(row.get('st_snaps', 0)) if pd.notna(row.get('st_snaps', 0)) else 0
+                        pct = round(float(row.get('st_pct', 0)) * 100, 1) if pd.notna(row.get('st_pct', 0)) else 0.0
+                        weekly_snaps[week] = {'snaps': snaps, 'pct': pct}
+                        total_snaps += snaps
+                    else:
+                        weekly_snaps[week] = {'snaps': 0, 'pct': 0.0}
+                
+                if total_snaps > 0:
+                    st_data.append({
+                        'player': player,
+                        'position': position,
+                        'weekly_snaps': weekly_snaps,
+                        'total_snaps': total_snaps
+                    })
+            
+            # Sort special teams by total snaps
+            st_data.sort(key=lambda x: x['total_snaps'], reverse=True)
             
             # Create summary statistics
             summary_stats = {
-                'total_players': len(snap_data),
-                'weeks_available': len(weeks),
-                'positions_represented': len(positions),
-                'total_offensive_snaps': int(snap_data.get('offense_snaps', 0).sum()) if 'offense_snaps' in snap_data.columns else 0,
-                'total_defensive_snaps': int(snap_data.get('defense_snaps', 0).sum()) if 'defense_snaps' in snap_data.columns else 0,
-                'total_st_snaps': int(snap_data.get('st_snaps', 0).sum()) if 'st_snaps' in snap_data.columns else 0
+                'total_players': len(snap_data['player'].unique()),
+                'weeks_available': len(all_weeks),
+                'offensive_players': len(offensive_data),
+                'defensive_players': len(defensive_data),
+                'special_teams_players': len(st_data)
             }
             
             return render_template('snap-counts-team.html',
@@ -701,8 +761,10 @@ def team_snap_counts(team, fullname):
                                  fullname=fullname,
                                  years=available_years,
                                  selected_year=selected_year,
-                                 snap_data=positions,
-                                 weeks=weeks,
+                                 offensive_data=offensive_data,
+                                 defensive_data=defensive_data,
+                                 special_teams_data=st_data,
+                                 weeks=all_weeks,
                                  summary_stats=summary_stats,
                                  loading=False)
                                  
@@ -727,7 +789,7 @@ def team_snap_counts(team, fullname):
                              selected_year=selected_year,
                              snap_data=None,
                              loading=False)
-     
+       
 @app.route('/NFL/SnapCounts/update/<team>')
 def update_team_snap_counts(team):
     """Trigger snap count data update for a specific team"""
