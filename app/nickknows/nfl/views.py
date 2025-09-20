@@ -61,11 +61,25 @@ def NFL():
     selected_year = get_selected_year()
     base_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year)
     
-    # Check if update is needed
-    last_update = os.environ.get(f'NFL_DATA_LAST_UPDATE_{selected_year}')
-    current_time = datetime.now()
-    update_needed = not last_update or (current_time - datetime.fromisoformat(last_update)).days >= 7
-
+    core_files = [
+        f'{base_path}_pbp_data.csv',
+        f'{base_path}_rosters.csv', 
+        f'{base_path}_schedule.csv',
+        f'{base_path}_weekly_data.csv'
+    ]
+    
+    update_needed = False
+    week_threshold = 7 * 24 * 60 * 60
+    current_time = time.time()
+    
+    for file_path in core_files:
+        if not os.path.exists(file_path):
+            update_needed = True
+            break
+        elif (current_time - os.path.getmtime(file_path)) > week_threshold:
+            update_needed = True
+            break
+    
     if update_needed:
         # Trigger all updates with selected year
         update_tasks = [
@@ -82,7 +96,6 @@ def NFL():
         ]
         for task, year in update_tasks:
             task.delay(year)
-        os.environ[f'NFL_DATA_LAST_UPDATE_{selected_year}'] = current_time.isoformat()
         flash('Data is updating in the background. Refresh the page in a bit')
         return render_template('nfl-home.html', years=available_years, selected_year=selected_year)
 
