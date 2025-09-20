@@ -59,27 +59,45 @@ def set_nfl_year(year):
 def NFL():
     available_years = get_available_years()
     selected_year = get_selected_year()
+    current_season = max(available_years)  # 2025 currently
     base_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year)
     
-    core_files = [
-        f'{base_path}_pbp_data.csv',
-        f'{base_path}_rosters.csv', 
-        f'{base_path}_schedule.csv',
-        f'{base_path}_weekly_data.csv'
-    ]
-    
+    # Only check for updates if this is the current season
     update_needed = False
-    week_threshold = 7 * 24 * 60 * 60
-    current_time = time.time()
-    
-    for file_path in core_files:
-        if not os.path.exists(file_path):
-            update_needed = True
-            break
-        elif (current_time - os.path.getmtime(file_path)) > week_threshold:
-            update_needed = True
-            break
-    
+    if selected_year == current_season:
+        # Check if current season data needs updating (7 day threshold)
+        core_files = [
+            f'{base_path}_pbp_data.csv',
+            f'{base_path}_rosters.csv', 
+            f'{base_path}_schedule.csv',
+            f'{base_path}_weekly_data.csv'
+        ]
+        
+        week_threshold = 7 * 24 * 60 * 60  # 7 days in seconds
+        current_time = time.time()
+        
+        for file_path in core_files:
+            if not os.path.exists(file_path):
+                update_needed = True
+                break
+            elif (current_time - os.path.getmtime(file_path)) > week_threshold:
+                update_needed = True
+                break
+    else:
+        # Historical season - just check if data exists at all
+        core_files = [
+            f'{base_path}_pbp_data.csv',
+            f'{base_path}_rosters.csv', 
+            f'{base_path}_schedule.csv',
+            f'{base_path}_weekly_data.csv'
+        ]
+        
+        # Only update if data is completely missing
+        for file_path in core_files:
+            if not os.path.exists(file_path):
+                update_needed = True
+                break
+
     if update_needed:
         # Trigger all updates with selected year
         update_tasks = [
@@ -96,7 +114,12 @@ def NFL():
         ]
         for task, year in update_tasks:
             task.delay(year)
-        flash('Data is updating in the background. Refresh the page in a bit')
+        
+        if selected_year == current_season:
+            flash('Current season data is updating in the background. Refresh the page in a bit')
+        else:
+            flash(f'{selected_year} season data is being loaded for the first time. Refresh the page in a bit')
+        
         return render_template('nfl-home.html', years=available_years, selected_year=selected_year)
 
     try:
