@@ -61,118 +61,6 @@
             margin: 0 auto;
         }
 
-        .teams-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            padding: 1rem 0;
-        }
-
-        .team-card {
-            display: flex;
-            align-items: center;
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-decoration: none;
-            color: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-            background: #333333; /* Fallback color */
-        }
-
-        .team-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.1) 100%);
-            pointer-events: none;
-        }
-
-        .team-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            text-decoration: none;
-            color: white;
-        }
-
-        .team-logo {
-            width: 60px;
-            height: 60px;
-            margin-right: 1.5rem;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.1);
-            padding: 8px;
-            flex-shrink: 0;
-        }
-
-        .team-info {
-            flex: 1;
-        }
-
-        .team-name {
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .team-division {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-bottom: 0.5rem;
-        }
-
-        .snap-stats {
-            font-size: 0.85rem;
-            opacity: 0.9;
-        }
-
-        .division-section {
-            margin-bottom: 3rem;
-        }
-
-        .division-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 8px;
-            border-left: 4px solid #007bff;
-        }
-
-        .division-header h2 {
-            margin: 0;
-            color: #2c3e50;
-            font-size: 1.5rem;
-        }
-
-        .division-subheader {
-            color: #2c3e50;
-            margin: 2rem 0 1rem 0;
-            padding-left: 1rem;
-            border-left: 3px solid #007bff;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        .afc-section .division-subheader {
-            border-left-color: #007bff;
-        }
-
-        .nfc-section .division-subheader {
-            border-left-color: #dc3545;
-        }
-
-        .nfc-section .division-header {
-            border-left-color: #dc3545;
-        }
-
         .controls-section {
             background: white;
             padding: 2rem;
@@ -261,6 +149,131 @@
             font-size: 0.9rem;
         }
 
+        .conference-section {
+            margin-bottom: 3rem;
+        }
+
+        .conference-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .conference-header h2 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+
+        .afc-section .conference-header {
+            border-left-color: #007bff;
+        }
+
+        .nfc-section .conference-header {
+            border-left-color: #dc3545;
+        }
+
+        /* New compact division layout */
+        .divisions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .division-column {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .division-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .afc-section .division-header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+
+        .nfc-section .division-header {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .teams-column {
+            padding: 0;
+        }
+
+        .team-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.1) 100%);
+            pointer-events: none;
+        }
+
+        .team-link:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            text-decoration: none;
+            color: white;
+        }
+
+        .team-link:last-child {
+            border-bottom: none;
+        }
+
+        .team-logo {
+            width: 32px;
+            height: 32px;
+            margin-right: 0.75rem;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            padding: 4px;
+            flex-shrink: 0;
+        }
+
+        .team-info {
+            flex: 1;
+        }
+
+        .team-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            line-height: 1.2;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .team-city {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            line-height: 1;
+        }
+
         /* Fallback styles for simple team list */
         .simple-teams-grid {
             display: grid;
@@ -269,20 +282,39 @@
             padding: 1rem 0;
         }
 
+        .simple-team-card {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            background: #333333;
+        }
+
+        .simple-team-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            text-decoration: none;
+            color: white;
+        }
+
         @media (max-width: 768px) {
-            .teams-grid, .simple-teams-grid {
+            .divisions-grid {
                 grid-template-columns: 1fr;
                 gap: 1rem;
             }
             
-            .team-card {
-                padding: 1rem;
+            .team-link {
+                padding: 0.75rem;
             }
             
             .team-logo {
-                width: 50px;
-                height: 50px;
-                margin-right: 1rem;
+                width: 28px;
+                height: 28px;
+                margin-right: 0.5rem;
             }
             
             .snap-counts-hero h1 {
@@ -291,6 +323,37 @@
             
             .controls-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .team-name {
+                font-size: 0.9rem;
+            }
+
+            .team-city {
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .divisions-grid {
+                gap: 0.5rem;
+            }
+
+            .division-column {
+                border-radius: 8px;
+            }
+
+            .team-link {
+                padding: 0.5rem;
+            }
+
+            .team-logo {
+                width: 24px;
+                height: 24px;
+            }
+
+            .team-name {
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -347,14 +410,14 @@
 
     {% if error %}
     <!-- Fallback simple team list -->
-    <div class="division-section">
-        <div class="division-header">
+    <div class="conference-section">
+        <div class="conference-header">
             <h2><i class="fas fa-football-ball"></i> All NFL Teams</h2>
         </div>
         <div class="simple-teams-grid">
             {% for team in teams %}
             <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
-               class="team-card">
+               class="simple-team-card">
                 <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
                 <div class="team-info">
                     <div class="team-name">{{ team.name }}</div>
@@ -369,169 +432,165 @@
     {% else %}
     <!-- Enhanced division-based layout -->
     
-    <!-- AFC Teams -->
-    <div class="division-section afc-section">
-        <div class="division-header">
+    <!-- AFC Conference -->
+    <div class="conference-section afc-section">
+        <div class="conference-header">
             <h2><i class="fas fa-football-ball"></i> AFC Conference</h2>
         </div>
         
-        <!-- AFC East -->
-        <h3 class="division-subheader">AFC East</h3>
-        <div class="teams-grid">
-            {% for team in afc_east %}
-            <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
-               class="team-card" 
-               style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
-                <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
-                <div class="team-info">
-                    <div class="team-name">{{ team.name }}</div>
-                    <div class="team-division">{{ team.division }}</div>
-                    <div class="snap-stats">
-                        <i class="fas fa-eye"></i> View Snap Counts
-                    </div>
+        <div class="divisions-grid">
+            <!-- AFC East -->
+            <div class="division-column">
+                <div class="division-header">AFC East</div>
+                <div class="teams-column">
+                    {% for team in afc_east %}
+                    <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
+                       class="team-link" 
+                       style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
+                        <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
+                        <div class="team-info">
+                            <div class="team-name">{{ team.name.split()[-1] if team.name.split()|length > 1 else team.name }}</div>
+                            <div class="team-city">{{ team.name.rsplit(' ', 1)[0] if ' ' in team.name else '' }}</div>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
-            </a>
-            {% endfor %}
-        </div>
+            </div>
 
-        <!-- AFC North -->
-        <h3 class="division-subheader">AFC North</h3>
-        <div class="teams-grid">
-            {% for team in afc_north %}
-            <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
-               class="team-card" 
-               style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
-                <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
-                <div class="team-info">
-                    <div class="team-name">{{ team.name }}</div>
-                    <div class="team-division">{{ team.division }}</div>
-                    <div class="snap-stats">
-                        <i class="fas fa-eye"></i> View Snap Counts
-                    </div>
+            <!-- AFC North -->
+            <div class="division-column">
+                <div class="division-header">AFC North</div>
+                <div class="teams-column">
+                    {% for team in afc_north %}
+                    <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
+                       class="team-link" 
+                       style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
+                        <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
+                        <div class="team-info">
+                            <div class="team-name">{{ team.name.split()[-1] if team.name.split()|length > 1 else team.name }}</div>
+                            <div class="team-city">{{ team.name.rsplit(' ', 1)[0] if ' ' in team.name else '' }}</div>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
-            </a>
-            {% endfor %}
-        </div>
+            </div>
 
-        <!-- AFC South -->
-        <h3 class="division-subheader">AFC South</h3>
-        <div class="teams-grid">
-            {% for team in afc_south %}
-            <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
-               class="team-card" 
-               style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
-                <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
-                <div class="team-info">
-                    <div class="team-name">{{ team.name }}</div>
-                    <div class="team-division">{{ team.division }}</div>
-                    <div class="snap-stats">
-                        <i class="fas fa-eye"></i> View Snap Counts
-                    </div>
+            <!-- AFC South -->
+            <div class="division-column">
+                <div class="division-header">AFC South</div>
+                <div class="teams-column">
+                    {% for team in afc_south %}
+                    <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
+                       class="team-link" 
+                       style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
+                        <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
+                        <div class="team-info">
+                            <div class="team-name">{{ team.name.split()[-1] if team.name.split()|length > 1 else team.name }}</div>
+                            <div class="team-city">{{ team.name.rsplit(' ', 1)[0] if ' ' in team.name else '' }}</div>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
-            </a>
-            {% endfor %}
-        </div>
+            </div>
 
-        <!-- AFC West -->
-        <h3 class="division-subheader">AFC West</h3>
-        <div class="teams-grid">
-            {% for team in afc_west %}
-            <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
-               class="team-card" 
-               style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
-                <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
-                <div class="team-info">
-                    <div class="team-name">{{ team.name }}</div>
-                    <div class="team-division">{{ team.division }}</div>
-                    <div class="snap-stats">
-                        <i class="fas fa-eye"></i> View Snap Counts
-                    </div>
+            <!-- AFC West -->
+            <div class="division-column">
+                <div class="division-header">AFC West</div>
+                <div class="teams-column">
+                    {% for team in afc_west %}
+                    <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
+                       class="team-link" 
+                       style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
+                        <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
+                        <div class="team-info">
+                            <div class="team-name">{{ team.name.split()[-1] if team.name.split()|length > 1 else team.name }}</div>
+                            <div class="team-city">{{ team.name.rsplit(' ', 1)[0] if ' ' in team.name else '' }}</div>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
-            </a>
-            {% endfor %}
+            </div>
         </div>
     </div>
 
-    <!-- NFC Teams -->
-    <div class="division-section nfc-section">
-        <div class="division-header">
+    <!-- NFC Conference -->
+    <div class="conference-section nfc-section">
+        <div class="conference-header">
             <h2><i class="fas fa-football-ball"></i> NFC Conference</h2>
         </div>
         
-        <!-- NFC East -->
-        <h3 class="division-subheader">NFC East</h3>
-        <div class="teams-grid">
-            {% for team in nfc_east %}
-            <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
-               class="team-card" 
-               style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
-                <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
-                <div class="team-info">
-                    <div class="team-name">{{ team.name }}</div>
-                    <div class="team-division">{{ team.division }}</div>
-                    <div class="snap-stats">
-                        <i class="fas fa-eye"></i> View Snap Counts
-                    </div>
+        <div class="divisions-grid">
+            <!-- NFC East -->
+            <div class="division-column">
+                <div class="division-header">NFC East</div>
+                <div class="teams-column">
+                    {% for team in nfc_east %}
+                    <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
+                       class="team-link" 
+                       style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
+                        <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
+                        <div class="team-info">
+                            <div class="team-name">{{ team.name.split()[-1] if team.name.split()|length > 1 else team.name }}</div>
+                            <div class="team-city">{{ team.name.rsplit(' ', 1)[0] if ' ' in team.name else '' }}</div>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
-            </a>
-            {% endfor %}
-        </div>
+            </div>
 
-        <!-- NFC North -->
-        <h3 class="division-subheader">NFC North</h3>
-        <div class="teams-grid">
-            {% for team in nfc_north %}
-            <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
-               class="team-card" 
-               style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
-                <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
-                <div class="team-info">
-                    <div class="team-name">{{ team.name }}</div>
-                    <div class="team-division">{{ team.division }}</div>
-                    <div class="snap-stats">
-                        <i class="fas fa-eye"></i> View Snap Counts
-                    </div>
+            <!-- NFC North -->
+            <div class="division-column">
+                <div class="division-header">NFC North</div>
+                <div class="teams-column">
+                    {% for team in nfc_north %}
+                    <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
+                       class="team-link" 
+                       style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
+                        <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
+                        <div class="team-info">
+                            <div class="team-name">{{ team.name.split()[-1] if team.name.split()|length > 1 else team.name }}</div>
+                            <div class="team-city">{{ team.name.rsplit(' ', 1)[0] if ' ' in team.name else '' }}</div>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
-            </a>
-            {% endfor %}
-        </div>
+            </div>
 
-        <!-- NFC South -->
-        <h3 class="division-subheader">NFC South</h3>
-        <div class="teams-grid">
-            {% for team in nfc_south %}
-            <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
-               class="team-card" 
-               style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
-                <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
-                <div class="team-info">
-                    <div class="team-name">{{ team.name }}</div>
-                    <div class="team-division">{{ team.division }}</div>
-                    <div class="snap-stats">
-                        <i class="fas fa-eye"></i> View Snap Counts
-                    </div>
+            <!-- NFC South -->
+            <div class="division-column">
+                <div class="division-header">NFC South</div>
+                <div class="teams-column">
+                    {% for team in nfc_south %}
+                    <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
+                       class="team-link" 
+                       style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
+                        <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
+                        <div class="team-info">
+                            <div class="team-name">{{ team.name.split()[-1] if team.name.split()|length > 1 else team.name }}</div>
+                            <div class="team-city">{{ team.name.rsplit(' ', 1)[0] if ' ' in team.name else '' }}</div>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
-            </a>
-            {% endfor %}
-        </div>
+            </div>
 
-        <!-- NFC West -->
-        <h3 class="division-subheader">NFC West</h3>
-        <div class="teams-grid">
-            {% for team in nfc_west %}
-            <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
-               class="team-card" 
-               style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
-                <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
-                <div class="team-info">
-                    <div class="team-name">{{ team.name }}</div>
-                    <div class="team-division">{{ team.division }}</div>
-                    <div class="snap-stats">
-                        <i class="fas fa-eye"></i> View Snap Counts
-                    </div>
+            <!-- NFC West -->
+            <div class="division-column">
+                <div class="division-header">NFC West</div>
+                <div class="teams-column">
+                    {% for team in nfc_west %}
+                    <a href="{{ url_for('team_snap_counts', team=team.abbr, fullname=team.name) }}" 
+                       class="team-link" 
+                       style="background: linear-gradient(135deg, {{ team.primary_color }} 0%, {{ team.secondary_color or team.primary_color }} 100%);">
+                        <img src="{{ team.logo }}" alt="{{ team.name }} logo" class="team-logo">
+                        <div class="team-info">
+                            <div class="team-name">{{ team.name.split()[-1] if team.name.split()|length > 1 else team.name }}</div>
+                            <div class="team-city">{{ team.name.rsplit(' ', 1)[0] if ' ' in team.name else '' }}</div>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
-            </a>
-            {% endfor %}
+            </div>
         </div>
     </div>
     {% endif %}
