@@ -58,7 +58,8 @@
     <body>
         <div id="header"></div>
         <div id="nfl_navbar"></div>
-        <h1>Week {{ week }}</h1>
+        <h1>{{ selected_year }} Season</h1>
+        <h2>Week {{ week }}</h2>
         <form id="scheduleForm" method="get" action="{{ url_for('schedule') }}">
             <label for="year">Year:</label>
             <select name="year" id="year">
