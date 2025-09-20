@@ -495,15 +495,122 @@ def team_fpa(team, fullname):
     
 @app.route('/NFL/SnapCounts')
 def snap_counts_home():
-    """Snap counts overview page"""
+    """Enhanced snap counts overview page with team colors and logos"""
     available_years = get_available_years()
     selected_year = get_selected_year()
-    teams = get_all_teams()
     
-    return render_template('snap-counts-home.html',
-                         years=available_years,
-                         selected_year=selected_year,
-                         teams=teams)
+    try:
+        # Import team description data for colors and logos
+        team_desc = nfl.import_team_desc()
+        
+        # Create team objects with all needed data
+        def create_team_data(row):
+            return {
+                'abbr': row['team_abbr'],
+                'name': row['team_name'],
+                'division': f"{row['team_conf']} {row['team_division']}",
+                'primary_color': row['team_color'] if pd.notna(row['team_color']) else '#333333',
+                'secondary_color': row['team_color2'] if pd.notna(row['team_color2']) else None,
+                'logo': row['team_logo_squared'] if pd.notna(row['team_logo_squared']) else row['team_logo_espn']
+            }
+        
+        # Organize teams by division
+        afc_east = []
+        afc_north = []
+        afc_south = []
+        afc_west = []
+        nfc_east = []
+        nfc_north = []
+        nfc_south = []
+        nfc_west = []
+        
+        # Map current team abbreviations to those in team_desc
+        team_mapping = {
+            'LV': 'OAK',  # Las Vegas Raiders were Oakland
+            'LAC': 'SD',  # Los Angeles Chargers were San Diego
+            'LA': 'LAR'   # Los Angeles Rams
+        }
+        
+        current_teams = get_all_teams()
+        
+        for team_abbr in current_teams:
+            # Use mapping if available, otherwise use the team abbreviation as-is
+            lookup_abbr = team_mapping.get(team_abbr, team_abbr)
+            
+            # Find team in description data
+            team_row = team_desc[team_desc['team_abbr'] == lookup_abbr]
+            
+            if team_row.empty:
+                # Fallback for teams not found
+                team_data = {
+                    'abbr': team_abbr,
+                    'name': get_team_fullname(team_abbr),
+                    'division': 'Unknown',
+                    'primary_color': '#333333',
+                    'secondary_color': None,
+                    'logo': 'https://via.placeholder.com/60x60?text=' + team_abbr
+                }
+            else:
+                team_data = create_team_data(team_row.iloc[0])
+                team_data['abbr'] = team_abbr  # Use current abbreviation for URLs
+                team_data['name'] = get_team_fullname(team_abbr)  # Use our full name mapping
+            
+            # Sort into divisions based on current team abbreviations
+            if team_abbr in ['BUF', 'MIA', 'NE', 'NYJ']:
+                afc_east.append(team_data)
+            elif team_abbr in ['BAL', 'CIN', 'CLE', 'PIT']:
+                afc_north.append(team_data)
+            elif team_abbr in ['HOU', 'IND', 'JAX', 'TEN']:
+                afc_south.append(team_data)
+            elif team_abbr in ['DEN', 'KC', 'LV', 'LAC']:
+                afc_west.append(team_data)
+            elif team_abbr in ['DAL', 'NYG', 'PHI', 'WAS']:
+                nfc_east.append(team_data)
+            elif team_abbr in ['CHI', 'DET', 'GB', 'MIN']:
+                nfc_north.append(team_data)
+            elif team_abbr in ['ATL', 'CAR', 'NO', 'TB']:
+                nfc_south.append(team_data)
+            elif team_abbr in ['ARI', 'LA', 'SEA', 'SF']:
+                nfc_west.append(team_data)
+        
+        # Sort teams within each division alphabetically
+        for division in [afc_east, afc_north, afc_south, afc_west, 
+                        nfc_east, nfc_north, nfc_south, nfc_west]:
+            division.sort(key=lambda x: x['name'])
+        
+        return render_template('snap-counts-home.html',
+                             years=available_years,
+                             selected_year=selected_year,
+                             afc_east=afc_east,
+                             afc_north=afc_north,
+                             afc_south=afc_south,
+                             afc_west=afc_west,
+                             nfc_east=nfc_east,
+                             nfc_north=nfc_north,
+                             nfc_south=nfc_south,
+                             nfc_west=nfc_west)
+                             
+    except Exception as e:
+        logger.error(f"Error loading team descriptions: {str(e)}")
+        # Fallback to simple team list if team_desc fails
+        teams = get_all_teams()
+        simple_teams = []
+        
+        for team in teams:
+            simple_teams.append({
+                'abbr': team,
+                'name': get_team_fullname(team),
+                'division': 'NFL',
+                'primary_color': '#333333',
+                'secondary_color': None,
+                'logo': f'https://via.placeholder.com/60x60?text={team}'
+            })
+        
+        return render_template('snap-counts-home.html',
+                             years=available_years,
+                             selected_year=selected_year,
+                             teams=simple_teams,
+                             error=True)
 
 @app.route('/NFL/SnapCounts/<team>/<fullname>')
 def team_snap_counts(team, fullname):
