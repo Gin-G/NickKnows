@@ -122,7 +122,7 @@
             font-size: 0.9rem;
         }
 
-        .snap-section {
+        .position-section {
             background: white;
             margin-bottom: 2rem;
             border-radius: 12px;
@@ -130,16 +130,28 @@
             overflow: hidden;
         }
 
-        .snap-section-header {
+        .position-header {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             padding: 1rem 1.5rem;
             border-bottom: 2px solid #dee2e6;
         }
 
-        .snap-section-header h3 {
+        .position-header h3 {
             margin: 0;
             color: #2c3e50;
             font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .position-header .count {
+            background: #007bff;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: normal;
         }
 
         .snap-table {
@@ -163,13 +175,15 @@
         .snap-table th:first-child {
             text-align: left;
             padding-left: 1rem;
-            min-width: 120px;
+            min-width: 140px;
+            background: #e9ecef;
         }
 
         .snap-table th:last-child {
             background: #e3f2fd;
             color: #1976d2;
             font-weight: bold;
+            min-width: 80px;
         }
 
         .snap-table td {
@@ -182,17 +196,18 @@
         .snap-table td:first-child {
             text-align: left;
             padding-left: 1rem;
-            font-weight: 600;
             background: #fafafa;
             position: sticky;
             left: 0;
             z-index: 5;
+            border-right: 1px solid #dee2e6;
         }
 
         .snap-table td:last-child {
             background: #e3f2fd;
             font-weight: bold;
             color: #1976d2;
+            font-size: 1rem;
         }
 
         .snap-table tbody tr:hover {
@@ -203,28 +218,55 @@
             background: #e9ecef;
         }
 
+        .snap-table tbody tr:hover td:last-child {
+            background: #bbdefb;
+        }
+
+        .player-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .player-position {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
         .snap-cell {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 40px;
+            padding: 0.25rem;
         }
 
         .snap-count {
             font-weight: bold;
             color: #2c3e50;
             font-size: 1rem;
+            line-height: 1;
         }
 
         .snap-percentage {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #6c757d;
+            line-height: 1;
+            margin-top: 0.1rem;
         }
 
         .no-snaps {
             color: #dee2e6;
             font-size: 1.2rem;
+            font-weight: bold;
         }
 
         .loading-message, .no-data-message {
@@ -247,10 +289,13 @@
             margin-bottom: 1rem;
         }
 
-        .position-label {
-            font-size: 0.8rem;
-            color: #6c757d;
-            display: block;
+        /* Position-specific colors */
+        .position-section:nth-child(odd) .position-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .position-section:nth-child(even) .position-header {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
         }
 
         /* Responsive design */
@@ -262,6 +307,11 @@
             .snap-table th,
             .snap-table td {
                 padding: 0.4rem 0.3rem;
+            }
+
+            .snap-table th:first-child,
+            .snap-table td:first-child {
+                min-width: 120px;
             }
         }
 
@@ -292,6 +342,7 @@
 
             .snap-cell {
                 min-height: 30px;
+                padding: 0.1rem;
             }
 
             .snap-count {
@@ -299,6 +350,14 @@
             }
 
             .snap-percentage {
+                font-size: 0.7rem;
+            }
+
+            .player-name {
+                font-size: 0.9rem;
+            }
+
+            .player-position {
                 font-size: 0.7rem;
             }
         }
@@ -325,7 +384,7 @@
 
     <div class="team-header">
         <h1><i class="fas fa-chart-bar"></i> {{ fullname }}</h1>
-        <p>{{ selected_year }} Season Snap Counts</p>
+        <p>{{ selected_year }} Season Snap Counts by Position</p>
     </div>
 
     <div class="controls-section">
@@ -355,7 +414,7 @@
         <h3>Loading Snap Count Data</h3>
         <p>Snap count data is being processed. Please refresh the page in a moment.</p>
     </div>
-    {% elif not offensive_data and not defensive_data and not special_teams_data %}
+    {% elif not position_groups %}
     <div class="no-data-message">
         <i class="fas fa-exclamation-triangle"></i>
         <h3>No Snap Count Data Available</h3>
@@ -375,25 +434,21 @@
             <div class="stat-label">Weeks Available</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number">{{ summary_stats.offensive_players }}</div>
-            <div class="stat-label">Offensive Players</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ summary_stats.defensive_players }}</div>
-            <div class="stat-label">Defensive Players</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ summary_stats.special_teams_players }}</div>
-            <div class="stat-label">Special Teams</div>
+            <div class="stat-number">{{ summary_stats.position_groups }}</div>
+            <div class="stat-label">Position Groups</div>
         </div>
     </div>
     {% endif %}
 
-    <!-- Offensive Players -->
-    {% if offensive_data %}
-    <div class="snap-section">
-        <div class="snap-section-header">
-            <h3><i class="fas fa-football-ball"></i> Offensive Players ({{ offensive_data|length }})</h3>
+    <!-- Position Groups -->
+    {% for group in position_groups %}
+    <div class="position-section">
+        <div class="position-header">
+            <h3>
+                <i class="{{ group.icon }}"></i> 
+                {{ group.name }} 
+                <span class="count">{{ group.count }}</span>
+            </h3>
         </div>
         <div class="table-container">
             <table class="snap-table">
@@ -407,11 +462,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for player in offensive_data %}
+                    {% for player in group.players %}
                     <tr>
                         <td>
-                            <strong>{{ player.player }}</strong>
-                            <span class="position-label">{{ player.position }}</span>
+                            <div class="player-info">
+                                <span class="player-name">{{ player.player }}</span>
+                                <span class="player-position">{{ player.position }}</span>
+                            </div>
                         </td>
                         {% for week in weeks %}
                         <td>
@@ -433,99 +490,7 @@
             </table>
         </div>
     </div>
-    {% endif %}
-
-    <!-- Defensive Players -->
-    {% if defensive_data %}
-    <div class="snap-section">
-        <div class="snap-section-header">
-            <h3><i class="fas fa-shield-alt"></i> Defensive Players ({{ defensive_data|length }})</h3>
-        </div>
-        <div class="table-container">
-            <table class="snap-table">
-                <thead>
-                    <tr>
-                        <th>Player</th>
-                        {% for week in weeks %}
-                        <th>Wk {{ week }}</th>
-                        {% endfor %}
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for player in defensive_data %}
-                    <tr>
-                        <td>
-                            <strong>{{ player.player }}</strong>
-                            <span class="position-label">{{ player.position }}</span>
-                        </td>
-                        {% for week in weeks %}
-                        <td>
-                            {% set week_data = player.weekly_snaps.get(week, {'snaps': 0, 'pct': 0.0}) %}
-                            {% if week_data.snaps > 0 %}
-                            <div class="snap-cell">
-                                <span class="snap-count">{{ week_data.snaps }}</span>
-                                <span class="snap-percentage">{{ week_data.pct }}%</span>
-                            </div>
-                            {% else %}
-                            <span class="no-snaps">-</span>
-                            {% endif %}
-                        </td>
-                        {% endfor %}
-                        <td>{{ player.total_snaps }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Special Teams Players -->
-    {% if special_teams_data %}
-    <div class="snap-section">
-        <div class="snap-section-header">
-            <h3><i class="fas fa-running"></i> Special Teams Players ({{ special_teams_data|length }})</h3>
-        </div>
-        <div class="table-container">
-            <table class="snap-table">
-                <thead>
-                    <tr>
-                        <th>Player</th>
-                        {% for week in weeks %}
-                        <th>Wk {{ week }}</th>
-                        {% endfor %}
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for player in special_teams_data %}
-                    <tr>
-                        <td>
-                            <strong>{{ player.player }}</strong>
-                            <span class="position-label">{{ player.position }}</span>
-                        </td>
-                        {% for week in weeks %}
-                        <td>
-                            {% set week_data = player.weekly_snaps.get(week, {'snaps': 0, 'pct': 0.0}) %}
-                            {% if week_data.snaps > 0 %}
-                            <div class="snap-cell">
-                                <span class="snap-count">{{ week_data.snaps }}</span>
-                                <span class="snap-percentage">{{ week_data.pct }}%</span>
-                            </div>
-                            {% else %}
-                            <span class="no-snaps">-</span>
-                            {% endif %}
-                        </td>
-                        {% endfor %}
-                        <td>{{ player.total_snaps }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% endif %}
+    {% endfor %}
 
     {% endif %}
 

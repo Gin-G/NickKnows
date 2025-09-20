@@ -614,7 +614,7 @@ def snap_counts_home():
 
 @app.route('/NFL/SnapCounts/<team>/<fullname>')
 def team_snap_counts(team, fullname):
-    """Team-specific snap counts page with footballguys-style layout"""
+    """Team-specific snap counts page with position-specific grouping"""
     try:
         available_years = get_available_years()
         selected_year = get_selected_year()
@@ -636,7 +636,7 @@ def team_snap_counts(team, fullname):
                                  fullname=fullname,
                                  years=available_years,
                                  selected_year=selected_year,
-                                 snap_data=None,
+                                 position_groups=None,
                                  loading=True)
         
         # Load and process snap count data
@@ -651,19 +651,69 @@ def team_snap_counts(team, fullname):
                                      fullname=fullname,
                                      years=available_years,
                                      selected_year=selected_year,
-                                     snap_data=None,
+                                     position_groups=None,
                                      loading=False)
             
             # Get all available weeks and sort them
             all_weeks = sorted(snap_data['week'].unique()) if 'week' in snap_data.columns else []
             
-            # Define position groups
-            offensive_positions = ['QB', 'RB', 'WR', 'TE', 'FB', 'C', 'G', 'T', 'OL']
-            defensive_positions = ['DE', 'DT', 'NT', 'LB', 'ILB', 'OLB', 'MLB', 'CB', 'S', 'FS', 'SS', 'DB']
+            # Define specific position groups
+            position_groups_config = [
+                {
+                    'name': 'Quarterbacks',
+                    'positions': ['QB'],
+                    'snap_type': 'offense',
+                    'icon': 'fas fa-user-tie'
+                },
+                {
+                    'name': 'Running Backs',
+                    'positions': ['RB', 'FB'],
+                    'snap_type': 'offense',
+                    'icon': 'fas fa-running'
+                },
+                {
+                    'name': 'Wide Receivers',
+                    'positions': ['WR'],
+                    'snap_type': 'offense',
+                    'icon': 'fas fa-route'
+                },
+                {
+                    'name': 'Tight Ends',
+                    'positions': ['TE'],
+                    'snap_type': 'offense',
+                    'icon': 'fas fa-hands'
+                },
+                {
+                    'name': 'Offensive Line',
+                    'positions': ['C', 'G', 'T', 'OL'],
+                    'snap_type': 'offense',
+                    'icon': 'fas fa-shield-alt'
+                },
+                {
+                    'name': 'Defensive Line',
+                    'positions': ['DE', 'DT', 'NT'],
+                    'snap_type': 'defense',
+                    'icon': 'fas fa-fist-raised'
+                },
+                {
+                    'name': 'Linebackers',
+                    'positions': ['LB', 'ILB', 'OLB', 'MLB'],
+                    'snap_type': 'defense',
+                    'icon': 'fas fa-user-shield'
+                },
+                {
+                    'name': 'Defensive Backs',
+                    'positions': ['CB', 'S', 'FS', 'SS', 'DB'],
+                    'snap_type': 'defense',
+                    'icon': 'fas fa-eye'
+                }
+            ]
             
-            def process_position_group(positions, snap_type):
-                """Process a group of positions for a specific snap type"""
+            def process_position_group(group_config):
+                """Process a specific position group"""
                 group_data = []
+                positions = group_config['positions']
+                snap_type = group_config['snap_type']
                 
                 for position in positions:
                     pos_data = snap_data[snap_data['position'] == position]
@@ -685,12 +735,9 @@ def team_snap_counts(team, fullname):
                                 if snap_type == 'offense':
                                     snaps = int(row.get('offense_snaps', 0)) if pd.notna(row.get('offense_snaps', 0)) else 0
                                     pct = round(float(row.get('offense_pct', 0)) * 100, 1) if pd.notna(row.get('offense_pct', 0)) else 0.0
-                                elif snap_type == 'defense':
+                                else:  # defense
                                     snaps = int(row.get('defense_snaps', 0)) if pd.notna(row.get('defense_snaps', 0)) else 0
                                     pct = round(float(row.get('defense_pct', 0)) * 100, 1) if pd.notna(row.get('defense_pct', 0)) else 0.0
-                                else:  # special teams
-                                    snaps = int(row.get('st_snaps', 0)) if pd.notna(row.get('st_snaps', 0)) else 0
-                                    pct = round(float(row.get('st_pct', 0)) * 100, 1) if pd.notna(row.get('st_pct', 0)) else 0.0
                                 
                                 weekly_snaps[week] = {'snaps': snaps, 'pct': pct}
                                 total_snaps += snaps
@@ -710,9 +757,17 @@ def team_snap_counts(team, fullname):
                 group_data.sort(key=lambda x: x['total_snaps'], reverse=True)
                 return group_data
             
-            # Process each group
-            offensive_data = process_position_group(offensive_positions, 'offense')
-            defensive_data = process_position_group(defensive_positions, 'defense')
+            # Process each position group
+            position_groups = []
+            for group_config in position_groups_config:
+                group_data = process_position_group(group_config)
+                if group_data:  # Only include groups that have players
+                    position_groups.append({
+                        'name': group_config['name'],
+                        'icon': group_config['icon'],
+                        'players': group_data,
+                        'count': len(group_data)
+                    })
             
             # Special teams - get all players who have ST snaps
             st_data = []
@@ -747,13 +802,21 @@ def team_snap_counts(team, fullname):
             # Sort special teams by total snaps
             st_data.sort(key=lambda x: x['total_snaps'], reverse=True)
             
+            # Add special teams to position groups
+            if st_data:
+                position_groups.append({
+                    'name': 'Special Teams',
+                    'icon': 'fas fa-star',
+                    'players': st_data,
+                    'count': len(st_data)
+                })
+            
             # Create summary statistics
+            total_players = len(snap_data['player'].unique())
             summary_stats = {
-                'total_players': len(snap_data['player'].unique()),
+                'total_players': total_players,
                 'weeks_available': len(all_weeks),
-                'offensive_players': len(offensive_data),
-                'defensive_players': len(defensive_data),
-                'special_teams_players': len(st_data)
+                'position_groups': len(position_groups)
             }
             
             return render_template('snap-counts-team.html',
@@ -761,9 +824,7 @@ def team_snap_counts(team, fullname):
                                  fullname=fullname,
                                  years=available_years,
                                  selected_year=selected_year,
-                                 offensive_data=offensive_data,
-                                 defensive_data=defensive_data,
-                                 special_teams_data=st_data,
+                                 position_groups=position_groups,
                                  weeks=all_weeks,
                                  summary_stats=summary_stats,
                                  loading=False)
@@ -776,7 +837,7 @@ def team_snap_counts(team, fullname):
                                  fullname=fullname,
                                  years=available_years,
                                  selected_year=selected_year,
-                                 snap_data=None,
+                                 position_groups=None,
                                  loading=False)
                                  
     except Exception as e:
@@ -787,9 +848,9 @@ def team_snap_counts(team, fullname):
                              fullname=fullname,
                              years=available_years,
                              selected_year=selected_year,
-                             snap_data=None,
+                             position_groups=None,
                              loading=False)
-       
+         
 @app.route('/NFL/SnapCounts/update/<team>')
 def update_team_snap_counts(team):
     """Trigger snap count data update for a specific team"""
