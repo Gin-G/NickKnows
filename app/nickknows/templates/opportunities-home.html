@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script>
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+    </script>
+        
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-YMZBTB7JST');
+    </script>
+    
+    <!-- Google Adsense tag (gtag.js) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
+    crossorigin="anonymous"></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script>
+        $(function(){
+            $('#nfl_navbar').load("{{ url_for('nfl_navbar') }}")
+        })
+    </script>
+    <script>
+        $(function(){
+            $('#header').load("{{ url_for('header') }}")
+        })
+    </script>
+    <body>
+        <div id="header"></div>
+        <div id="nfl_navbar"></div>
+        
+        <h1>🎯 {{ fullname }} Opportunities</h1>
+        <h2>{{ selected_year }} Season</h2>
+        
+        {% if loading %}
+            <div class="loading-message">
+                <p>📊 Team opportunity data is being calculated...</p>
+                <p>Please refresh the page in a moment.</p>
+            </div>
+        {% else %}
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="{{ url_for('opportunities_home') }}" style="font-size: 16px; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+                    ← Back to All Teams
+                </a>
+            </div>
+            
+            {% if position_data %}
+                {% if 'QB' in position_data %}
+                <div class="position-section">
+                    <h2>🎯 Quarterbacks</h2>
+                    <div class="table-wrapper">
+                        {% set qb_data = position_data['QB'][['player_name', 'weeks_played', 'targets_avg', 'targets_latest', 'targets_trend', 'target_share_avg']].round(2) %}
+                        {{ qb_data.style.hide(axis="index").to_html(classes="table", escape=False) | safe }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if 'RB' in position_data %}
+                <div class="position-section">
+                    <h2>🏃 Running Backs</h2>
+                    <div class="table-wrapper">
+                        {% set rb_data = position_data['RB'][['player_name', 'weeks_played', 'carries_avg', 'carries_latest', 'carries_trend', 'carry_share_avg', 'red_zone_carries_avg', 'goal_line_carries_avg']].round(2) %}
+                        {{ rb_data.style.hide(axis="index").to_html(classes="table", escape=False) | safe }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if 'WR' in position_data %}
+                <div class="position-section">
+                    <h2>📡 Wide Receivers</h2>
+                    <div class="table-wrapper">
+                        {% set wr_data = position_data['WR'][['player_name', 'weeks_played', 'targets_avg', 'targets_latest', 'targets_trend', 'target_share_avg', 'red_zone_targets_avg', 'deep_targets_avg']].round(2) %}
+                        {{ wr_data.style.hide(axis="index").to_html(classes="table", escape=False) | safe }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if 'TE' in position_data %}
+                <div class="position-section">
+                    <h2>🤲 Tight Ends</h2>
+                    <div class="table-wrapper">
+                        {% set te_data = position_data['TE'][['player_name', 'weeks_played', 'targets_avg', 'targets_latest', 'targets_trend', 'target_share_avg', 'red_zone_targets_avg']].round(2) %}
+                        {{ te_data.style.hide(axis="index").to_html(classes="table", escape=False) | safe }}
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="no-data">
+                    <p>No opportunity data available for {{ fullname }}.</p>
+                    <p>Data may still be processing or this team may not have enough qualifying players.</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </body>
+</head>
+</html>

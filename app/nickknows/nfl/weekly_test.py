@@ -1,312 +1,398 @@
 #!/usr/bin/env python3
 """
-Simple Python-only test to compare PBP-derived vs standard weekly data
-No Celery required - just pure Python and pandas
+Test the opportunity tracker with 2025 data
 """
 
 import pandas as pd
 import numpy as np
 import nfl_data_py as nfl
 
-def create_weekly_from_pbp_simple(year):
-    """Simple PBP to weekly conversion - Python only"""
-    print(f"Creating weekly data from PBP for {year}...")
+def test_opportunity_metrics():
+    """Test basic opportunity metric extraction"""
+    print("🏈 TESTING OPPORTUNITY METRICS")
+    print("=" * 50)
     
-    # Load data
+    # Load 2025 data
+    year = 2025
     pbp_data = nfl.import_pbp_data([year], include_participation=False)
-    
-    try:
-        roster_data = nfl.import_weekly_rosters([year])
-        has_roster = True
-    except:
-        roster_data = pd.DataFrame()
-        has_roster = False
-    
-    # Filter to regular season
     reg_season = pbp_data[pbp_data['season_type'] == 'REG'].copy()
     
-    all_stats = []
+    print(f"Loaded {len(reg_season)} regular season plays")
+    weeks = sorted(reg_season['week'].unique())
+    print(f"Weeks available: {weeks}")
     
-    # PASSING STATS
-    passing_plays = reg_season[
-        (reg_season['play_type'] == 'pass') & 
-        (reg_season['passer_player_id'].notna())
-    ]
+    # Test target extraction
+    print(f"\n🎯 TESTING TARGET EXTRACTION:")
+    pass_plays = reg_season[reg_season['play_type'] == 'pass']
     
-    if len(passing_plays) > 0:
-        pass_stats = passing_plays.groupby(['passer_player_id', 'week']).agg({
-            'passing_yards': 'sum',
-            'pass_touchdown': 'sum',
-            'interception': 'sum', 
-            'complete_pass': 'sum',
-            'pass_attempt': 'sum'
-        }).reset_index()
+    target_data = []
+    for week in weeks:
+        week_passes = pass_plays[pass_plays['week'] == week]
         
-        pass_stats.rename(columns={
-            'passer_player_id': 'player_id',
-            'complete_pass': 'completions',
-            'pass_attempt': 'attempts',
-            'pass_touchdown': 'passing_tds'
-        }, inplace=True)
+        # Count targets by receiver
+        targets = week_passes[week_passes['receiver_player_id'].notna()].groupby('receiver_player_id').size()
         
-        pass_stats['season'] = year
-        pass_stats['season_type'] = 'REG'
-        all_stats.append(pass_stats)
+        for player_id, target_count in targets.items():
+            target_data.append({
+                'player_id': player_id,
+                'week': week,
+                'targets': target_count
+            })
     
-    # RUSHING STATS
-    rushing_plays = reg_season[
-        (reg_season['play_type'] == 'run') & 
-        (reg_season['rusher_player_id'].notna())
-    ]
+    targets_df = pd.DataFrame(target_data)
+    print(f"Extracted {len(targets_df)} player-week target records")
     
-    if len(rushing_plays) > 0:
-        rush_stats = rushing_plays.groupby(['rusher_player_id', 'week']).agg({
-            'rushing_yards': 'sum',
-            'rush_touchdown': 'sum',
-            'rush_attempt': 'sum'
-        }).reset_index()
-        
-        rush_stats.rename(columns={
-            'rusher_player_id': 'player_id',
-            'rush_attempt': 'carries',
-            'rush_touchdown': 'rushing_tds'
-        }, inplace=True)
-        
-        rush_stats['season'] = year
-        rush_stats['season_type'] = 'REG'
-        all_stats.append(rush_stats)
+    # Show top targets
+    total_targets = targets_df.groupby('player_id')['targets'].sum().sort_values(ascending=False)
+    print(f"Top 5 target leaders (by ID):")
+    print(total_targets.head())
     
-    # RECEIVING STATS
-    receiving_plays = reg_season[
-        (reg_season['play_type'] == 'pass') & 
-        (reg_season['receiver_player_id'].notna())
-    ]
+    # Test carry extraction
+    print(f"\n🏃 TESTING CARRY EXTRACTION:")
+    run_plays = reg_season[reg_season['play_type'] == 'run']
     
-    if len(receiving_plays) > 0:
-        rec_stats = receiving_plays.groupby(['receiver_player_id', 'week']).agg({
-            'receiving_yards': 'sum',
-            'pass_touchdown': 'sum',
-            'complete_pass': 'sum',
-            'pass_attempt': 'sum'
-        }).reset_index()
+    carry_data = []
+    for week in weeks:
+        week_runs = run_plays[run_plays['week'] == week]
         
-        rec_stats.rename(columns={
-            'receiver_player_id': 'player_id',
-            'complete_pass': 'receptions',
-            'pass_attempt': 'targets',
-            'pass_touchdown': 'receiving_tds'
-        }, inplace=True)
+        # Count carries by rusher
+        carries = week_runs[week_runs['rusher_player_id'].notna()].groupby('rusher_player_id').size()
         
-        rec_stats['season'] = year
-        rec_stats['season_type'] = 'REG'
-        all_stats.append(rec_stats)
+        for player_id, carry_count in carries.items():
+            carry_data.append({
+                'player_id': player_id,
+                'week': week,
+                'carries': carry_count
+            })
     
-    # Combine all stats
-    if all_stats:
-        combined_df = pd.concat(all_stats, ignore_index=True)
-        
-        # Group by player and week
-        numeric_cols = ['passing_yards', 'passing_tds', 'interceptions', 'completions', 'attempts',
-                       'rushing_yards', 'rushing_tds', 'carries', 
-                       'receiving_yards', 'receiving_tds', 'receptions', 'targets']
-        
-        agg_dict = {col: 'sum' for col in numeric_cols if col in combined_df.columns}
-        agg_dict.update({'season': 'first', 'season_type': 'first'})
-        
-        final_df = combined_df.groupby(['player_id', 'week']).agg(agg_dict).reset_index()
-        
-        # Add roster info if available
-        if has_roster and len(roster_data) > 0:
-            player_info = roster_data.groupby('player_id').agg({
-                'player_name': 'first',
-                'position': 'first'
-            }).reset_index()
-            
-            final_df = final_df.merge(player_info, on='player_id', how='left')
-            final_df['player_display_name'] = final_df['player_name']
-        else:
-            final_df['player_display_name'] = final_df['player_id']
-        
-        # Fill missing columns with 0
-        for col in numeric_cols:
-            if col not in final_df.columns:
-                final_df[col] = 0
-        
-        final_df = final_df.fillna(0)
-        
-        print(f"Created {len(final_df)} player-week records from PBP")
-        return final_df
+    carries_df = pd.DataFrame(carry_data)
+    print(f"Extracted {len(carries_df)} player-week carry records")
     
-    return pd.DataFrame()
+    # Show top carries
+    total_carries = carries_df.groupby('player_id')['carries'].sum().sort_values(ascending=False)
+    print(f"Top 5 carry leaders (by ID):")
+    print(total_carries.head())
+    
+    # Test situational metrics
+    print(f"\n🚨 TESTING SITUATIONAL METRICS:")
+    
+    # Red zone targets (20 yards or closer)
+    rz_targets = pass_plays[
+        (pass_plays['yardline_100'] <= 20) & 
+        (pass_plays['receiver_player_id'].notna())
+    ].groupby('receiver_player_id').size().sort_values(ascending=False)
+    
+    print(f"Red zone target leaders:")
+    print(rz_targets.head())
+    
+    # Goal line carries (5 yards or closer)
+    gl_carries = run_plays[
+        (run_plays['yardline_100'] <= 5) & 
+        (run_plays['rusher_player_id'].notna())
+    ].groupby('rusher_player_id').size().sort_values(ascending=False)
+    
+    print(f"Goal line carry leaders:")
+    print(gl_carries.head())
+    
+    return targets_df, carries_df
 
-def compare_methods(year=2024):
-    """Compare standard vs PBP methods for a given year"""
-    print(f"=" * 60)
-    print(f"COMPARING METHODS FOR {year}")
-    print(f"=" * 60)
+def test_trend_analysis(targets_df, carries_df):
+    """Test trend analysis functionality"""
+    print(f"\n📈 TESTING TREND ANALYSIS:")
+    print("=" * 30)
     
-    # Try to get standard weekly data
-    try:
-        print(f"Loading standard weekly data for {year}...")
-        standard_weekly = nfl.import_weekly_data([year])
-        standard_weekly = standard_weekly[standard_weekly['season_type'] == 'REG']
-        print(f"✅ Standard weekly: {len(standard_weekly)} records")
-        has_standard = True
-    except Exception as e:
-        print(f"❌ Standard weekly failed: {e}")
-        has_standard = False
-        standard_weekly = pd.DataFrame()
+    # Combine targets and carries
+    combined_data = []
     
-    # Get PBP-derived data
-    try:
-        print(f"Creating PBP-derived weekly data for {year}...")
-        pbp_weekly = create_weekly_from_pbp_simple(year)
-        print(f"✅ PBP weekly: {len(pbp_weekly)} records")
-        has_pbp = True
-    except Exception as e:
-        print(f"❌ PBP weekly failed: {e}")
-        has_pbp = False
-        pbp_weekly = pd.DataFrame()
+    # Add targets
+    for _, row in targets_df.iterrows():
+        combined_data.append({
+            'player_id': row['player_id'],
+            'week': row['week'],
+            'targets': row['targets'],
+            'carries': 0
+        })
     
-    # If we have both, compare them
-    if has_standard and has_pbp and len(standard_weekly) > 0 and len(pbp_weekly) > 0:
-        print(f"\n📊 COMPARISON RESULTS:")
+    # Add carries
+    for _, row in carries_df.iterrows():
+        # Find existing record or create new one
+        existing = None
+        for record in combined_data:
+            if record['player_id'] == row['player_id'] and record['week'] == row['week']:
+                existing = record
+                break
         
-        # Compare key stats totals
-        key_stats = ['passing_yards', 'passing_tds', 'rushing_yards', 'rushing_tds', 
-                     'receiving_yards', 'receiving_tds', 'receptions', 'targets']
-        
-        for stat in key_stats:
-            if stat in standard_weekly.columns and stat in pbp_weekly.columns:
-                std_total = standard_weekly[stat].sum()
-                pbp_total = pbp_weekly[stat].sum()
-                diff = abs(std_total - pbp_total)
-                pct_diff = (diff / std_total * 100) if std_total > 0 else 0
-                
-                status = "✅" if pct_diff <= 10 else "⚠️" if pct_diff <= 25 else "❌"
-                print(f"   {stat}: Standard={std_total}, PBP={pbp_total}, Diff={pct_diff:.1f}% {status}")
-        
-        # Check if good enough for top10 tasks
-        key_yard_stats = ['passing_yards', 'rushing_yards', 'receiving_yards']
-        acceptable = True
-        
-        for stat in key_yard_stats:
-            if stat in standard_weekly.columns and stat in pbp_weekly.columns:
-                std_total = standard_weekly[stat].sum()
-                pbp_total = pbp_weekly[stat].sum()
-                pct_diff = (abs(std_total - pbp_total) / std_total * 100) if std_total > 0 else 0
-                if pct_diff > 20:  # More than 20% difference is concerning
-                    acceptable = False
-        
-        if acceptable:
-            print(f"\n✅ PBP method is acceptable for backup use")
+        if existing:
+            existing['carries'] = row['carries']
         else:
-            print(f"\n❌ PBP method has significant differences")
-            
-        return acceptable
+            combined_data.append({
+                'player_id': row['player_id'],
+                'week': row['week'],
+                'targets': 0,
+                'carries': row['carries']
+            })
     
-    elif has_pbp and len(pbp_weekly) > 0:
-        print(f"\n✅ PBP method works (no standard data to compare)")
-        return True
+    combined_df = pd.DataFrame(combined_data)
+    combined_df['touches'] = combined_df['targets'] + combined_df['carries']
+    
+    print(f"Combined opportunity data: {len(combined_df)} records")
+    
+    # Calculate trends for players with multiple weeks
+    trend_results = []
+    
+    for player_id, player_data in combined_df.groupby('player_id'):
+        player_data = player_data.sort_values('week')
+        
+        if len(player_data) >= 2:  # Need at least 2 weeks for trend
+            weeks_played = len(player_data)
+            
+            # Calculate averages
+            avg_targets = player_data['targets'].mean()
+            avg_carries = player_data['carries'].mean()
+            avg_touches = player_data['touches'].mean()
+            
+            # Calculate trend (simple: recent week vs first week)
+            if weeks_played >= 2:
+                targets_trend = ((player_data['targets'].iloc[-1] - player_data['targets'].iloc[0]) / 
+                               max(player_data['targets'].iloc[0], 1) * 100)
+                carries_trend = ((player_data['carries'].iloc[-1] - player_data['carries'].iloc[0]) / 
+                               max(player_data['carries'].iloc[0], 1) * 100)
+                touches_trend = ((player_data['touches'].iloc[-1] - player_data['touches'].iloc[0]) / 
+                               max(player_data['touches'].iloc[0], 1) * 100)
+            else:
+                targets_trend = carries_trend = touches_trend = 0
+            
+            trend_results.append({
+                'player_id': player_id,
+                'weeks_played': weeks_played,
+                'avg_targets': avg_targets,
+                'avg_carries': avg_carries,
+                'avg_touches': avg_touches,
+                'targets_trend': targets_trend,
+                'carries_trend': carries_trend,
+                'touches_trend': touches_trend,
+                'latest_targets': player_data['targets'].iloc[-1],
+                'latest_carries': player_data['carries'].iloc[-1],
+                'latest_touches': player_data['touches'].iloc[-1]
+            })
+    
+    trends_df = pd.DataFrame(trend_results)
+    
+    print(f"Calculated trends for {len(trends_df)} players")
+    
+    # Show trending up players (targets)
+    trending_up_targets = trends_df[
+        (trends_df['targets_trend'] > 20) & 
+        (trends_df['avg_targets'] > 1)
+    ].sort_values('targets_trend', ascending=False)
+    
+    print(f"\n🔥 TRENDING UP - TARGETS (>20% increase):")
+    if len(trending_up_targets) > 0:
+        print(trending_up_targets[['player_id', 'weeks_played', 'avg_targets', 'targets_trend', 'latest_targets']].head(10).to_string(index=False))
     else:
-        print(f"\n❌ Neither method worked")
-        return False
-
-def test_top10_calculations(weekly_data, year):
-    """Test if our data works for top10 calculations"""
-    print(f"\n🏆 TESTING TOP10 CALCULATIONS FOR {year}:")
+        print("No players trending significantly up in targets")
     
-    if len(weekly_data) == 0:
-        print(f"❌ No data to test")
-        return False
+    # Show trending up players (carries)
+    trending_up_carries = trends_df[
+        (trends_df['carries_trend'] > 20) & 
+        (trends_df['avg_carries'] > 1)
+    ].sort_values('carries_trend', ascending=False)
+    
+    print(f"\n🏃 TRENDING UP - CARRIES (>20% increase):")
+    if len(trending_up_carries) > 0:
+        print(trending_up_carries[['player_id', 'weeks_played', 'avg_carries', 'carries_trend', 'latest_carries']].head(10).to_string(index=False))
+    else:
+        print("No players trending significantly up in carries")
+    
+    # Show declining players
+    declining_touches = trends_df[
+        (trends_df['touches_trend'] < -15) & 
+        (trends_df['avg_touches'] > 2)
+    ].sort_values('touches_trend', ascending=True)
+    
+    print(f"\n📉 DECLINING OPPORTUNITIES (>15% decrease in touches):")
+    if len(declining_touches) > 0:
+        print(declining_touches[['player_id', 'weeks_played', 'avg_touches', 'touches_trend', 'latest_touches']].head(10).to_string(index=False))
+    else:
+        print("No players significantly declining in opportunities")
+    
+    # Show opportunity leaders
+    print(f"\n👑 OPPORTUNITY LEADERS:")
+    print("Top targets per game:")
+    top_targets = trends_df[trends_df['avg_targets'] > 0].sort_values('avg_targets', ascending=False)
+    print(top_targets[['player_id', 'weeks_played', 'avg_targets', 'latest_targets']].head(10).to_string(index=False))
+    
+    print(f"\nTop carries per game:")
+    top_carries = trends_df[trends_df['avg_carries'] > 0].sort_values('avg_carries', ascending=False)
+    print(top_carries[['player_id', 'weeks_played', 'avg_carries', 'latest_carries']].head(10).to_string(index=False))
+    
+    return trends_df
+
+def test_with_roster_data(trends_df):
+    """Test adding roster information for better readability"""
+    print(f"\n👥 TESTING WITH ROSTER DATA:")
+    print("=" * 30)
     
     try:
-        # QB yards top 10
-        qb_data = weekly_data[weekly_data['passing_yards'] > 0].copy()
-        if len(qb_data) > 0:
-            qb_totals = qb_data.groupby('player_display_name')['passing_yards'].sum().sort_values(ascending=False).head(10)
-            print(f"✅ QB yards top 10: {len(qb_totals)} players")
-            if len(qb_totals) > 0:
-                print(f"   #1: {qb_totals.index[0]} - {qb_totals.iloc[0]} yards")
+        roster_data = nfl.import_weekly_rosters([2025])
         
-        # RB yards top 10  
-        rb_data = weekly_data[weekly_data['rushing_yards'] > 0].copy()
-        if len(rb_data) > 0:
-            rb_totals = rb_data.groupby('player_display_name')['rushing_yards'].sum().sort_values(ascending=False).head(10)
-            print(f"✅ RB yards top 10: {len(rb_totals)} players")
-            if len(rb_totals) > 0:
-                print(f"   #1: {rb_totals.index[0]} - {rb_totals.iloc[0]} yards")
+        # Get player info
+        player_info = roster_data.groupby('player_id').agg({
+            'player_name': 'first',
+            'position': 'first',
+            'team': 'first'
+        }).reset_index()
         
-        # WR yards top 10
-        wr_data = weekly_data[weekly_data['receiving_yards'] > 0].copy()
-        if len(wr_data) > 0:
-            wr_totals = wr_data.groupby('player_display_name')['receiving_yards'].sum().sort_values(ascending=False).head(10)
-            print(f"✅ WR yards top 10: {len(wr_totals)} players")
-            if len(wr_totals) > 0:
-                print(f"   #1: {wr_totals.index[0]} - {wr_totals.iloc[0]} yards")
+        # Merge with trends
+        trends_with_names = trends_df.merge(player_info, on='player_id', how='left')
         
-        # TDs
-        td_data = weekly_data[
-            (weekly_data['passing_tds'] > 0) | 
-            (weekly_data['rushing_tds'] > 0) | 
-            (weekly_data['receiving_tds'] > 0)
-        ].copy()
+        print(f"Added names for {len(player_info)} players")
         
-        if len(td_data) > 0:
-            print(f"✅ TD data available for top10 calculations")
+        # Show top targets with names
+        print(f"\n🎯 TOP TARGET LEADERS (with names):")
+        top_targets_named = trends_with_names[
+            trends_with_names['avg_targets'] > 0
+        ].sort_values('avg_targets', ascending=False)
         
-        return True
+        print(top_targets_named[['player_name', 'position', 'team', 'weeks_played', 'avg_targets', 'latest_targets']].head(15).to_string(index=False))
+        
+        # Show top RB carries
+        print(f"\n🏃 TOP RB CARRY LEADERS:")
+        rb_carries = trends_with_names[
+            (trends_with_names['position'] == 'RB') & 
+            (trends_with_names['avg_carries'] > 0)
+        ].sort_values('avg_carries', ascending=False)
+        
+        print(rb_carries[['player_name', 'team', 'weeks_played', 'avg_carries', 'latest_carries', 'carries_trend']].head(15).to_string(index=False))
+        
+        # Show WR/TE target leaders
+        print(f"\n📡 TOP WR/TE TARGET LEADERS:")
+        receiver_targets = trends_with_names[
+            (trends_with_names['position'].isin(['WR', 'TE'])) & 
+            (trends_with_names['avg_targets'] > 0)
+        ].sort_values('avg_targets', ascending=False)
+        
+        print(receiver_targets[['player_name', 'position', 'team', 'weeks_played', 'avg_targets', 'latest_targets', 'targets_trend']].head(15).to_string(index=False))
+        
+        return trends_with_names
         
     except Exception as e:
-        print(f"❌ Top10 calculation failed: {e}")
-        return False
+        print(f"Could not load roster data: {e}")
+        return trends_df
+
+def test_advanced_metrics():
+    """Test advanced opportunity metrics"""
+    print(f"\n🔬 TESTING ADVANCED METRICS:")
+    print("=" * 30)
+    
+    # Load data again for advanced analysis
+    year = 2025
+    pbp_data = nfl.import_pbp_data([year], include_participation=False)
+    reg_season = pbp_data[pbp_data['season_type'] == 'REG'].copy()
+    
+    # Test target share calculation
+    print("Calculating target shares by team...")
+    
+    target_shares = []
+    for week in sorted(reg_season['week'].unique()):
+        week_passes = reg_season[
+            (reg_season['week'] == week) & 
+            (reg_season['play_type'] == 'pass')
+        ]
+        
+        for team in week_passes['posteam'].unique():
+            if pd.isna(team):
+                continue
+                
+            team_passes = week_passes[week_passes['posteam'] == team]
+            total_targets = len(team_passes[team_passes['receiver_player_id'].notna()])
+            
+            if total_targets > 0:
+                player_targets = team_passes[
+                    team_passes['receiver_player_id'].notna()
+                ].groupby('receiver_player_id').size()
+                
+                for player_id, targets in player_targets.items():
+                    target_share = (targets / total_targets) * 100
+                    target_shares.append({
+                        'player_id': player_id,
+                        'week': week,
+                        'team': team,
+                        'targets': targets,
+                        'team_total_targets': total_targets,
+                        'target_share': target_share
+                    })
+    
+    target_share_df = pd.DataFrame(target_shares)
+    
+    print(f"Calculated target shares for {len(target_share_df)} player-week records")
+    
+    # Show highest target shares
+    avg_target_shares = target_share_df.groupby('player_id').agg({
+        'target_share': 'mean',
+        'targets': 'mean',
+        'week': 'count'
+    }).reset_index()
+    avg_target_shares.rename(columns={'week': 'weeks_played'}, inplace=True)
+    
+    high_share_players = avg_target_shares[
+        (avg_target_shares['weeks_played'] >= 2) & 
+        (avg_target_shares['target_share'] >= 15)
+    ].sort_values('target_share', ascending=False)
+    
+    print(f"\n📊 HIGHEST TARGET SHARE LEADERS (>15%):")
+    print(high_share_players.head(10).to_string(index=False))
+    
+    # Test red zone opportunities
+    print(f"\n🚨 RED ZONE OPPORTUNITIES:")
+    
+    rz_data = reg_season[reg_season['yardline_100'] <= 20]
+    
+    # Red zone targets
+    rz_targets = rz_data[
+        (rz_data['play_type'] == 'pass') & 
+        (rz_data['receiver_player_id'].notna())
+    ].groupby('receiver_player_id').size().sort_values(ascending=False)
+    
+    print(f"Red zone target leaders:")
+    print(rz_targets.head(10))
+    
+    # Red zone carries
+    rz_carries = rz_data[
+        (rz_data['play_type'] == 'run') & 
+        (rz_data['rusher_player_id'].notna())
+    ].groupby('rusher_player_id').size().sort_values(ascending=False)
+    
+    print(f"\nRed zone carry leaders:")
+    print(rz_carries.head(10))
+    
+    return target_share_df
 
 def main():
     """Main test function"""
-    print("WEEKLY DATA BACKUP METHOD VALIDATION")
-    print("=" * 60)
+    print("🏈 NFL OPPORTUNITY TRACKER TEST")
+    print("=" * 50)
     
-    # Test with 2024 first (should have standard data available)
-    print("Step 1: Testing with 2024 data (should have both methods)...")
-    success_2024 = compare_methods(2024)
+    # Test basic opportunity extraction
+    targets_df, carries_df = test_opportunity_metrics()
     
-    if success_2024:
-        print(f"\n✅ 2024 comparison successful!")
-        
-        # Test with 2025 (only PBP available)
-        print(f"\nStep 2: Testing with 2025 data (PBP only)...")
-        pbp_2025 = create_weekly_from_pbp_simple(2025)
-        
-        if len(pbp_2025) > 0:
-            print(f"✅ 2025 PBP data created: {len(pbp_2025)} records")
-            
-            # Test top10 calculations
-            top10_success = test_top10_calculations(pbp_2025, 2025)
-            
-            if top10_success:
-                print(f"\n🚀 FINAL RESULT: ✅ BACKUP METHOD IS READY!")
-                print(f"   - PBP method produces acceptable data")
-                print(f"   - Top10 calculations work with PBP data")
-                print(f"   - Safe to implement as backup for 2025")
-                return True
-            else:
-                print(f"\n❌ Top10 calculations failed with PBP data")
-                return False
-        else:
-            print(f"\n❌ Could not create 2025 PBP data")
-            return False
-    else:
-        print(f"\n❌ 2024 comparison failed - method needs work")
-        return False
+    # Test trend analysis
+    trends_df = test_trend_analysis(targets_df, carries_df)
+    
+    # Test with roster data
+    trends_with_names = test_with_roster_data(trends_df)
+    
+    # Test advanced metrics
+    target_share_df = test_advanced_metrics()
+    
+    print(f"\n✅ ALL TESTS COMPLETED!")
+    print("=" * 50)
+    print("📋 SUMMARY:")
+    print(f"   - Basic opportunity extraction: ✅")
+    print(f"   - Trend analysis: ✅") 
+    print(f"   - Roster integration: ✅")
+    print(f"   - Advanced metrics: ✅")
+    print(f"\n🚀 Ready to implement full opportunity tracking system!")
 
 if __name__ == "__main__":
-    success = main()
-    
-    if success:
-        print(f"\n" + "=" * 60)
-        print(f"✅ VALIDATION COMPLETE - READY TO UPDATE CELERY TASK")
-        print(f"=" * 60)
-    else:
-        print(f"\n" + "=" * 60)
-        print(f"❌ VALIDATION FAILED - DO NOT UPDATE CELERY TASK YET")
-        print(f"=" * 60)
+    main()

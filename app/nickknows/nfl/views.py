@@ -948,6 +948,161 @@ def update_all_snap_counts():
     flash(f'Snap count data for all teams is updating in the background for {selected_year} season.')
     return redirect(url_for('snap_counts_home', year=selected_year))
 
+
+@app.route('/NFL/Opportunities')
+def opportunities_home():
+    """Opportunity tracking home page"""
+    try:
+        available_years = get_available_years()
+        selected_year = get_selected_year()
+        
+        # Load trend data
+        trend_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_trends.csv'
+        
+        if not os.path.exists(trend_file_path):
+            update_opportunity_data.delay(selected_year)
+            flash(f'Opportunity data for {selected_year} is updating. Please refresh in a moment.')
+            return render_template('opportunities-home.html',
+                                 years=available_years,
+                                 selected_year=selected_year,
+                                 loading=True)
+        
+        trend_data = pd.read_csv(trend_file_path)
+        
+        # Get key insights
+        insights = {
+            'trending_up_targets': get_trending_players_view(trend_data, 'targets', 'up'),
+            'trending_up_carries': get_trending_players_view(trend_data, 'carries', 'up'),
+            'target_leaders': get_opportunity_leaders_view(trend_data, 'targets'),
+            'carry_leaders': get_opportunity_leaders_view(trend_data, 'carries'),
+            'declining_opportunities': get_trending_players_view(trend_data, 'touches', 'down')
+        }
+        
+        return render_template('opportunities-home.html',
+                             years=available_years,
+                             selected_year=selected_year,
+                             insights=insights,
+                             loading=False)
+                             
+    except Exception as e:
+        flash(f'Error loading opportunity data: {str(e)}')
+        return render_template('opportunities-home.html',
+                             years=available_years,
+                             selected_year=selected_year,
+                             loading=False)
+
+@app.route('/NFL/Opportunities/<team>')
+def team_opportunities(team):
+    """Team-specific opportunity analysis"""
+    try:
+        available_years = get_available_years()
+        selected_year = get_selected_year()
+        fullname = get_team_fullname(team)
+        
+        # Load opportunity data
+        opp_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_data.csv'
+        trend_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_trends.csv'
+        
+        if not os.path.exists(opp_file_path) or not os.path.exists(trend_file_path):
+            update_opportunity_data.delay(selected_year)
+            flash(f'Opportunity data for {fullname} is updating. Please refresh in a moment.')
+            return render_template('team-opportunities.html',
+                                 team=team,
+                                 fullname=fullname,
+                                 years=available_years,
+                                 selected_year=selected_year,
+                                 loading=True)
+        
+        opportunity_data = pd.read_csv(opp_file_path)
+        trend_data = pd.read_csv(trend_file_path)
+        
+        # Filter to team
+        team_opportunities = opportunity_data[opportunity_data['team'] == team]
+        team_trends = trend_data[trend_data['team'] == team]
+        
+        # Group by position
+        position_data = {}
+        for position in ['QB', 'RB', 'WR', 'TE']:
+            pos_trends = team_trends[team_trends['position'] == position]
+            if len(pos_trends) > 0:
+                position_data[position] = pos_trends.sort_values('targets_avg' if position in ['QB', 'WR', 'TE'] else 'carries_avg', ascending=False)
+        
+        return render_template('team-opportunities.html',
+                             team=team,
+                             fullname=fullname,
+                             years=available_years,
+                             selected_year=selected_year,
+                             position_data=position_data,
+                             loading=False)
+                             
+    except Exception as e:
+        flash(f'Error loading team opportunity data: {str(e)}')
+        return render_template('team-opportunities.html',
+                             team=team,
+                             fullname=fullname,
+                             years=available_years,
+                             selected_year=selected_year,
+                             loading=False)
+
+@app.route('/NFL/Opportunities/update')
+def update_opportunities():
+    """Trigger opportunity data update"""
+    selected_year = get_selected_year()
+    update_opportunity_data.delay(selected_year)
+    flash(f'Opportunity data for {selected_year} is updating in the background.')
+    return redirect(url_for('opportunities_home'))
+
+def get_trending_players_view(trend_data, metric, direction='up', min_trend=20, min_avg=1):
+    """Get trending players for view"""
+    trend_col = f'{metric}_trend'
+    avg_col = f'{metric}_avg'
+    
+    if direction == 'up':
+        filters = (
+            (trend_data[trend_col] >= min_trend) &
+            (trend_data[avg_col] >= min_avg)
+        )
+        sort_ascending = False
+    else:  # direction == 'down'
+        filters = (
+            (trend_data[trend_col] <= -min_trend) &
+            (trend_data[avg_col] >= min_avg)
+        )
+        sort_ascending = True
+    
+    result = trend_data[filters].copy()
+    if len(result) > 0:
+        result = result.sort_values(trend_col, ascending=sort_ascending)
+        
+        # Select and format columns
+        display_cols = ['player_name', 'position', 'team', 'weeks_played', avg_col, f'{metric}_latest', trend_col]
+        result = result[display_cols].head(10)
+        result = result.round(2)
+        
+        return result.style.hide(axis="index").to_html(classes="table", escape=False)
+    return "<p>No players meet criteria</p>"
+
+def get_opportunity_leaders_view(trend_data, metric, min_weeks=2):
+    """Get opportunity leaders for view"""
+    avg_col = f'{metric}_avg'
+    
+    filters = (
+        (trend_data['weeks_played'] >= min_weeks) &
+        (trend_data[avg_col] > 0)
+    )
+    
+    leaders = trend_data[filters].copy()
+    if len(leaders) > 0:
+        leaders = leaders.sort_values(avg_col, ascending=False)
+        
+        # Select and format columns
+        display_cols = ['player_name', 'position', 'team', 'weeks_played', avg_col, f'{metric}_latest', f'{metric}_max']
+        leaders = leaders[display_cols].head(15)
+        leaders = leaders.round(2)
+        
+        return leaders.style.hide(axis="index").to_html(classes="table", escape=False)
+    return "<p>No leaders available</p>"
+
 def get_season_display_name(year):
     """Format season display name"""
     return f"{year-1}-{year} Season"

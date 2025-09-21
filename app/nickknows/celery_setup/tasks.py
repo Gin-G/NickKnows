@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from celery.utils.log import get_task_logger
 from datetime import datetime
 from urllib.error import HTTPError
+from collections import defaultdict
 
 logger = get_task_logger(__name__)
 
@@ -1466,3 +1467,260 @@ def check_snap_count_data_availability(year=None):
             }
     
     return available_years
+
+@celery.task()
+def update_opportunity_data(year=None):
+    """Update opportunity metrics from PBP data"""
+    if year is None:
+        year = get_selected_year()
+    
+    season_display = format_nfl_season(year)
+    logger.info(f"Updating opportunity data for {season_display}")
+    
+    try:
+        # Load PBP data
+        if year >= 2024:
+            pbp_data = nfl.import_pbp_data([year], include_participation=False)
+        else:
+            pbp_data = nfl.import_pbp_data([year])
+        
+        logger.info(f"Loaded {len(pbp_data)} PBP records for {season_display}")
+        
+        # Load supporting data
+        try:
+            roster_data = nfl.import_weekly_rosters([year])
+            has_roster = True
+        except Exception as e:
+            logger.warning(f"Could not load roster data: {e}")
+            roster_data = pd.DataFrame()
+            has_roster = False
+        
+        # Process opportunity data
+        opportunity_data = calculate_opportunity_metrics_task(pbp_data, year)
+        
+        if len(opportunity_data) == 0:
+            raise Exception(f"No opportunity data generated for {season_display}")
+        
+        # Add roster information
+        if has_roster and len(roster_data) > 0:
+            opportunity_data = add_roster_info_to_opportunities_task(opportunity_data, roster_data)
+        
+        # Save opportunity data
+        opp_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_opportunity_data.csv'
+        opportunity_data.to_csv(opp_file_path, index=False)
+        
+        # Also create trend analysis immediately
+        trend_data = calculate_trend_analysis_task(opportunity_data, min_weeks=2)
+        trend_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_opportunity_trends.csv'
+        trend_data.to_csv(trend_file_path, index=False)
+        
+        logger.info(f"Opportunity data for {season_display} saved to {opp_file_path}")
+        logger.info(f"Trend data for {season_display} saved to {trend_file_path}")
+        logger.info(f"Created {len(opportunity_data)} opportunity records and {len(trend_data)} trend records")
+        
+        return f"Successfully updated opportunity data for {season_display}"
+        
+    except Exception as e:
+        logger.error(f"Error updating opportunity data for {season_display}: {str(e)}")
+        raise
+
+def calculate_opportunity_metrics_task(pbp_data, year):
+    """Calculate opportunity metrics from PBP data"""
+    logger.info("Calculating opportunity metrics from PBP data...")
+    
+    # Filter to regular season
+    reg_season = pbp_data[pbp_data['season_type'] == 'REG'].copy()
+    
+    opportunity_records = []
+    weeks = sorted(reg_season['week'].unique())
+    
+    for week in weeks:
+        week_data = reg_season[reg_season['week'] == week]
+        week_opportunities = process_week_opportunities_task(week_data, week, year)
+        opportunity_records.extend(week_opportunities)
+        logger.debug(f"Processed week {week}: {len(week_opportunities)} opportunity records")
+    
+    return pd.DataFrame(opportunity_records)
+
+def process_week_opportunities_task(week_data, week, year):
+    """Process opportunities for a single week"""
+    opportunities = defaultdict(lambda: {
+        'player_id': '',
+        'week': week,
+        'season': year,
+        'targets': 0,
+        'red_zone_targets': 0,
+        'end_zone_targets': 0,
+        'carries': 0,
+        'red_zone_carries': 0,
+        'goal_line_carries': 0,
+        'air_yards': 0,
+        'touches': 0,
+        'goal_line_touches': 0,
+        'third_down_targets': 0,
+        'deep_targets': 0,
+        'short_targets': 0,
+        'team': ''
+    })
+    
+    # Team totals for calculating shares
+    team_totals = defaultdict(lambda: {'total_targets': 0, 'total_carries': 0})
+    
+    # Process each play
+    for _, play in week_data.iterrows():
+        play_type = play.get('play_type', '')
+        down = play.get('down', 0)
+        yardline_100 = play.get('yardline_100', 100)
+        air_yards = play.get('air_yards', 0) if pd.notna(play.get('air_yards', 0)) else 0
+        
+        # PASSING OPPORTUNITIES
+        if play_type == 'pass':
+            receiver_id = play.get('receiver_player_id')
+            posteam = play.get('posteam')
+            
+            if pd.notna(receiver_id):
+                opportunities[receiver_id]['player_id'] = receiver_id
+                opportunities[receiver_id]['targets'] += 1
+                opportunities[receiver_id]['touches'] += 1
+                opportunities[receiver_id]['air_yards'] += air_yards
+                opportunities[receiver_id]['team'] = posteam
+                
+                # Count team totals
+                if pd.notna(posteam):
+                    team_totals[posteam]['total_targets'] += 1
+                
+                # Situational targets
+                if yardline_100 <= 20:
+                    opportunities[receiver_id]['red_zone_targets'] += 1
+                if yardline_100 <= 10:
+                    opportunities[receiver_id]['end_zone_targets'] += 1
+                    opportunities[receiver_id]['goal_line_touches'] += 1
+                if down == 3:
+                    opportunities[receiver_id]['third_down_targets'] += 1
+                if air_yards >= 20:
+                    opportunities[receiver_id]['deep_targets'] += 1
+                elif air_yards < 10:
+                    opportunities[receiver_id]['short_targets'] += 1
+        
+        # RUSHING OPPORTUNITIES
+        elif play_type == 'run':
+            rusher_id = play.get('rusher_player_id')
+            posteam = play.get('posteam')
+            
+            if pd.notna(rusher_id):
+                opportunities[rusher_id]['player_id'] = rusher_id
+                opportunities[rusher_id]['carries'] += 1
+                opportunities[rusher_id]['touches'] += 1
+                opportunities[rusher_id]['team'] = posteam
+                
+                # Count team totals
+                if pd.notna(posteam):
+                    team_totals[posteam]['total_carries'] += 1
+                
+                # Situational carries
+                if yardline_100 <= 20:
+                    opportunities[rusher_id]['red_zone_carries'] += 1
+                if yardline_100 <= 5:
+                    opportunities[rusher_id]['goal_line_carries'] += 1
+                    opportunities[rusher_id]['goal_line_touches'] += 1
+    
+    # Calculate shares and return records
+    records = []
+    for player_id, stats in opportunities.items():
+        player_team = stats['team']
+        
+        if player_team and player_team in team_totals:
+            # Calculate shares
+            stats['target_share'] = (stats['targets'] / team_totals[player_team]['total_targets'] * 100) if team_totals[player_team]['total_targets'] > 0 else 0
+            stats['carry_share'] = (stats['carries'] / team_totals[player_team]['total_carries'] * 100) if team_totals[player_team]['total_carries'] > 0 else 0
+        else:
+            stats['target_share'] = 0
+            stats['carry_share'] = 0
+        
+        records.append(stats)
+    
+    return records
+
+def add_roster_info_to_opportunities_task(opportunity_data, roster_data):
+    """Add roster information to opportunity data"""
+    try:
+        player_info = roster_data.groupby('player_id').agg({
+            'player_name': 'first',
+            'position': 'first',
+            'team': 'first'
+        }).reset_index()
+        
+        opportunity_data = opportunity_data.merge(player_info, on='player_id', how='left')
+        opportunity_data['player_display_name'] = opportunity_data['player_name']
+        
+        # Use roster team if available
+        opportunity_data['team'] = opportunity_data['team_y'].fillna(opportunity_data['team_x'])
+        opportunity_data.drop(['team_x', 'team_y'], axis=1, inplace=True, errors='ignore')
+        
+        logger.info(f"Added roster info for opportunity data")
+    except Exception as e:
+        logger.warning(f"Could not add roster info to opportunities: {e}")
+    
+    return opportunity_data
+
+def calculate_trend_analysis_task(opportunity_data, min_weeks=2):
+    """Calculate trend analysis from opportunity data"""
+    logger.info(f"Calculating trend analysis (min {min_weeks} weeks)...")
+    
+    trend_records = []
+    
+    # Key metrics to analyze
+    trend_metrics = ['targets', 'carries', 'touches', 'target_share', 'carry_share', 
+                     'red_zone_targets', 'red_zone_carries', 'goal_line_touches']
+    
+    for player_id, player_data in opportunity_data.groupby('player_id'):
+        player_data = player_data.sort_values('week')
+        
+        if len(player_data) < min_weeks:
+            continue
+        
+        # Get player info
+        player_name = player_data['player_display_name'].iloc[0] if 'player_display_name' in player_data.columns else player_id
+        position = player_data['position'].iloc[0] if 'position' in player_data.columns else 'Unknown'
+        team = player_data['team'].iloc[0] if 'team' in player_data.columns else 'Unknown'
+        
+        trend_record = {
+            'player_id': player_id,
+            'player_name': player_name,
+            'position': position,
+            'team': team,
+            'weeks_played': len(player_data),
+            'latest_week': player_data['week'].max()
+        }
+        
+        for metric in trend_metrics:
+            if metric in player_data.columns:
+                values = player_data[metric].values
+                
+                # Basic stats
+                trend_record[f'{metric}_avg'] = np.mean(values)
+                trend_record[f'{metric}_latest'] = values[-1] if len(values) > 0 else 0
+                trend_record[f'{metric}_max'] = np.max(values)
+                
+                # Trend calculation (recent vs early)
+                if len(values) >= 2:
+                    if len(values) >= 3:
+                        recent_avg = np.mean(values[-2:])  # Last 2 games
+                        early_avg = np.mean(values[:-2])   # All but last 2
+                    else:
+                        recent_avg = values[-1]
+                        early_avg = values[0]
+                    
+                    trend_record[f'{metric}_trend'] = ((recent_avg - early_avg) / max(early_avg, 0.1) * 100) if early_avg > 0 else 0
+                else:
+                    trend_record[f'{metric}_trend'] = 0
+                
+                # Consistency
+                if np.mean(values) > 0:
+                    trend_record[f'{metric}_consistency'] = (np.std(values) / np.mean(values)) * 100
+                else:
+                    trend_record[f'{metric}_consistency'] = 0
+        
+        trend_records.append(trend_record)
+    
+    return pd.DataFrame(trend_records)
