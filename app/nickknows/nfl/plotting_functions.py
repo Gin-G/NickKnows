@@ -421,28 +421,28 @@ def cleanup_old_plots(team, selected_year, keep_days=7):
 def validate_plot_data(weekly_position_data, available_weeks):
     """Validate data before plotting"""
     issues = []
-    
-    if not weekly_position_data:
-        issues.append("No position data available")
-        return issues
-    
-    if not available_weeks:
-        issues.append("No weeks available")
-        return issues
-    
-    for position, players_data in weekly_position_data.items():
-        if not players_data:
-            issues.append(f"No players data for {position}")
-            continue
-            
-        for player in players_data:
-            # Check required fields
-            required_fields = ['player_name', 'weekly_targets', 'weekly_carries']
-            missing_fields = [field for field in required_fields if field not in player]
-            if missing_fields:
-                issues.append(f"Missing fields for {player.get('player_name', 'Unknown')}: {missing_fields}")
-    
-    return issues.relative_to('nickknows/static/'))
+    try:
+        if not weekly_position_data:
+            issues.append("No position data available")
+            return issues
+        
+        if not available_weeks:
+            issues.append("No weeks available")
+            return issues
+        
+        for position, players_data in weekly_position_data.items():
+            if not players_data:
+                issues.append(f"No players data for {position}")
+                continue
+                
+            for player in players_data:
+                # Check required fields
+                required_fields = ['player_name', 'weekly_targets', 'weekly_carries']
+                missing_fields = [field for field in required_fields if field not in player]
+                if missing_fields:
+                    issues.append(f"Missing fields for {player.get('player_name', 'Unknown')}: {missing_fields}")
+        
+        return issues.relative_to('nickknows/static/')
         
     except Exception as e:
         logger.error(f"Error creating weekly trends plot: {str(e)}")
