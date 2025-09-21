@@ -37,105 +37,830 @@
             $('#header').load("{{ url_for('header') }}")
         })
     </script>
-    <body>
-        <div id="header"></div>
-        <div id="nfl_navbar"></div>
+    
+    <style>
+        .opportunity-controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
         
-        <h1>🎯 NFL Opportunity Tracker</h1>
-        <h2>{{ selected_year }} Season</h2>
+        .opportunity-controls h4 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
         
-        {% if loading %}
-            <div class="loading-message">
-                <p>📊 Opportunity data is being calculated from play-by-play data...</p>
-                <p>Please refresh the page in a moment.</p>
-            </div>
-        {% else %}
-            <div style="text-align: center; margin: 20px 0;">
-                <a href="{{ url_for('update_opportunities') }}" style="font-size: 16px; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
-                    🔄 Update Opportunity Data
-                </a>
-            </div>
+        .metric-toggle {
+            display: inline-block;
+            margin: 0 15px 10px 15px;
+            padding: 8px 12px;
+            background-color: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            transition: all 0.2s ease;
+        }
+        
+        .metric-toggle:hover {
+            background-color: #e9ecef;
+            transform: translateY(-1px);
+        }
+        
+        .metric-toggle input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.1);
+        }
+        
+        .metric-toggle label {
+            font-weight: 500;
+            cursor: pointer;
+            color: #495057;
+        }
+        
+        .position-header {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            padding: 18px;
+            margin: 25px 0 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            border-left: 5px solid #007bff;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .position-header:hover {
+            background: linear-gradient(135deg, #dee2e6 0%, #ced4da 100%);
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .position-header h3 {
+            margin: 0;
+            color: #495057;
+            font-weight: 600;
+        }
+        
+        .position-header i {
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .position-content {
+            margin-bottom: 40px;
+            animation: slideDown 0.3s ease-in-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 1000px;
+            }
+        }
+        
+        .weekly-table {
+            overflow-x: auto;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+        
+        .weekly-table table {
+            min-width: 100%;
+            font-size: 11px;
+            border-collapse: collapse;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .weekly-table th {
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            color: white;
+            padding: 12px 6px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-weight: 600;
+            font-size: 10px;
+            border-right: 1px solid #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .weekly-table td {
+            padding: 8px 6px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+            border-right: 1px solid #f8f9fa;
+            transition: background-color 0.2s ease;
+            font-weight: 500;
+        }
+        
+        .weekly-table tbody tr:hover td {
+            background-color: #f8f9fa !important;
+        }
+        
+        .player-name {
+            background-color: #f8f9fa !important;
+            font-weight: bold;
+            text-align: left !important;
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            min-width: 140px;
+            max-width: 140px;
+            border-right: 2px solid #dee2e6 !important;
+            box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+        }
+        
+        .player-name strong {
+            color: #495057;
+            font-size: 12px;
+        }
+        
+        .player-name small {
+            color: #6c757d;
+            font-size: 9px;
+            font-weight: normal;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-avg { 
+            background-color: #e8f5e8 !important; 
+            font-weight: 600;
+        }
+        
+        .stat-max { 
+            background-color: #fff3cd !important; 
+            font-weight: 600;
+        }
+        
+        .stat-min { 
+            background-color: #f8d7da !important; 
+            font-weight: 600;
+        }
+        
+        .stat-std { 
+            background-color: #d1ecf1 !important; 
+            font-style: italic;
+        }
+        
+        .targets { 
+            background-color: rgba(227, 242, 253, 0.3) !important;
+        }
+        
+        .carries { 
+            background-color: rgba(243, 229, 245, 0.3) !important;
+        }
+        
+        .shares { 
+            background-color: rgba(255, 248, 225, 0.3) !important;
+        }
+        
+        .situational { 
+            background-color: rgba(252, 228, 236, 0.3) !important;
+        }
+        
+        .trend-positive { 
+            color: #28a745 !important; 
+            font-weight: bold;
+        }
+        
+        .trend-positive::before {
+            content: "↗";
+            margin-right: 2px;
+            font-size: 10px;
+        }
+        
+        .trend-negative { 
+            color: #dc3545 !important; 
+            font-weight: bold;
+        }
+        
+        .trend-negative::before {
+            content: "↘";
+            margin-right: 2px;
+            font-size: 10px;
+        }
+        
+        .trend-neutral { 
+            color: #6c757d !important;
+        }
+        
+        .trend-neutral::before {
+            content: "→";
+            margin-right: 2px;
+            font-size: 10px;
+        }
+        
+        .insight-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        
+        .insight-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+        
+        .insight-card h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #495057;
+            font-weight: 600;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+        }
+        
+        .loading-message {
+            text-align: center;
+            padding: 60px 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        /* Plot Styles */
+        .plots-section {
+            margin: 30px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .plot-controls {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .plot-btn {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .plot-btn:hover {
+            background-color: #495057;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .plot-btn.active {
+            background-color: #007bff;
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        }
+        
+        .plot-container {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .plot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .plot-grid-compact {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .plot-item {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        
+        .plot-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .plot-item h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #495057;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .plot-image {
+            width: 100%;
+            height: auto;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .plot-image:hover {
+            transform: scale(1.02);
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .weekly-table {
+                font-size: 10px;
+            }
             
-            <div class="opportunity-section">
-                <h2>🔥 Trending Up - Targets</h2>
-                <p>Players with increasing target opportunities (>20% increase)</p>
-                <div class="table-wrapper">
-                    {{ insights.trending_up_targets | safe }}
-                </div>
-            </div>
+            .weekly-table th,
+            .weekly-table td {
+                padding: 6px 4px;
+            }
             
-            <div class="opportunity-section">
-                <h2>🏃 Trending Up - Carries</h2>
-                <p>Players with increasing rushing opportunities (>20% increase)</p>
-                <div class="table-wrapper">
-                    {{ insights.trending_up_carries | safe }}
-                </div>
-            </div>
+            .player-name {
+                min-width: 120px;
+                max-width: 120px;
+            }
             
-            <div class="nfl-row">
-                <div class="nfl-column">
-                    <h2>👑 Target Leaders</h2>
-                    <p>Highest average targets per game</p>
-                    <div class="table-wrapper">
-                        {{ insights.target_leaders | safe }}
-                    </div>
-                </div>
-                <div class="nfl-column">
-                    <h2>🏃‍♂️ Carry Leaders</h2>
-                    <p>Highest average carries per game</p>
-                    <div class="table-wrapper">
-                        {{ insights.carry_leaders | safe }}
-                    </div>
-                </div>
-            </div>
+            .metric-toggle {
+                display: block;
+                margin: 5px auto;
+                width: 200px;
+            }
             
-            <div class="opportunity-section">
-                <h2>📉 Declining Opportunities</h2>
-                <p>Players losing touches (>20% decrease)</p>
-                <div class="table-wrapper">
-                    {{ insights.declining_opportunities | safe }}
-                </div>
-            </div>
+            .plot-grid {
+                grid-template-columns: 1fr;
+            }
             
-            <div class="team-links">
-                <h2>🏈 Team Opportunity Analysis</h2>
-                <p>Click a team to see detailed opportunity breakdowns:</p>
-                <div class="teams-grid">
-                    <a href="{{url_for('team_opportunities', team='ARI')}}" class="team-link">Arizona Cardinals</a>
-                    <a href="{{url_for('team_opportunities', team='ATL')}}" class="team-link">Atlanta Falcons</a>
-                    <a href="{{url_for('team_opportunities', team='BAL')}}" class="team-link">Baltimore Ravens</a>
-                    <a href="{{url_for('team_opportunities', team='BUF')}}" class="team-link">Buffalo Bills</a>
-                    <a href="{{url_for('team_opportunities', team='CAR')}}" class="team-link">Carolina Panthers</a>
-                    <a href="{{url_for('team_opportunities', team='CHI')}}" class="team-link">Chicago Bears</a>
-                    <a href="{{url_for('team_opportunities', team='CIN')}}" class="team-link">Cincinnati Bengals</a>
-                    <a href="{{url_for('team_opportunities', team='CLE')}}" class="team-link">Cleveland Browns</a>
-                    <a href="{{url_for('team_opportunities', team='DAL')}}" class="team-link">Dallas Cowboys</a>
-                    <a href="{{url_for('team_opportunities', team='DEN')}}" class="team-link">Denver Broncos</a>
-                    <a href="{{url_for('team_opportunities', team='DET')}}" class="team-link">Detroit Lions</a>
-                    <a href="{{url_for('team_opportunities', team='GB')}}" class="team-link">Green Bay Packers</a>
-                    <a href="{{url_for('team_opportunities', team='HOU')}}" class="team-link">Houston Texans</a>
-                    <a href="{{url_for('team_opportunities', team='IND')}}" class="team-link">Indianapolis Colts</a>
-                    <a href="{{url_for('team_opportunities', team='JAX')}}" class="team-link">Jacksonville Jaguars</a>
-                    <a href="{{url_for('team_opportunities', team='KC')}}" class="team-link">Kansas City Chiefs</a>
-                    <a href="{{url_for('team_opportunities', team='LA')}}" class="team-link">Los Angeles Rams</a>
-                    <a href="{{url_for('team_opportunities', team='LAC')}}" class="team-link">Los Angeles Chargers</a>
-                    <a href="{{url_for('team_opportunities', team='LV')}}" class="team-link">Las Vegas Raiders</a>
-                    <a href="{{url_for('team_opportunities', team='MIA')}}" class="team-link">Miami Dolphins</a>
-                    <a href="{{url_for('team_opportunities', team='MIN')}}" class="team-link">Minnesota Vikings</a>
-                    <a href="{{url_for('team_opportunities', team='NE')}}" class="team-link">New England Patriots</a>
-                    <a href="{{url_for('team_opportunities', team='NO')}}" class="team-link">New Orleans Saints</a>
-                    <a href="{{url_for('team_opportunities', team='NYG')}}" class="team-link">New York Giants</a>
-                    <a href="{{url_for('team_opportunities', team='NYJ')}}" class="team-link">New York Jets</a>
-                    <a href="{{url_for('team_opportunities', team='PHI')}}" class="team-link">Philadelphia Eagles</a>
-                    <a href="{{url_for('team_opportunities', team='PIT')}}" class="team-link">Pittsburgh Steelers</a>
-                    <a href="{{url_for('team_opportunities', team='SEA')}}" class="team-link">Seattle Seahawks</a>
-                    <a href="{{url_for('team_opportunities', team='SF')}}" class="team-link">San Francisco 49ers</a>
-                    <a href="{{url_for('team_opportunities', team='TB')}}" class="team-link">Tampa Bay Buccaneers</a>
-                    <a href="{{url_for('team_opportunities', team='TEN')}}" class="team-link">Tennessee Titans</a>
-                    <a href="{{url_for('team_opportunities', team='WAS')}}" class="team-link">Washington Commanders</a>
-                </div>
-            </div>
-        {% endif %}
-    </body>
+            .plot-btn {
+                display: block;
+                margin: 5px auto;
+                width: 90%;
+                max-width: 200px;
+            }
+        }
+    </style>
+    
 </head>
+<body>
+    <div id="header"></div>
+    <div id="nfl_navbar"></div>
+    
+    <h1>🎯 {{ fullname }} Opportunities</h1>
+    <h2>{{ selected_year }} Season</h2>
+    
+    {% if loading %}
+        <div class="loading-message">
+            <p>📊 Opportunity data is being calculated...</p>
+            <p>Please refresh the page in a moment.</p>
+        </div>
+    {% else %}
+        <div style="text-align: center; margin: 20px 0;">
+            <a href="{{ url_for('update_opportunities') }}" style="font-size: 16px; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
+                🔄 Update Data
+            </a>
+            <a href="{{ url_for('opportunities_home') }}" style="font-size: 16px; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">
+                ← Back to Overview
+            </a>
+        </div>
+        
+        <!-- Team Insights Summary -->
+        {% if insights %}
+        <div class="nfl-row">
+            <div class="nfl-column">
+                <div class="insight-card">
+                    <h4>🔥 Trending Up</h4>
+                    <p><strong>Targets:</strong> {{ insights.trending_up_targets_count or 0 }} players</p>
+                    <p><strong>Carries:</strong> {{ insights.trending_up_carries_count or 0 }} players</p>
+                </div>
+            </div>
+            <div class="nfl-column">
+                <div class="insight-card">
+                    <h4>📉 Declining</h4>
+                    <p><strong>Touches:</strong> {{ insights.declining_count or 0 }} players</p>
+                    <p><strong>Target Share:</strong> {{ insights.declining_target_share_count or 0 }} players</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Interactive Plots Section -->
+        {% if plot_data %}
+        <div class="plots-section">
+            <h2>📊 Visual Analysis</h2>
+            
+            <!-- Plot Controls -->
+            <div class="plot-controls">
+                <button onclick="showAllPlots()" class="plot-btn active" id="all-plots-btn">All Positions</button>
+                {% for position in ['QB', 'RB', 'WR', 'TE'] %}
+                    {% if position in weekly_position_data %}
+                        <button onclick="showPositionPlots('{{ position|lower }}')" class="plot-btn" id="{{ position|lower }}-plots-btn">{{ position }}</button>
+                    {% endif %}
+                {% endfor %}
+                <button onclick="showSummaryPlots()" class="plot-btn" id="summary-plots-btn">Team Summary</button>
+            </div>
+            
+            <!-- Team Summary Plots -->
+            <div id="summary-plots" class="plot-container">
+                <h3>Team Overview</h3>
+                {% if plot_data and 'summary' in plot_data %}
+                    <div class="plot-grid">
+                        {% if plot_data['summary']['distribution'] %}
+                            <div class="plot-item">
+                                <h4>Opportunity Distribution by Position</h4>
+                                <img src="{{ url_for('static', filename=plot_data['summary']['distribution']) }}" alt="Team Distribution" class="plot-image">
+                            </div>
+                        {% endif %}
+                        {% if plot_data['summary']['weekly_totals'] %}
+                            <div class="plot-item">
+                                <h4>Weekly Team Totals</h4>
+                                <img src="{{ url_for('static', filename=plot_data['summary']['weekly_totals']) }}" alt="Weekly Totals" class="plot-image">
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Position-Specific Plots -->
+            {% for position in ['QB', 'RB', 'WR', 'TE'] %}
+                {% if position in weekly_position_data and position in plot_data %}
+                    <div id="{{ position|lower }}-plots" class="plot-container" style="display: none;">
+                        <h3>{{ position }} Analysis</h3>
+                        <div class="plot-grid">
+                            {% if plot_data[position]['weekly_trends'] %}
+                                <div class="plot-item">
+                                    <h4>Weekly Trends with 3 & 5 Game Moving Averages</h4>
+                                    <img src="{{ url_for('static', filename=plot_data[position]['weekly_trends']) }}" alt="{{ position }} Trends" class="plot-image">
+                                </div>
+                            {% endif %}
+                            
+                            {% if plot_data[position]['target_share'] %}
+                                <div class="plot-item">
+                                    <h4>Target Share Evolution</h4>
+                                    <img src="{{ url_for('static', filename=plot_data[position]['target_share']) }}" alt="{{ position }} Target Share" class="plot-image">
+                                </div>
+                            {% endif %}
+                            
+                            {% if plot_data[position]['correlation'] %}
+                                <div class="plot-item">
+                                    <h4>Targets vs Carries Correlation</h4>
+                                    <img src="{{ url_for('static', filename=plot_data[position]['correlation']) }}" alt="{{ position }} Correlation" class="plot-image">
+                                </div>
+                            {% endif %}
+                            
+                            {% if plot_data[position]['red_zone'] %}
+                                <div class="plot-item">
+                                    <h4>Red Zone Opportunities</h4>
+                                    <img src="{{ url_for('static', filename=plot_data[position]['red_zone']) }}" alt="{{ position }} Red Zone" class="plot-image">
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+            
+            <!-- All Positions Overview -->
+            <div id="all-plots" class="plot-container">
+                <h3>All Positions Overview</h3>
+                <div class="plot-grid-compact">
+                    {% for position in ['QB', 'RB', 'WR', 'TE'] %}
+                        {% if position in weekly_position_data and position in plot_data and plot_data[position]['weekly_trends'] %}
+                            <div class="plot-item">
+                                <h4>{{ position }} Trends</h4>
+                                <img src="{{ url_for('static', filename=plot_data[position]['weekly_trends']) }}" alt="{{ position }} Overview" class="plot-image">
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Metric Toggle Controls -->
+        <div class="opportunity-controls">
+            <h4>📊 Show/Hide Metrics:</h4>
+            <div class="metric-toggle">
+                <input type="checkbox" id="targets" checked onchange="toggleMetricDisplay('targets')">
+                <label for="targets">Targets</label>
+            </div>
+            <div class="metric-toggle">
+                <input type="checkbox" id="carries" checked onchange="toggleMetricDisplay('carries')">
+                <label for="carries">Carries</label>
+            </div>
+            <div class="metric-toggle">
+                <input type="checkbox" id="shares" checked onchange="toggleMetricDisplay('shares')">
+                <label for="shares">Shares</label>
+            </div>
+            <div class="metric-toggle">
+                <input type="checkbox" id="situational" checked onchange="toggleMetricDisplay('situational')">
+                <label for="situational">Red Zone</label>
+            </div>
+        </div>
+        
+        <!-- Position Sections -->
+        {% if weekly_position_data %}
+        {% for position in ['QB', 'RB', 'WR', 'TE'] %}
+            {% if position in weekly_position_data %}
+                <div class="position-header" onclick="togglePositionSection('{{ position|lower }}-section')" data-position="{{ position|lower }}-section">
+                    <h3 style="margin: 0;">
+                        <i class="fas fa-chevron-down"></i>
+                        {% if position == 'QB' %}🎯 Quarterbacks
+                        {% elif position == 'RB' %}🏃 Running Backs  
+                        {% elif position == 'WR' %}📡 Wide Receivers
+                        {% elif position == 'TE' %}🙌 Tight Ends
+                        {% endif %}
+                        ({{ weekly_position_data[position]|length }} players)
+                    </h3>
+                </div>
+                
+                <div id="{{ position|lower }}-section" class="position-content">
+                    <div class="weekly-table">
+                        <table class="table" id="{{ position|lower }}-table">
+                            <thead>
+                                <tr>
+                                    <th class="player-name">Player</th>
+                                    <th class="stat-avg">Weeks</th>
+                                    
+                                    <!-- Weekly Columns -->
+                                    {% if available_weeks %}
+                                        {% for week in available_weeks %}
+                                            <th class="week-col">W{{ week }}</th>
+                                        {% endfor %}
+                                    {% endif %}
+                                    
+                                    <!-- Summary Stats -->
+                                    <th class="stat-avg">Avg</th>
+                                    <th class="stat-max">Max</th>
+                                    <th class="stat-min">Min</th>
+                                    <th class="stat-std">Std</th>
+                                    <th class="stat-avg">Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for player_data in weekly_position_data[position] %}
+                                    <!-- Targets Row -->
+                                    <tr class="targets">
+                                        <td class="player-name">
+                                            <strong>{{ player_data.player_name }}</strong><br>
+                                            <small>Targets</small>
+                                        </td>
+                                        <td class="stat-avg">{{ player_data.weeks_played }}</td>
+                                        
+                                        {% if available_weeks %}
+                                            {% for week in available_weeks %}
+                                                <td>{{ player_data.weekly_targets.get(week, 0) }}</td>
+                                            {% endfor %}
+                                        {% endif %}
+                                        
+                                        <td class="stat-avg">{{ "%.1f"|format(player_data.targets_avg) }}</td>
+                                        <td class="stat-max">{{ player_data.targets_max }}</td>
+                                        <td class="stat-min">{{ player_data.targets_min }}</td>
+                                        <td class="stat-std">{{ "%.1f"|format(player_data.targets_std) }}</td>
+                                        <td class="stat-avg {% if player_data.targets_trend > 10 %}trend-positive{% elif player_data.targets_trend < -10 %}trend-negative{% else %}trend-neutral{% endif %}">
+                                            {{ "%.0f"|format(player_data.targets_trend) }}%
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Carries Row (for RB primarily) -->
+                                    {% if position in ['RB', 'QB'] %}
+                                    <tr class="carries">
+                                        <td class="player-name">
+                                            <small>Carries</small>
+                                        </td>
+                                        <td class="stat-avg">{{ player_data.weeks_played }}</td>
+                                        
+                                        {% if available_weeks %}
+                                            {% for week in available_weeks %}
+                                                <td>{{ player_data.weekly_carries.get(week, 0) }}</td>
+                                            {% endfor %}
+                                        {% endif %}
+                                        
+                                        <td class="stat-avg">{{ "%.1f"|format(player_data.carries_avg) }}</td>
+                                        <td class="stat-max">{{ player_data.carries_max }}</td>
+                                        <td class="stat-min">{{ player_data.carries_min }}</td>
+                                        <td class="stat-std">{{ "%.1f"|format(player_data.carries_std) }}</td>
+                                        <td class="stat-avg {% if player_data.carries_trend > 10 %}trend-positive{% elif player_data.carries_trend < -10 %}trend-negative{% else %}trend-neutral{% endif %}">
+                                            {{ "%.0f"|format(player_data.carries_trend) }}%
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    
+                                    <!-- Target Share Row -->
+                                    <tr class="shares">
+                                        <td class="player-name">
+                                            <small>Target %</small>
+                                        </td>
+                                        <td class="stat-avg">{{ player_data.weeks_played }}</td>
+                                        
+                                        {% if available_weeks %}
+                                            {% for week in available_weeks %}
+                                                <td>{{ "%.1f"|format(player_data.weekly_target_share.get(week, 0)) }}%</td>
+                                            {% endfor %}
+                                        {% endif %}
+                                        
+                                        <td class="stat-avg">{{ "%.1f"|format(player_data.target_share_avg) }}%</td>
+                                        <td class="stat-max">{{ "%.1f"|format(player_data.target_share_max) }}%</td>
+                                        <td class="stat-min">{{ "%.1f"|format(player_data.target_share_min) }}%</td>
+                                        <td class="stat-std">{{ "%.1f"|format(player_data.target_share_std) }}</td>
+                                        <td class="stat-avg {% if player_data.target_share_trend > 5 %}trend-positive{% elif player_data.target_share_trend < -5 %}trend-negative{% else %}trend-neutral{% endif %}">
+                                            {{ "%.1f"|format(player_data.target_share_trend) }}%
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Red Zone Opportunities -->
+                                    <tr class="situational">
+                                        <td class="player-name">
+                                            <small>Red Zone</small>
+                                        </td>
+                                        <td class="stat-avg">{{ player_data.weeks_played }}</td>
+                                        
+                                        {% if available_weeks %}
+                                            {% for week in available_weeks %}
+                                                <td>{{ player_data.weekly_red_zone.get(week, 0) }}</td>
+                                            {% endfor %}
+                                        {% endif %}
+                                        
+                                        <td class="stat-avg">{{ "%.1f"|format(player_data.red_zone_avg) }}</td>
+                                        <td class="stat-max">{{ player_data.red_zone_max }}</td>
+                                        <td class="stat-min">{{ player_data.red_zone_min }}</td>
+                                        <td class="stat-std">{{ "%.1f"|format(player_data.red_zone_std) }}</td>
+                                        <td class="stat-avg {% if player_data.red_zone_trend > 10 %}trend-positive{% elif player_data.red_zone_trend < -10 %}trend-negative{% else %}trend-neutral{% endif %}">
+                                            {{ "%.0f"|format(player_data.red_zone_trend) }}%
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Separator row -->
+                                    <tr style="height: 10px; background-color: #f8f9fa;"><td colspan="{{ (available_weeks|length if available_weeks else 0) + 6 }}"></td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+        {% endif %}
+    {% endif %}
+    
+    <script>
+        function toggleMetricDisplay(metric) {
+            const checkbox = document.getElementById(metric);
+            const rows = document.querySelectorAll(`.${metric}`);
+            
+            rows.forEach(row => {
+                row.style.display = checkbox.checked ? '' : 'none';
+            });
+            
+            // Save preference to localStorage
+            localStorage.setItem(`show_${metric}`, checkbox.checked);
+        }
+        
+        function togglePositionSection(positionId) {
+            const section = document.getElementById(positionId);
+            const icon = document.querySelector(`[data-position="${positionId}"] i`);
+            
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                icon.className = 'fas fa-chevron-down';
+            } else {
+                section.style.display = 'none';
+                icon.className = 'fas fa-chevron-right';
+            }
+        }
+        
+        function showAllPlots() {
+            hideAllPlotContainers();
+            document.getElementById('all-plots').style.display = 'block';
+            setActiveButton('all-plots-btn');
+        }
+        
+        function showPositionPlots(position) {
+            hideAllPlotContainers();
+            document.getElementById(position + '-plots').style.display = 'block';
+            setActiveButton(position + '-plots-btn');
+        }
+        
+        function showSummaryPlots() {
+            hideAllPlotContainers();
+            document.getElementById('summary-plots').style.display = 'block';
+            setActiveButton('summary-plots-btn');
+        }
+        
+        function hideAllPlotContainers() {
+            const containers = document.querySelectorAll('.plot-container');
+            containers.forEach(container => {
+                container.style.display = 'none';
+            });
+        }
+        
+        function setActiveButton(activeId) {
+            const buttons = document.querySelectorAll('.plot-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(activeId).classList.add('active');
+        }
+        
+        function openPlotModal(imgSrc) {
+            const modal = document.getElementById('plot-modal');
+            const modalImg = document.getElementById('modal-plot-img');
+            modal.style.display = 'block';
+            modalImg.src = imgSrc;
+        }
+        
+        function closePlotModal() {
+            document.getElementById('plot-modal').style.display = 'none';
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize metric toggles
+            initializeMetricToggles();
+            
+            // Add click handlers to plot images for modal viewing
+            const plotImages = document.querySelectorAll('.plot-image');
+            plotImages.forEach(img => {
+                img.addEventListener('click', function() {
+                    openPlotModal(this.src);
+                });
+            });
+            
+            // Add modal to body if it doesn't exist
+            if (!document.getElementById('plot-modal')) {
+                const modal = document.createElement('div');
+                modal.id = 'plot-modal';
+                modal.className = 'plot-modal';
+                modal.style.cssText = `
+                    display: none;
+                    position: fixed;
+                    z-index: 1000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0,0,0,0.9);
+                    cursor: pointer;
+                `;
+                modal.innerHTML = `
+                    <span class="plot-modal-close" onclick="closePlotModal()" style="position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer;">&times;</span>
+                    <img id="modal-plot-img" src="" style="display: block; margin: auto; max-width: 95%; max-height: 95%; margin-top: 2.5%;">
+                `;
+                document.body.appendChild(modal);
+                
+                // Close modal when clicking outside image
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closePlotModal();
+                    }
+                });
+            }
+            
+            // Show appropriate plots by default
+            {% if plot_data %}
+            showAllPlots();
+            {% endif %}
+        });
+        
+        function initializeMetricToggles() {
+            const metrics = ['targets', 'carries', 'shares', 'situational'];
+            
+            metrics.forEach(metric => {
+                const checkbox = document.getElementById(metric);
+                if (checkbox) {
+                    const saved = localStorage.getItem(`show_${metric}`);
+                    
+                    if (saved !== null) {
+                        checkbox.checked = saved === 'true';
+                        toggleMetricDisplay(metric);
+                    }
+                }
+            });
+        }
+    </script>
+</body>
 </html>

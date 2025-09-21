@@ -803,3 +803,345 @@ a#social-media {
         overflow-x: auto;
     }
 }
+
+/* Additional Mobile Responsive CSS for Team Opportunities */
+
+@media (max-width: 1200px) {
+    .plot-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .plot-grid-compact {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    /* Plot controls */
+    .plot-controls {
+        padding: 10px;
+    }
+    
+    .plot-btn {
+        display: block;
+        margin: 5px auto;
+        width: 90%;
+        max-width: 200px;
+    }
+    
+    /* Plot containers */
+    .plots-section {
+        padding: 15px;
+        margin: 15px 0;
+    }
+    
+    .plot-container {
+        padding: 15px;
+        margin: 15px 0;
+    }
+    
+    .plot-grid,
+    .plot-grid-compact {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .plot-item {
+        padding: 10px;
+    }
+    
+    .plot-item h4 {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    /* Tables */
+    .weekly-table {
+        font-size: 10px;
+    }
+    
+    .weekly-table th,
+    .weekly-table td {
+        padding: 4px 2px;
+    }
+    
+    .player-name {
+        min-width: 100px;
+        max-width: 100px;
+    }
+    
+    .player-name strong {
+        font-size: 10px;
+    }
+    
+    .player-name small {
+        font-size: 8px;
+    }
+    
+    /* Opportunity controls */
+    .opportunity-controls {
+        padding: 10px;
+    }
+    
+    .metric-toggle {
+        display: block;
+        margin: 5px auto;
+        width: 90%;
+        max-width: 200px;
+        text-align: center;
+    }
+    
+    /* Position headers */
+    .position-header {
+        padding: 12px;
+        margin: 15px 0 5px 0;
+    }
+    
+    .position-header h3 {
+        font-size: 16px;
+    }
+    
+    /* Insight cards */
+    .insight-card {
+        padding: 15px;
+        margin: 15px 0;
+    }
+    
+    .insight-card h4 {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+    
+    .nfl-row {
+        flex-direction: column;
+    }
+    
+    .nfl-column {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Extra small screens */
+    .weekly-table {
+        font-size: 9px;
+    }
+    
+    .weekly-table th,
+    .weekly-table td {
+        padding: 3px 1px;
+    }
+    
+    .player-name {
+        min-width: 80px;
+        max-width: 80px;
+    }
+    
+    .player-name strong {
+        font-size: 9px;
+    }
+    
+    .player-name small {
+        font-size: 7px;
+    }
+    
+    .plot-item h4 {
+        font-size: 12px;
+    }
+    
+    .position-header h3 {
+        font-size: 14px;
+    }
+    
+    /* Hide some less critical columns on very small screens */
+    .weekly-table .stat-std {
+        display: none;
+    }
+    
+    .weekly-table .stat-min {
+        display: none;
+    }
+}
+
+/* Print styles */
+@media print {
+    .plot-controls,
+    .opportunity-controls {
+        display: none;
+    }
+    
+    .plot-container {
+        break-inside: avoid;
+        margin: 10px 0;
+    }
+    
+    .plot-image {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .position-header {
+        break-after: avoid;
+    }
+    
+    .weekly-table {
+        font-size: 8px;
+    }
+    
+    .weekly-table th,
+    .weekly-table td {
+        padding: 2px 1px;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .plot-btn {
+        border: 2px solid #000;
+    }
+    
+    .plot-btn.active {
+        background-color: #000;
+        color: #fff;
+    }
+    
+    .plot-item {
+        border: 1px solid #000;
+    }
+    
+    .position-header {
+        border: 2px solid #000;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .plot-btn,
+    .plot-item,
+    .position-header {
+        transition: none;
+    }
+    
+    .position-content {
+        animation: none;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .plots-section {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: #ecf0f1;
+    }
+    
+    .plot-controls {
+        background-color: #34495e;
+        color: #ecf0f1;
+    }
+    
+    .plot-container {
+        background-color: #2c3e50;
+        color: #ecf0f1;
+    }
+    
+    .plot-item {
+        background-color: #34495e;
+        color: #ecf0f1;
+    }
+    
+    .plot-btn {
+        background-color: #5a6c7d;
+        color: #ecf0f1;
+    }
+    
+    .plot-btn:hover {
+        background-color: #4a5a6b;
+    }
+    
+    .plot-btn.active {
+        background-color: #3498db;
+    }
+}
+
+/* Focus styles for accessibility */
+.plot-btn:focus,
+.metric-toggle input:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Loading animation for plots */
+.plot-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.plot-loading::after {
+    content: '';
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e9ecef;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Tooltip styles for plot elements */
+.plot-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.plot-tooltip.show {
+    opacity: 1;
+}
+
+/* Sticky header enhancements */
+.weekly-table th.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Enhanced scroll indicators */
+.scroll-indicator {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-size: 18px;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(-50%);
+    }
+    40% {
+        transform: translateY(-45%);
+    }
+    60% {
+        transform: translateY(-55%);
+    }
+}
