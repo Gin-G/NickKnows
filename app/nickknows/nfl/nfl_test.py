@@ -75,8 +75,8 @@ year = 2025
 #pbp_data.to_csv(file_path)
 #print(pbp_data.head(10))
 
-snaps = nfl.import_team_desc()
-print(snaps.columns)
+snaps = nfl.import_pbp_data([year])
+print(snaps.head(50))
 '''
 ### All weekly columns
 player_name

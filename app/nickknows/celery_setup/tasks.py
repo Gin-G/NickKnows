@@ -8,6 +8,7 @@ from flask import flash, request
 import matplotlib.pyplot as plt
 from celery.utils.log import get_task_logger
 from datetime import datetime
+from urllib.error import HTTPError
 
 logger = get_task_logger(__name__)
 
@@ -96,7 +97,7 @@ def update_sched_data(year=None):
 
 @celery.task()
 def update_week_data(year=None):
-    """Update weekly data for specified year"""
+    """Update weekly data for specified year with PBP backup"""
     if year is None:
         year = get_selected_year()
         
@@ -104,9 +105,220 @@ def update_week_data(year=None):
     season_display = format_nfl_season(year)
     logger.info(f"Updating weekly data for {season_display}")
     
-    weekly_data = nfl.import_weekly_data([year])
-    weekly_data.to_csv(wefile_path)
-    logger.info(f"Weekly data for {season_display} saved to {wefile_path}")
+    try:
+        # Try standard method first
+        logger.info(f"Attempting standard weekly data import for {year}...")
+        weekly_data = nfl.import_weekly_data([year])
+        weekly_data.to_csv(wefile_path)
+        logger.info(f"✅ Standard weekly data successful for {season_display}")
+        logger.info(f"Weekly data saved to {wefile_path}")
+        
+    except (HTTPError, OSError) as e:
+        # These are the specific errors you're seeing
+        logger.warning(f"❌ Standard weekly data failed for {season_display}: {str(e)}")
+        logger.info(f"🔄 Using PBP backup method...")
+        
+        try:
+            # Use PBP backup method
+            weekly_data = create_weekly_from_pbp_backup(year)
+            
+            if len(weekly_data) > 0:
+                weekly_data.to_csv(wefile_path)
+                logger.info(f"✅ PBP backup successful for {season_display}")
+                logger.info(f"Created {len(weekly_data)} player-week records")
+                logger.info(f"PBP weekly data saved to {wefile_path}")
+            else:
+                raise Exception(f"PBP backup produced no data for {season_display}")
+                
+        except Exception as pbp_error:
+            logger.error(f"❌ PBP backup also failed for {season_display}: {str(pbp_error)}")
+            raise Exception(f"Both methods failed for {season_display}. Standard: {str(e)}. PBP: {str(pbp_error)}")
+    
+    except Exception as e:
+        # Any other unexpected errors
+        logger.error(f"❌ Unexpected error for {season_display}: {str(e)}")
+        raise
+
+def create_weekly_from_pbp_backup(year):
+    """Backup method to create weekly data from PBP when standard import fails"""
+    logger.info(f"Creating weekly data from PBP backup for {year}...")
+    
+    # Load PBP data
+    if year >= 2024:
+        pbp_data = nfl.import_pbp_data([year], include_participation=False)
+    else:
+        pbp_data = nfl.import_pbp_data([year])
+    
+    logger.info(f"Loaded {len(pbp_data)} PBP records")
+    
+    # Load roster data
+    try:
+        roster_data = nfl.import_weekly_rosters([year])
+        logger.info(f"Loaded {len(roster_data)} roster records")
+        has_roster = True
+    except Exception as e:
+        logger.warning(f"Could not load roster data: {e}")
+        roster_data = pd.DataFrame()
+        has_roster = False
+    
+    # Filter to regular season
+    reg_season = pbp_data[pbp_data['season_type'] == 'REG'].copy()
+    logger.info(f"Regular season plays: {len(reg_season)}")
+    
+    all_stats = []
+    
+    # PASSING STATS
+    passing_plays = reg_season[
+        (reg_season['play_type'] == 'pass') & 
+        (reg_season['passer_player_id'].notna())
+    ]
+    
+    if len(passing_plays) > 0:
+        pass_stats = passing_plays.groupby(['passer_player_id', 'week']).agg({
+            'passing_yards': 'sum',
+            'pass_touchdown': 'sum',
+            'interception': 'sum', 
+            'complete_pass': 'sum',
+            'pass_attempt': 'sum'
+        }).reset_index()
+        
+        pass_stats.rename(columns={
+            'passer_player_id': 'player_id',
+            'complete_pass': 'completions',
+            'pass_attempt': 'attempts',
+            'pass_touchdown': 'passing_tds'
+        }, inplace=True)
+        
+        pass_stats['season'] = year
+        pass_stats['season_type'] = 'REG'
+        all_stats.append(pass_stats)
+        logger.info(f"Created {len(pass_stats)} QB stat records")
+    
+    # RUSHING STATS
+    rushing_plays = reg_season[
+        (reg_season['play_type'] == 'run') & 
+        (reg_season['rusher_player_id'].notna())
+    ]
+    
+    if len(rushing_plays) > 0:
+        rush_stats = rushing_plays.groupby(['rusher_player_id', 'week']).agg({
+            'rushing_yards': 'sum',
+            'rush_touchdown': 'sum',
+            'rush_attempt': 'sum'
+        }).reset_index()
+        
+        rush_stats.rename(columns={
+            'rusher_player_id': 'player_id',
+            'rush_attempt': 'carries',
+            'rush_touchdown': 'rushing_tds'
+        }, inplace=True)
+        
+        rush_stats['season'] = year
+        rush_stats['season_type'] = 'REG'
+        all_stats.append(rush_stats)
+        logger.info(f"Created {len(rush_stats)} RB stat records")
+    
+    # RECEIVING STATS
+    receiving_plays = reg_season[
+        (reg_season['play_type'] == 'pass') & 
+        (reg_season['receiver_player_id'].notna())
+    ]
+    
+    if len(receiving_plays) > 0:
+        rec_stats = receiving_plays.groupby(['receiver_player_id', 'week']).agg({
+            'receiving_yards': 'sum',
+            'pass_touchdown': 'sum',
+            'complete_pass': 'sum',
+            'pass_attempt': 'sum'
+        }).reset_index()
+        
+        rec_stats.rename(columns={
+            'receiver_player_id': 'player_id',
+            'complete_pass': 'receptions',
+            'pass_attempt': 'targets',
+            'pass_touchdown': 'receiving_tds'
+        }, inplace=True)
+        
+        rec_stats['season'] = year
+        rec_stats['season_type'] = 'REG'
+        all_stats.append(rec_stats)
+        logger.info(f"Created {len(rec_stats)} WR/TE stat records")
+    
+    # Combine all stats
+    if all_stats:
+        combined_df = pd.concat(all_stats, ignore_index=True)
+        
+        # Group by player and week to combine stat types
+        numeric_cols = ['passing_yards', 'passing_tds', 'interceptions', 'completions', 'attempts',
+                       'rushing_yards', 'rushing_tds', 'carries', 
+                       'receiving_yards', 'receiving_tds', 'receptions', 'targets']
+        
+        agg_dict = {col: 'sum' for col in numeric_cols if col in combined_df.columns}
+        agg_dict.update({'season': 'first', 'season_type': 'first'})
+        
+        final_df = combined_df.groupby(['player_id', 'week']).agg(agg_dict).reset_index()
+        
+        # Add roster information if available
+        if has_roster and len(roster_data) > 0:
+            player_info = roster_data.groupby('player_id').agg({
+                'player_name': 'first',
+                'position': 'first',
+                'team': 'first',
+                'headshot_url': 'first'
+            }).reset_index()
+            
+            final_df = final_df.merge(player_info, on='player_id', how='left')
+            final_df['player_display_name'] = final_df['player_name']
+            final_df['recent_team'] = final_df['team']
+            final_df['position_group'] = final_df['position']
+        else:
+            # Add empty columns if no roster data
+            for col in ['player_name', 'player_display_name', 'position', 'position_group', 
+                       'recent_team', 'team', 'headshot_url']:
+                final_df[col] = ''
+        
+        # Add standard columns with defaults to match expected format
+        standard_defaults = {
+            'sacks': 0, 'sack_yards': 0, 'sack_fumbles': 0, 'sack_fumbles_lost': 0,
+            'rushing_fumbles': 0, 'rushing_fumbles_lost': 0,
+            'receiving_fumbles': 0, 'receiving_fumbles_lost': 0,
+            'special_teams_tds': 0,
+            'passing_air_yards': 0, 'passing_yards_after_catch': 0, 'passing_first_downs': 0,
+            'passing_epa': 0.0, 'passing_2pt_conversions': 0,
+            'rushing_first_downs': 0, 'rushing_epa': 0.0, 'rushing_2pt_conversions': 0,
+            'receiving_air_yards': 0, 'receiving_yards_after_catch': 0, 'receiving_first_downs': 0,
+            'receiving_epa': 0.0, 'receiving_2pt_conversions': 0,
+            'pacr': 0.0, 'dakota': 0.0, 'racr': 0.0, 'target_share': 0.0, 'air_yards_share': 0.0, 'wopr': 0.0
+        }
+        
+        for col, default_val in standard_defaults.items():
+            if col not in final_df.columns:
+                final_df[col] = default_val
+        
+        # Fill any remaining NaN values
+        final_df = final_df.fillna(0)
+        
+        # Calculate fantasy points
+        final_df['fantasy_points'] = (
+            final_df.get('passing_yards', 0) * 0.04 +
+            final_df.get('passing_tds', 0) * 4 +
+            final_df.get('interceptions', 0) * -2 +
+            final_df.get('rushing_yards', 0) * 0.1 +
+            final_df.get('rushing_tds', 0) * 6 +
+            final_df.get('receiving_yards', 0) * 0.1 +
+            final_df.get('receiving_tds', 0) * 6 +
+            (final_df.get('rushing_fumbles_lost', 0) + 
+             final_df.get('receiving_fumbles_lost', 0) + 
+             final_df.get('sack_fumbles_lost', 0)) * -2
+        )
+        
+        final_df['fantasy_points_ppr'] = final_df['fantasy_points'] + final_df.get('receptions', 0) * 1
+        
+        logger.info(f"Created final dataset: {len(final_df)} player-week records")
+        return final_df
+    else:
+        logger.error("No stats could be created from PBP data")
+        return pd.DataFrame()
 
 @celery.task()
 def update_qb_yards_top10(year=None):
