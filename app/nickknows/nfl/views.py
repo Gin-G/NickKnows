@@ -1027,13 +1027,22 @@ def team_opportunities(team):
             if len(pos_trends) > 0:
                 position_data[position] = pos_trends.sort_values('targets_avg' if position in ['QB', 'WR', 'TE'] else 'carries_avg', ascending=False)
         
+        team_insights = {
+            'trending_up_targets': get_trending_players_view(team_trends, 'targets', 'up'),
+            'trending_up_carries': get_trending_players_view(team_trends, 'carries', 'up'),
+            'target_leaders': get_opportunity_leaders_view(team_trends, 'targets'),
+            'carry_leaders': get_opportunity_leaders_view(team_trends, 'carries'),
+            'declining_opportunities': get_trending_players_view(team_trends, 'touches', 'down')
+        }
+        
         return render_template('team-opportunities.html',
-                             team=team,
-                             fullname=fullname,
-                             years=available_years,
-                             selected_year=selected_year,
-                             position_data=position_data,
-                             loading=False)
+                            team=team,
+                            fullname=fullname,
+                            years=available_years,
+                            selected_year=selected_year,
+                            position_data=position_data,
+                            insights=team_insights,  # Add this line
+                            loading=False)
                              
     except Exception as e:
         flash(f'Error loading team opportunity data: {str(e)}')
