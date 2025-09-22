@@ -37,72 +37,237 @@
             $('#header').load("{{ url_for('header') }}")
         })
     </script>
-    <body>
-        <div id="header"></div>
-        <div id="nfl_navbar"></div>
+    
+    <style>
+        .opportunity-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
         
-        <h1>🎯 {{ fullname }} Opportunities</h1>
-        <h2>{{ selected_year }} Season</h2>
+        .opportunity-section h2 {
+            margin-top: 0;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
         
-        {% if loading %}
-            <div class="loading-message">
-                <p>📊 Team opportunity data is being calculated...</p>
-                <p>Please refresh the page in a moment.</p>
-            </div>
-        {% else %}
-            <div style="text-align: center; margin: 20px 0;">
-                <a href="{{ url_for('opportunities_home') }}" style="font-size: 16px; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
-                    ← Back to All Teams
-                </a>
+        .trend-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .trend-negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .trend-neutral {
+            color: #6c757d;
+        }
+        
+        .team-links {
+            margin: 30px 0;
+        }
+        
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .team-link {
+            display: block;
+            padding: 12px 16px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            text-align: center;
+            transition: background-color 0.2s ease;
+        }
+        
+        .team-link:hover {
+            background-color: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .loading-message {
+            text-align: center;
+            padding: 40px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .insights-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .insights-table th,
+        .insights-table td {
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        
+        .insights-table th {
+            background-color: #e9ecef;
+            font-weight: 600;
+        }
+        
+        .insights-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .stat-highlight {
+            font-weight: bold;
+            color: #495057;
+        }
+    </style>
+    
+</head>
+<body>
+    <div id="header"></div>
+    <div id="nfl_navbar"></div>
+    
+    <h1>🎯 NFL Opportunity Tracker</h1>
+    <h2>{{ selected_year }} Season</h2>
+    
+    {% if loading %}
+        <div class="loading-message">
+            <p>📊 Opportunity data is being calculated from play-by-play data...</p>
+            <p>Please refresh the page in a moment.</p>
+        </div>
+    {% else %}
+        <div style="text-align: center; margin: 20px 0;">
+            <a href="{{ url_for('update_opportunities') }}" style="font-size: 16px; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
+                🔄 Update Opportunity Data
+            </a>
+        </div>
+        
+        {% if insights %}
+            <!-- Trending Up - Targets -->
+            {% if insights.trending_up_targets %}
+                <div class="opportunity-section">
+                    <h2>🔥 Trending Up - Targets</h2>
+                    <p>Players with increasing target opportunities (>20% increase)</p>
+                    <div class="table-wrapper">
+                        {{ insights.trending_up_targets | safe }}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Trending Up - Carries -->
+            {% if insights.trending_up_carries %}
+                <div class="opportunity-section">
+                    <h2>🏃 Trending Up - Carries</h2>
+                    <p>Players with increasing rushing opportunities (>20% increase)</p>
+                    <div class="table-wrapper">
+                        {{ insights.trending_up_carries | safe }}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Target Leaders and Carry Leaders side by side -->
+            <div class="nfl-row">
+                {% if insights.target_leaders %}
+                <div class="nfl-column">
+                    <div class="opportunity-section">
+                        <h2>👑 Target Leaders</h2>
+                        <p>Highest average targets per game</p>
+                        <div class="table-wrapper">
+                            {{ insights.target_leaders | safe }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if insights.carry_leaders %}
+                <div class="nfl-column">
+                    <div class="opportunity-section">
+                        <h2>🏃‍♂️ Carry Leaders</h2>
+                        <p>Highest average carries per game</p>
+                        <div class="table-wrapper">
+                            {{ insights.carry_leaders | safe }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
             
-            {% if position_data %}
-                {% if 'QB' in position_data %}
-                <div class="position-section">
-                    <h2>🎯 Quarterbacks</h2>
+            <!-- Declining Opportunities -->
+            {% if insights.declining_opportunities %}
+                <div class="opportunity-section">
+                    <h2>📉 Declining Opportunities</h2>
+                    <p>Players losing touches (>20% decrease)</p>
                     <div class="table-wrapper">
-                        {% set qb_data = position_data['QB'][['player_name', 'weeks_played', 'targets_avg', 'targets_latest', 'targets_trend', 'target_share_avg']].round(2) %}
-                        {{ qb_data.style.hide(axis="index").to_html(classes="table", escape=False) | safe }}
+                        {{ insights.declining_opportunities | safe }}
                     </div>
-                </div>
-                {% endif %}
-                
-                {% if 'RB' in position_data %}
-                <div class="position-section">
-                    <h2>🏃 Running Backs</h2>
-                    <div class="table-wrapper">
-                        {% set rb_data = position_data['RB'][['player_name', 'weeks_played', 'carries_avg', 'carries_latest', 'carries_trend', 'carry_share_avg', 'red_zone_carries_avg', 'goal_line_carries_avg']].round(2) %}
-                        {{ rb_data.style.hide(axis="index").to_html(classes="table", escape=False) | safe }}
-                    </div>
-                </div>
-                {% endif %}
-                
-                {% if 'WR' in position_data %}
-                <div class="position-section">
-                    <h2>📡 Wide Receivers</h2>
-                    <div class="table-wrapper">
-                        {% set wr_data = position_data['WR'][['player_name', 'weeks_played', 'targets_avg', 'targets_latest', 'targets_trend', 'target_share_avg', 'red_zone_targets_avg', 'deep_targets_avg']].round(2) %}
-                        {{ wr_data.style.hide(axis="index").to_html(classes="table", escape=False) | safe }}
-                    </div>
-                </div>
-                {% endif %}
-                
-                {% if 'TE' in position_data %}
-                <div class="position-section">
-                    <h2>🤲 Tight Ends</h2>
-                    <div class="table-wrapper">
-                        {% set te_data = position_data['TE'][['player_name', 'weeks_played', 'targets_avg', 'targets_latest', 'targets_trend', 'target_share_avg', 'red_zone_targets_avg']].round(2) %}
-                        {{ te_data.style.hide(axis="index").to_html(classes="table", escape=False) | safe }}
-                    </div>
-                </div>
-                {% endif %}
-            {% else %}
-                <div class="no-data">
-                    <p>No opportunity data available for {{ fullname }}.</p>
-                    <p>Data may still be processing or this team may not have enough qualifying players.</p>
                 </div>
             {% endif %}
         {% endif %}
-    </body>
-</head>
+        
+        <!-- Team Links -->
+        <div class="team-links">
+            <h2>🏈 Team Opportunity Analysis</h2>
+            <p>Click a team to see detailed opportunity breakdowns:</p>
+            <div class="teams-grid">
+                <a href="{{url_for('team_opportunities', team='ARI')}}" class="team-link">Arizona Cardinals</a>
+                <a href="{{url_for('team_opportunities', team='ATL')}}" class="team-link">Atlanta Falcons</a>
+                <a href="{{url_for('team_opportunities', team='BAL')}}" class="team-link">Baltimore Ravens</a>
+                <a href="{{url_for('team_opportunities', team='BUF')}}" class="team-link">Buffalo Bills</a>
+                <a href="{{url_for('team_opportunities', team='CAR')}}" class="team-link">Carolina Panthers</a>
+                <a href="{{url_for('team_opportunities', team='CHI')}}" class="team-link">Chicago Bears</a>
+                <a href="{{url_for('team_opportunities', team='CIN')}}" class="team-link">Cincinnati Bengals</a>
+                <a href="{{url_for('team_opportunities', team='CLE')}}" class="team-link">Cleveland Browns</a>
+                <a href="{{url_for('team_opportunities', team='DAL')}}" class="team-link">Dallas Cowboys</a>
+                <a href="{{url_for('team_opportunities', team='DEN')}}" class="team-link">Denver Broncos</a>
+                <a href="{{url_for('team_opportunities', team='DET')}}" class="team-link">Detroit Lions</a>
+                <a href="{{url_for('team_opportunities', team='GB')}}" class="team-link">Green Bay Packers</a>
+                <a href="{{url_for('team_opportunities', team='HOU')}}" class="team-link">Houston Texans</a>
+                <a href="{{url_for('team_opportunities', team='IND')}}" class="team-link">Indianapolis Colts</a>
+                <a href="{{url_for('team_opportunities', team='JAX')}}" class="team-link">Jacksonville Jaguars</a>
+                <a href="{{url_for('team_opportunities', team='KC')}}" class="team-link">Kansas City Chiefs</a>
+                <a href="{{url_for('team_opportunities', team='LA')}}" class="team-link">Los Angeles Rams</a>
+                <a href="{{url_for('team_opportunities', team='LAC')}}" class="team-link">Los Angeles Chargers</a>
+                <a href="{{url_for('team_opportunities', team='LV')}}" class="team-link">Las Vegas Raiders</a>
+                <a href="{{url_for('team_opportunities', team='MIA')}}" class="team-link">Miami Dolphins</a>
+                <a href="{{url_for('team_opportunities', team='MIN')}}" class="team-link">Minnesota Vikings</a>
+                <a href="{{url_for('team_opportunities', team='NE')}}" class="team-link">New England Patriots</a>
+                <a href="{{url_for('team_opportunities', team='NO')}}" class="team-link">New Orleans Saints</a>
+                <a href="{{url_for('team_opportunities', team='NYG')}}" class="team-link">New York Giants</a>
+                <a href="{{url_for('team_opportunities', team='NYJ')}}" class="team-link">New York Jets</a>
+                <a href="{{url_for('team_opportunities', team='PHI')}}" class="team-link">Philadelphia Eagles</a>
+                <a href="{{url_for('team_opportunities', team='PIT')}}" class="team-link">Pittsburgh Steelers</a>
+                <a href="{{url_for('team_opportunities', team='SEA')}}" class="team-link">Seattle Seahawks</a>
+                <a href="{{url_for('team_opportunities', team='SF')}}" class="team-link">San Francisco 49ers</a>
+                <a href="{{url_for('team_opportunities', team='TB')}}" class="team-link">Tampa Bay Buccaneers</a>
+                <a href="{{url_for('team_opportunities', team='TEN')}}" class="team-link">Tennessee Titans</a>
+                <a href="{{url_for('team_opportunities', team='WAS')}}" class="team-link">Washington Commanders</a>
+            </div>
+        </div>
+        
+        {% if not insights %}
+        <div class="no-data">
+            <p>No opportunity insights available.</p>
+            <p>Click "Update Opportunity Data" to generate the latest analysis.</p>
+        </div>
+        {% endif %}
+    {% endif %}
+</body>
 </html>

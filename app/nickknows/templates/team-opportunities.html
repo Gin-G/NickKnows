@@ -39,45 +39,7 @@
     </script>
     
     <style>
-        .opportunity-controls {
-            margin: 20px 0;
-            padding: 15px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .opportunity-controls h4 {
-            margin-bottom: 15px;
-            color: #495057;
-        }
-        
-        .metric-toggle {
-            display: inline-block;
-            margin: 0 15px 10px 15px;
-            padding: 8px 12px;
-            background-color: white;
-            border-radius: 6px;
-            border: 1px solid #dee2e6;
-            transition: all 0.2s ease;
-        }
-        
-        .metric-toggle:hover {
-            background-color: #e9ecef;
-            transform: translateY(-1px);
-        }
-        
-        .metric-toggle input[type="checkbox"] {
-            margin-right: 8px;
-            transform: scale(1.1);
-        }
-        
-        .metric-toggle label {
-            font-weight: 500;
-            cursor: pointer;
-            color: #495057;
-        }
+
         
         .position-header {
             background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
@@ -260,29 +222,7 @@
             font-size: 10px;
         }
         
-        .insight-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border: 1px solid #dee2e6;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: transform 0.2s ease;
-        }
-        
-        .insight-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-        }
-        
-        .insight-card h4 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #495057;
-            font-weight: 600;
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 8px;
-        }
+
         
         .loading-message {
             text-align: center;
@@ -408,12 +348,6 @@
                 max-width: 120px;
             }
             
-            .metric-toggle {
-                display: block;
-                margin: 5px auto;
-                width: 200px;
-            }
-            
             .plot-grid {
                 grid-template-columns: 1fr;
             }
@@ -450,25 +384,7 @@
             </a>
         </div>
         
-        <!-- Team Insights Summary -->
-        {% if insights %}
-        <div class="nfl-row">
-            <div class="nfl-column">
-                <div class="insight-card">
-                    <h4>🔥 Trending Up</h4>
-                    <p><strong>Targets:</strong> {{ insights.trending_up_targets_count or 0 }} players</p>
-                    <p><strong>Carries:</strong> {{ insights.trending_up_carries_count or 0 }} players</p>
-                </div>
-            </div>
-            <div class="nfl-column">
-                <div class="insight-card">
-                    <h4>📉 Declining</h4>
-                    <p><strong>Touches:</strong> {{ insights.declining_count or 0 }} players</p>
-                    <p><strong>Target Share:</strong> {{ insights.declining_target_share_count or 0 }} players</p>
-                </div>
-            </div>
-        </div>
-        {% endif %}
+
         
         <!-- Interactive Plots Section -->
         {% if plot_data %}
@@ -562,26 +478,7 @@
         </div>
         {% endif %}
         
-        <!-- Metric Toggle Controls -->
-        <div class="opportunity-controls">
-            <h4>📊 Show/Hide Metrics:</h4>
-            <div class="metric-toggle">
-                <input type="checkbox" id="targets" checked onchange="toggleMetricDisplay('targets')">
-                <label for="targets">Targets</label>
-            </div>
-            <div class="metric-toggle">
-                <input type="checkbox" id="carries" checked onchange="toggleMetricDisplay('carries')">
-                <label for="carries">Carries</label>
-            </div>
-            <div class="metric-toggle">
-                <input type="checkbox" id="shares" checked onchange="toggleMetricDisplay('shares')">
-                <label for="shares">Shares</label>
-            </div>
-            <div class="metric-toggle">
-                <input type="checkbox" id="situational" checked onchange="toggleMetricDisplay('situational')">
-                <label for="situational">Red Zone</label>
-            </div>
-        </div>
+
         
         <!-- Position Sections -->
         {% if weekly_position_data %}
@@ -728,18 +625,6 @@
     {% endif %}
     
     <script>
-        function toggleMetricDisplay(metric) {
-            const checkbox = document.getElementById(metric);
-            const rows = document.querySelectorAll(`.${metric}`);
-            
-            rows.forEach(row => {
-                row.style.display = checkbox.checked ? '' : 'none';
-            });
-            
-            // Save preference to localStorage
-            localStorage.setItem(`show_${metric}`, checkbox.checked);
-        }
-        
         function togglePositionSection(positionId) {
             const section = document.getElementById(positionId);
             const icon = document.querySelector(`[data-position="${positionId}"] i`);
@@ -799,9 +684,6 @@
         
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize metric toggles
-            initializeMetricToggles();
-            
             // Add click handlers to plot images for modal viewing
             const plotImages = document.querySelectorAll('.plot-image');
             plotImages.forEach(img => {
@@ -845,22 +727,7 @@
             showAllPlots();
             {% endif %}
         });
-        
-        function initializeMetricToggles() {
-            const metrics = ['targets', 'carries', 'shares', 'situational'];
-            
-            metrics.forEach(metric => {
-                const checkbox = document.getElementById(metric);
-                if (checkbox) {
-                    const saved = localStorage.getItem(`show_${metric}`);
-                    
-                    if (saved !== null) {
-                        checkbox.checked = saved === 'true';
-                        toggleMetricDisplay(metric);
-                    }
-                }
-            });
-        }
+    </script>
     </script>
 </body>
 </html>

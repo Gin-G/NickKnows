@@ -957,8 +957,13 @@ def opportunities_home():
         available_years = get_available_years()
         selected_year = get_selected_year()
         
+        print(f"DEBUG: Loading opportunity home for {selected_year}")
+        
         # Load trend data
         trend_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_trends.csv'
+        
+        print(f"DEBUG: Looking for trend file: {trend_file_path}")
+        print(f"DEBUG: File exists: {os.path.exists(trend_file_path)}")
         
         if not os.path.exists(trend_file_path):
             update_opportunity_data.delay(selected_year)
@@ -968,16 +973,40 @@ def opportunities_home():
                                  selected_year=selected_year,
                                  loading=True)
         
-        trend_data = pd.read_csv(trend_file_path)
+        try:
+            trend_data = pd.read_csv(trend_file_path)
+            print(f"DEBUG: Loaded trend data: {len(trend_data)} records")
+            print(f"DEBUG: Trend data columns: {list(trend_data.columns)}")
+        except Exception as e:
+            print(f"DEBUG: Error loading trend data: {str(e)}")
+            flash(f'Error loading opportunity data: {str(e)}')
+            return render_template('opportunities-home.html',
+                                 years=available_years,
+                                 selected_year=selected_year,
+                                 loading=False)
         
-        # Get key insights
-        insights = {
-            'trending_up_targets': get_trending_players_view(trend_data, 'targets', 'up'),
-            'trending_up_carries': get_trending_players_view(trend_data, 'carries', 'up'),
-            'target_leaders': get_opportunity_leaders_view(trend_data, 'targets'),
-            'carry_leaders': get_opportunity_leaders_view(trend_data, 'carries'),
-            'declining_opportunities': get_trending_players_view(trend_data, 'touches', 'down')
-        }
+        # Get key insights using the helper functions
+        insights = {}
+        
+        try:
+            insights['trending_up_targets'] = get_trending_players_view(trend_data, 'targets', 'up')
+            insights['trending_up_carries'] = get_trending_players_view(trend_data, 'carries', 'up')
+            insights['target_leaders'] = get_opportunity_leaders_view(trend_data, 'targets')
+            insights['carry_leaders'] = get_opportunity_leaders_view(trend_data, 'carries')
+            insights['declining_opportunities'] = get_trending_players_view(trend_data, 'touches', 'down')
+            
+            print(f"DEBUG: Generated insights successfully")
+            
+        except Exception as e:
+            print(f"DEBUG: Error generating insights: {str(e)}")
+            # Provide empty insights rather than failing
+            insights = {
+                'trending_up_targets': "<p>No trending data available</p>",
+                'trending_up_carries': "<p>No trending data available</p>",
+                'target_leaders': "<p>No target leader data available</p>",
+                'carry_leaders': "<p>No carry leader data available</p>",
+                'declining_opportunities': "<p>No declining opportunity data available</p>"
+            }
         
         return render_template('opportunities-home.html',
                              years=available_years,
@@ -986,6 +1015,10 @@ def opportunities_home():
                              loading=False)
                              
     except Exception as e:
+        print(f"DEBUG: Major error in opportunities_home: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
         flash(f'Error loading opportunity data: {str(e)}')
         return render_template('opportunities-home.html',
                              years=available_years,
@@ -1210,55 +1243,159 @@ def update_opportunities():
 
 def get_trending_players_view(trend_data, metric, direction='up', min_trend=20, min_avg=1):
     """Get trending players for view"""
+    if len(trend_data) == 0:
+        return "<p class='text-muted'>No trend data available</p>"
+    
     trend_col = f'{metric}_trend'
     avg_col = f'{metric}_avg'
     
-    if direction == 'up':
-        filters = (
-            (trend_data[trend_col] >= min_trend) &
-            (trend_data[avg_col] >= min_avg)
-        )
-        sort_ascending = False
-    else:  # direction == 'down'
-        filters = (
-            (trend_data[trend_col] <= -min_trend) &
-            (trend_data[avg_col] >= min_avg)
-        )
-        sort_ascending = True
+    # Check if required columns exist
+    if trend_col not in trend_data.columns or avg_col not in trend_data.columns:
+        return f"<p class='text-warning'>Missing {metric} trend data</p>"
     
-    result = trend_data[filters].copy()
-    if len(result) > 0:
-        result = result.sort_values(trend_col, ascending=sort_ascending)
+    try:
+        if direction == 'up':
+            filters = (
+                (trend_data[trend_col] >= min_trend) &
+                (trend_data[avg_col] >= min_avg)
+            )
+            sort_ascending = False
+            emoji = "📈"
+        else:  # direction == 'down'
+            filters = (
+                (trend_data[trend_col] <= -min_trend) &
+                (trend_data[avg_col] >= min_avg)
+            )
+            sort_ascending = True
+            emoji = "📉"
         
-        # Select and format columns
-        display_cols = ['player_name', 'position', 'team', 'weeks_played', avg_col, f'{metric}_latest', trend_col]
-        result = result[display_cols].head(10)
-        result = result.round(2)
+        result = trend_data[filters].copy()
         
-        return result.style.hide(axis="index").to_html(classes="table", escape=False)
-    return "<p>No players meet criteria</p>"
+        if len(result) == 0:
+            direction_text = "increasing" if direction == 'up' else "declining"
+            return f"<p class='text-muted'>{emoji} No players with significantly {direction_text} {metric}</p>"
+        
+        # Sort and limit results
+        result = result.sort_values(trend_col, ascending=sort_ascending).head(10)
+        
+        # Select and format columns for display
+        display_cols = []
+        available_cols = list(result.columns)
+        
+        # Add columns that exist
+        if 'player_name' in available_cols:
+            display_cols.append('player_name')
+        if 'position' in available_cols:
+            display_cols.append('position')
+        if 'team' in available_cols:
+            display_cols.append('team')
+        if 'weeks_played' in available_cols:
+            display_cols.append('weeks_played')
+        if avg_col in available_cols:
+            display_cols.append(avg_col)
+        if f'{metric}_latest' in available_cols:
+            display_cols.append(f'{metric}_latest')
+        if trend_col in available_cols:
+            display_cols.append(trend_col)
+        
+        if len(display_cols) < 3:
+            return f"<p class='text-warning'>Insufficient data columns for {metric} display</p>"
+        
+        result_display = result[display_cols].copy()
+        
+        # Round numeric columns
+        numeric_cols = result_display.select_dtypes(include=[np.number]).columns
+        result_display[numeric_cols] = result_display[numeric_cols].round(2)
+        
+        # Format column names for display
+        col_rename = {
+            'player_name': 'Player',
+            'position': 'Pos',
+            'team': 'Team',
+            'weeks_played': 'Weeks',
+            f'{metric}_avg': f'Avg {metric.title()}',
+            f'{metric}_latest': f'Latest',
+            f'{metric}_trend': 'Trend %'
+        }
+        
+        result_display = result_display.rename(columns=col_rename)
+        
+        return result_display.style.hide(axis="index").to_html(classes="table table-sm", escape=False)
+               
+    except Exception as e:
+        print(f"Error in get_trending_players_view: {str(e)}")
+        return f"<p class='text-danger'>Error generating {metric} trends: {str(e)}</p>"
 
 def get_opportunity_leaders_view(trend_data, metric, min_weeks=2):
     """Get opportunity leaders for view"""
+    if len(trend_data) == 0:
+        return "<p class='text-muted'>No trend data available</p>"
+    
     avg_col = f'{metric}_avg'
     
-    filters = (
-        (trend_data['weeks_played'] >= min_weeks) &
-        (trend_data[avg_col] > 0)
-    )
+    if avg_col not in trend_data.columns:
+        return f"<p class='text-warning'>Missing {metric} average data</p>"
     
-    leaders = trend_data[filters].copy()
-    if len(leaders) > 0:
-        leaders = leaders.sort_values(avg_col, ascending=False)
+    try:
+        filters = (
+            (trend_data['weeks_played'] >= min_weeks) &
+            (trend_data[avg_col] > 0)
+        )
+        
+        leaders = trend_data[filters].copy()
+        if len(leaders) == 0:
+            return f"<p class='text-muted'>No {metric} leaders available</p>"
+        
+        leaders = leaders.sort_values(avg_col, ascending=False).head(15)
         
         # Select and format columns
-        display_cols = ['player_name', 'position', 'team', 'weeks_played', avg_col, f'{metric}_latest', f'{metric}_max']
-        leaders = leaders[display_cols].head(15)
-        leaders = leaders.round(2)
+        display_cols = []
+        available_cols = list(leaders.columns)
         
-        return leaders.style.hide(axis="index").to_html(classes="table", escape=False)
-    return "<p>No leaders available</p>"
-
+        # Add columns that exist
+        if 'player_name' in available_cols:
+            display_cols.append('player_name')
+        if 'position' in available_cols:
+            display_cols.append('position')
+        if 'team' in available_cols:
+            display_cols.append('team')
+        if 'weeks_played' in available_cols:
+            display_cols.append('weeks_played')
+        if avg_col in available_cols:
+            display_cols.append(avg_col)
+        if f'{metric}_latest' in available_cols:
+            display_cols.append(f'{metric}_latest')
+        if f'{metric}_max' in available_cols:
+            display_cols.append(f'{metric}_max')
+        
+        if len(display_cols) < 3:
+            return f"<p class='text-warning'>Insufficient data for {metric} leaders</p>"
+        
+        leaders_display = leaders[display_cols].copy()
+        
+        # Round numeric columns
+        numeric_cols = leaders_display.select_dtypes(include=[np.number]).columns
+        leaders_display[numeric_cols] = leaders_display[numeric_cols].round(2)
+        
+        # Format column names
+        col_rename = {
+            'player_name': 'Player',
+            'position': 'Pos',
+            'team': 'Team',
+            'weeks_played': 'Weeks',
+            f'{metric}_avg': f'Avg {metric.title()}',
+            f'{metric}_latest': 'Latest',
+            f'{metric}_max': 'Max'
+        }
+        
+        leaders_display = leaders_display.rename(columns=col_rename)
+        
+        return leaders_display.style.hide(axis="index").to_html(classes="table table-sm", escape=False)
+        
+    except Exception as e:
+        print(f"Error in get_opportunity_leaders_view: {str(e)}")
+        return f"<p class='text-danger'>Error generating {metric} leaders: {str(e)}</p>"
+    
 def get_season_display_name(year):
     """Format season display name"""
     return f"{year-1}-{year} Season"
