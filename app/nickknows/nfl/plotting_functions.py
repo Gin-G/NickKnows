@@ -625,4 +625,4 @@ def create_red_zone_opportunities_plot(position, players_data, available_weeks, 
         plt.savefig(filepath, dpi=300, bbox_inches='tight', facecolor='white')
         plt.close(fig)
         
-        return str(filepath
+        return str(filepath)
