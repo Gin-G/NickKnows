@@ -625,4 +625,8 @@ def create_red_zone_opportunities_plot(position, players_data, available_weeks, 
         plt.savefig(filepath, dpi=300, bbox_inches='tight', facecolor='white')
         plt.close(fig)
         
-        return str(filepath)
+        return str(filepath.relative_to('nickknows/static/'))
+        
+    except Exception as e:
+        logger.error(f"Error creating Red Zone plot: {str(e)}")
+        return None
