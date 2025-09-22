@@ -9,5 +9,6 @@ tk
 matplotlib
 pandas
 scikit-learn==1.3.1
+seaborn
 setuptools
 flower
