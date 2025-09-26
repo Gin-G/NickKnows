@@ -68,7 +68,7 @@ stadium = schedule['stadium']
 Working with weekly data
 """
 
-year = 2025
+year = 2024
 
 #file_path = os.getcwd() + '/nickknows/nfl/data/' + str(year) + '_pbp_data.csv'
 #pbp_data = nfl.import_pbp_data([year])
@@ -76,7 +76,8 @@ year = 2025
 #print(pbp_data.head(10))
 
 snaps = nfl.import_pbp_data([year])
-print(snaps.head(50))
+pd.set_option('display.max_columns', None)
+print(snaps.head(5))
 '''
 ### All weekly columns
 player_name
