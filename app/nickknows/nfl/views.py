@@ -1,9 +1,46 @@
 from flask import render_template, url_for, redirect, flash, request, session
 from nickknows import app
-from ..celery_setup.tasks import process_team_data, update_fpa_data, update_PBP_data, update_roster_data, update_sched_data, update_week_data, update_qb_yards_top10, update_qb_tds_top10, update_rb_yards_top10, update_rb_tds_top10, update_rec_yds_top10, update_rec_tds_top10, update_team_schedule, update_weekly_team_data, update_snap_count_data, get_snap_count_summary, update_all_teams_snap_counts, update_opportunity_data
+from ..celery_setup.tasks import (
+    update_full_season_data,
+    update_single_team_full,
+    update_core_data_only,
+    update_opportunities_only,
+    update_snap_counts_only,
+    system_health_check,
+    update_all_teams_snap_counts,
+    
+    get_snap_count_summary,
+    update_pbp_data,
+    update_roster_data,
+    update_schedule_data,
+    update_snap_count_data,
+    update_team_schedule,
+    update_player_stats_data,
+    calculate_all_stat_leaders,
+    update_all_team_fpa,
+    calculate_opportunity_data,
+
+    update_PBP_data,
+    update_sched_data,
+    update_week_data,
+    update_qb_yards_top10,
+    update_qb_tds_top10,
+    update_rb_yards_top10,
+    update_rb_tds_top10,
+    update_rec_yds_top10,
+    update_rec_tds_top10,
+    update_fpa_data,
+    process_team_data,
+    update_snap_count_data,
+    update_opportunity_data,
+    
+    get_available_years,
+    get_selected_year,
+    format_nfl_season
+)
 from .plotting_functions import create_team_opportunity_plots
 from celery import chain, chord
-import nfl_data_py as nfl
+import nflreadpy as nfl
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -58,15 +95,17 @@ def set_nfl_year(year):
 
 @app.route('/NFL')
 def NFL():
+    """
+    Updated NFL home route with new task structure
+    """
     available_years = get_available_years()
     selected_year = get_selected_year()
-    current_season = max(available_years)  # 2025 currently
+    current_season = max(available_years)
     base_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year)
     
-    # Only check for updates if this is the current season
+    # Check if data needs updating (only current season)
     update_needed = False
     if selected_year == current_season:
-        # Check if current season data needs updating (7 day threshold)
         core_files = [
             f'{base_path}_pbp_data.csv',
             f'{base_path}_rosters.csv', 
@@ -74,7 +113,7 @@ def NFL():
             f'{base_path}_weekly_data.csv'
         ]
         
-        week_threshold = 7 * 24 * 60 * 60  # 7 days in seconds
+        week_threshold = 7 * 24 * 60 * 60  # 7 days
         current_time = time.time()
         
         for file_path in core_files:
@@ -84,47 +123,17 @@ def NFL():
             elif (current_time - os.path.getmtime(file_path)) > week_threshold:
                 update_needed = True
                 break
-    else:
-        # Historical season - just check if data exists at all
-        core_files = [
-            f'{base_path}_pbp_data.csv',
-            f'{base_path}_rosters.csv', 
-            f'{base_path}_schedule.csv',
-            f'{base_path}_weekly_data.csv'
-        ]
-        
-        # Only update if data is completely missing
-        for file_path in core_files:
-            if not os.path.exists(file_path):
-                update_needed = True
-                break
-
+    
     if update_needed:
-        # Trigger all updates with selected year
-        update_tasks = [
-            (update_PBP_data, selected_year), 
-            (update_roster_data, selected_year), 
-            (update_sched_data, selected_year), 
-            (update_week_data, selected_year),
-            (update_qb_yards_top10, selected_year), 
-            (update_qb_tds_top10, selected_year), 
-            (update_rb_yards_top10, selected_year),
-            (update_rb_tds_top10, selected_year), 
-            (update_rec_yds_top10, selected_year), 
-            (update_rec_tds_top10, selected_year)
-        ]
-        for task, year in update_tasks:
-            task.delay(year)
-        
-        if selected_year == current_season:
-            flash('Current season data is updating in the background. Refresh the page in a bit')
-        else:
-            flash(f'{selected_year} season data is being loaded for the first time. Refresh the page in a bit')
-        
-        return render_template('nfl-home.html', years=available_years, selected_year=selected_year)
-
+        # NEW: Single orchestrated update instead of multiple task calls
+        update_full_season_data.delay(selected_year)
+        flash(f'Data for {selected_year} season is updating. Refresh in a few minutes.')
+        return render_template('nfl-home.html', 
+                             years=available_years, 
+                             selected_year=selected_year)
+    
+    # Load and display data (unchanged)
     try:
-        # File paths
         files = {
             'pass_agg': f'{base_path}_qb_yards_top10_data.csv',
             'pass_td_agg': f'{base_path}_qb_tds_top10_data.csv',
@@ -133,8 +142,7 @@ def NFL():
             'rec_yds_agg': f'{base_path}_rec_yds_top10_data.csv',
             'rec_td_agg': f'{base_path}_rec_tds_top10_data.csv'
         }
-
-        # Load data
+        
         data = {}
         for name, path in files.items():
             if os.path.exists(path):
@@ -142,8 +150,7 @@ def NFL():
                 data[name] = df.style.hide(axis="index").format(precision=0)
             else:
                 raise FileNotFoundError(f"Missing file: {path}")
-
-        # Render template with all data
+        
         return render_template(
             'nfl-home.html',
             pass_yards_data=data['pass_agg'].to_html(classes="table"),
@@ -155,30 +162,18 @@ def NFL():
             years=available_years,
             selected_year=selected_year
         )
-
-    except Exception as e:
-        # Reset update time to force refresh on next load
-        os.environ.pop(f'NFL_DATA_LAST_UPDATE_{selected_year}', None)
-        flash('Error loading data. Updates scheduled.')
-        return render_template('nfl-home.html', years=available_years, selected_year=selected_year)
     
+    except Exception as e:
+        flash('Error loading data. Updates scheduled.')
+        return render_template('nfl-home.html', 
+                             years=available_years, 
+                             selected_year=selected_year)
+      
 @app.route('/NFL/update')
 def NFLupdate():
     selected_year = get_selected_year()
-    # Pass year to all update tasks
-    update_PBP_data.delay(selected_year)
-    update_roster_data.delay(selected_year)
-    update_sched_data.delay(selected_year)
-    update_week_data.delay(selected_year)
-    time.sleep(30)
-    update_qb_yards_top10.delay(selected_year)
-    update_qb_tds_top10.delay(selected_year)
-    update_rb_yards_top10.delay(selected_year)
-    update_rb_tds_top10.delay(selected_year)
-    update_rec_yds_top10.delay(selected_year)
-    update_rec_tds_top10.delay(selected_year)
-    flash('All data is updating in the background. Changes should be reflected on the pages shortly')
-    return redirect(url_for('NFL', year=selected_year))
+    update_full_season_data.delay(selected_year)  # One call does it all
+    return redirect(url_for('NFL'))
 
 @app.route('/NFL/FPA/update')
 def FPAupdate():
@@ -502,7 +497,9 @@ def snap_counts_home():
     
     try:
         # Import team description data for colors and logos
-        team_desc = nfl.import_team_desc()
+        # OLD: team_desc = nfl.import_team_desc()
+        # NEW: nflreadpy uses load_teams()
+        team_desc = nfl.load_teams()
         
         # Create team objects with all needed data
         def create_team_data(row):
@@ -612,7 +609,7 @@ def snap_counts_home():
                              selected_year=selected_year,
                              teams=simple_teams,
                              error=True)
-
+    
 @app.route('/NFL/SnapCounts/<team>/<fullname>')
 def team_snap_counts(team, fullname):
     """Team-specific snap counts page with position-specific grouping"""
