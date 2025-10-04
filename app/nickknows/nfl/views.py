@@ -23,6 +23,7 @@ from ..celery_setup.tasks import (
     update_PBP_data,
     update_sched_data,
     update_week_data,
+    update_weekly_team_data,
     update_qb_yards_top10,
     update_qb_tds_top10,
     update_rb_yards_top10,
