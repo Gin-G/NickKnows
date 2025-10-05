@@ -308,3 +308,10 @@ def check_snap_count_availability(year=None):
             }
     
     return available_years
+
+@celery.task(name='nfl.snaps.get_snap_count_summary')
+def get_snap_count_summary(team, year, position_filter=None):
+    """
+    Alias for get_team_snap_summary for backward compatibility
+    """
+    return get_team_snap_summary(team, year, position_filter)
