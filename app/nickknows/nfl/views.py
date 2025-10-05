@@ -500,7 +500,8 @@ def team_page(team):
         
         # Get team branding data
         try:
-            team_desc = nfl.load_teams()
+            import nfl_data_py as nfl_legacy
+            team_desc = nfl_legacy.import_team_desc()
             
             # Map current team abbreviations to those in team_desc
             team_mapping = {
@@ -654,9 +655,8 @@ def snap_counts_home():
     
     try:
         # Import team description data for colors and logos
-        # OLD: team_desc = nfl.import_team_desc()
-        # NEW: nflreadpy uses load_teams()
-        team_desc = nfl.load_teams()
+        import nfl_data_py as nfl_legacy
+        team_desc = nfl_legacy.import_team_desc()
         
         # Create team objects with all needed data
         def create_team_data(row):
