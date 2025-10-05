@@ -7,6 +7,78 @@
         <a href="{{url_for('NFL')}}">NFL Home</a>
         <a href="{{url_for('schedule')}}">Schedule</a>
         
+
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown(this)">
+                Teams <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>AFC East</strong>
+                </div>
+                <a href="{{url_for('team_page', team='BUF')}}">Buffalo Bills</a>
+                <a href="{{url_for('team_page', team='MIA')}}">Miami Dolphins</a>
+                <a href="{{url_for('team_page', team='NE')}}">New England Patriots</a>
+                <a href="{{url_for('team_page', team='NYJ')}}">New York Jets</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>AFC North</strong>
+                </div>
+                <a href="{{url_for('team_page', team='BAL')}}">Baltimore Ravens</a>
+                <a href="{{url_for('team_page', team='CIN')}}">Cincinnati Bengals</a>
+                <a href="{{url_for('team_page', team='CLE')}}">Cleveland Browns</a>
+                <a href="{{url_for('team_page', team='PIT')}}">Pittsburgh Steelers</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>AFC South</strong>
+                </div>
+                <a href="{{url_for('team_page', team='HOU')}}">Houston Texans</a>
+                <a href="{{url_for('team_page', team='IND')}}">Indianapolis Colts</a>
+                <a href="{{url_for('team_page', team='JAX')}}">Jacksonville Jaguars</a>
+                <a href="{{url_for('team_page', team='TEN')}}">Tennessee Titans</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>AFC West</strong>
+                </div>
+                <a href="{{url_for('team_page', team='DEN')}}">Denver Broncos</a>
+                <a href="{{url_for('team_page', team='KC')}}">Kansas City Chiefs</a>
+                <a href="{{url_for('team_page', team='LV')}}">Las Vegas Raiders</a>
+                <a href="{{url_for('team_page', team='LAC')}}">Los Angeles Chargers</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>NFC East</strong>
+                </div>
+                <a href="{{url_for('team_page', team='DAL')}}">Dallas Cowboys</a>
+                <a href="{{url_for('team_page', team='NYG')}}">New York Giants</a>
+                <a href="{{url_for('team_page', team='PHI')}}">Philadelphia Eagles</a>
+                <a href="{{url_for('team_page', team='WAS')}}">Washington Commanders</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>NFC North</strong>
+                </div>
+                <a href="{{url_for('team_page', team='CHI')}}">Chicago Bears</a>
+                <a href="{{url_for('team_page', team='DET')}}">Detroit Lions</a>
+                <a href="{{url_for('team_page', team='GB')}}">Green Bay Packers</a>
+                <a href="{{url_for('team_page', team='MIN')}}">Minnesota Vikings</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>NFC South</strong>
+                </div>
+                <a href="{{url_for('team_page', team='ATL')}}">Atlanta Falcons</a>
+                <a href="{{url_for('team_page', team='CAR')}}">Carolina Panthers</a>
+                <a href="{{url_for('team_page', team='NO')}}">New Orleans Saints</a>
+                <a href="{{url_for('team_page', team='TB')}}">Tampa Bay Buccaneers</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>NFC West</strong>
+                </div>
+                <a href="{{url_for('team_page', team='ARI')}}">Arizona Cardinals</a>
+                <a href="{{url_for('team_page', team='LA')}}">Los Angeles Rams</a>
+                <a href="{{url_for('team_page', team='SEA')}}">Seattle Seahawks</a>
+                <a href="{{url_for('team_page', team='SF')}}">San Francisco 49ers</a>
+            </div>
+        </div>
+
         <div class="dropdown">
             <button class="dropbtn" onclick="toggleDropdown(this)">
                 {{ selected_year }} Season <i class="fa fa-caret-down"></i>

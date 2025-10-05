@@ -490,6 +490,162 @@ def team_fpa(team, fullname):
         flash(f'Error loading team FPA data for {fullname} ({selected_year}): {str(e)}')
         return redirect(url_for('NFL', year=selected_year))
     
+@app.route('/NFL/Team/<team>')
+def team_page(team):
+    """Comprehensive team page with schedule, results, FPA, and roster"""
+    try:
+        available_years = get_available_years()
+        selected_year = get_selected_year()
+        fullname = get_team_fullname(team)
+        
+        # Get team branding data
+        try:
+            team_desc = nfl.load_teams()
+            
+            # Map current team abbreviations to those in team_desc
+            team_mapping = {
+                'LV': 'OAK',
+                'LAC': 'SD',
+                'LA': 'LAR'
+            }
+            
+            lookup_abbr = team_mapping.get(team, team)
+            team_row = team_desc[team_desc['team_abbr'] == lookup_abbr]
+            
+            if not team_row.empty:
+                team_info = {
+                    'abbr': team,
+                    'name': fullname,
+                    'division': f"{team_row.iloc[0]['team_conf']} {team_row.iloc[0]['team_division']}",
+                    'primary_color': team_row.iloc[0]['team_color'] if pd.notna(team_row.iloc[0]['team_color']) else '#333333',
+                    'secondary_color': team_row.iloc[0]['team_color2'] if pd.notna(team_row.iloc[0]['team_color2']) else None,
+                    'logo': team_row.iloc[0]['team_logo_squared'] if pd.notna(team_row.iloc[0]['team_logo_squared']) else team_row.iloc[0]['team_logo_espn'],
+                    'logo_espn': team_row.iloc[0]['team_logo_espn'] if pd.notna(team_row.iloc[0]['team_logo_espn']) else None
+                }
+            else:
+                # Fallback
+                team_info = {
+                    'abbr': team,
+                    'name': fullname,
+                    'division': 'NFL',
+                    'primary_color': '#333333',
+                    'secondary_color': None,
+                    'logo': f'https://via.placeholder.com/120x120?text={team}',
+                    'logo_espn': None
+                }
+        except Exception as e:
+            logger.warning(f"Could not load team description: {str(e)}")
+            team_info = {
+                'abbr': team,
+                'name': fullname,
+                'division': 'NFL',
+                'primary_color': '#333333',
+                'secondary_color': None,
+                'logo': f'https://via.placeholder.com/120x120?text={team}',
+                'logo_espn': None
+            }
+        
+        # Load team data files
+        team_dir = os.getcwd() + f'/nickknows/nfl/data/{team}/'
+        
+        # Schedule data
+        schedule_file = team_dir + str(selected_year) + '_' + team + '_schedule.csv'
+        schedule_data = None
+        if os.path.exists(schedule_file):
+            try:
+                schedule_df = pd.read_csv(schedule_file, index_col=0)
+                schedule_df = schedule_df.dropna(subset=['away_score'])  # Only completed games
+                
+                # Calculate record
+                home_wins = len(schedule_df[(schedule_df['is_home'] == True) & (schedule_df['result'] > 0)])
+                away_wins = len(schedule_df[(schedule_df['is_home'] == False) & (schedule_df['result'] < 0)])
+                total_wins = home_wins + away_wins
+                total_games = len(schedule_df)
+                total_losses = total_games - total_wins
+                
+                team_info['record'] = f"{total_wins}-{total_losses}"
+                team_info['games_played'] = total_games
+                
+                # Format schedule for display
+                schedule_display = schedule_df[['week', 'game_id', 'away_score', 'home_score', 'result']].copy()
+                schedule_display = schedule_display.sort_values('week', ascending=False).head(5)  # Last 5 games
+                schedule_data = schedule_display.to_html(classes="table table-sm", index=False, escape=False)
+            except Exception as e:
+                logger.error(f"Error loading schedule: {str(e)}")
+        else:
+            team_info['record'] = "N/A"
+            team_info['games_played'] = 0
+        
+        # FPA data
+        fpa_file = team_dir + str(selected_year) + '_' + team + '_data.csv'
+        fpa_summary = None
+        if os.path.exists(fpa_file):
+            try:
+                fpa_df = pd.read_csv(fpa_file, index_col=0)
+                
+                # Calculate position aggregates
+                pass_agg = fpa_df[fpa_df['position'] == 'QB']['fantasy_points_ppr'].mean() if len(fpa_df[fpa_df['position'] == 'QB']) > 0 else 0
+                rush_agg = fpa_df[fpa_df['position'] == 'RB']['fantasy_points_ppr'].mean() if len(fpa_df[fpa_df['position'] == 'RB']) > 0 else 0
+                rec_agg = fpa_df[fpa_df['position'] == 'WR']['fantasy_points_ppr'].mean() if len(fpa_df[fpa_df['position'] == 'WR']) > 0 else 0
+                te_agg = fpa_df[fpa_df['position'] == 'TE']['fantasy_points_ppr'].mean() if len(fpa_df[fpa_df['position'] == 'TE']) > 0 else 0
+                
+                fpa_summary = {
+                    'QB': round(pass_agg, 2),
+                    'RB': round(rush_agg, 2),
+                    'WR': round(rec_agg, 2),
+                    'TE': round(te_agg, 2)
+                }
+            except Exception as e:
+                logger.error(f"Error loading FPA data: {str(e)}")
+        
+        # Roster data
+        roster_file = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+        roster_summary = None
+        if os.path.exists(roster_file):
+            try:
+                roster_df = pd.read_csv(roster_file, index_col=0)
+                team_roster = roster_df[roster_df['team'] == team]
+                
+                # Get position counts
+                position_counts = team_roster['position'].value_counts().to_dict()
+                roster_summary = {
+                    'total_players': len(team_roster),
+                    'positions': position_counts,
+                    'active_players': len(team_roster[team_roster['status'] == 'ACT'])
+                }
+            except Exception as e:
+                logger.error(f"Error loading roster: {str(e)}")
+        
+        # Snap counts availability
+        snap_file = team_dir + str(selected_year) + '_' + team + '_snap_counts.csv'
+        has_snap_counts = os.path.exists(snap_file)
+        
+        # Opportunity data availability
+        opp_file = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_data.csv'
+        has_opportunity_data = False
+        if os.path.exists(opp_file):
+            try:
+                opp_df = pd.read_csv(opp_file)
+                has_opportunity_data = len(opp_df[opp_df['team'] == team]) > 0
+            except:
+                pass
+        
+        return render_template('team-page.html',
+                             team=team,
+                             team_info=team_info,
+                             years=available_years,
+                             selected_year=selected_year,
+                             schedule_data=schedule_data,
+                             fpa_summary=fpa_summary,
+                             roster_summary=roster_summary,
+                             has_snap_counts=has_snap_counts,
+                             has_opportunity_data=has_opportunity_data)
+                             
+    except Exception as e:
+        logger.error(f"Error loading team page for {team}: {str(e)}")
+        flash(f'Error loading team page: {str(e)}')
+        return redirect(url_for('NFL'))
+    
 @app.route('/NFL/SnapCounts')
 def snap_counts_home():
     """Enhanced snap counts overview page with team colors and logos"""
