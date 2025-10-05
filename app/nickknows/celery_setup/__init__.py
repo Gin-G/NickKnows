@@ -9,6 +9,7 @@ Task Organization:
 - opportunity_tasks: Opportunity tracking and trends
 - snap_count_tasks: Snap count processing
 - task_orchestrator: High-level workflows and coordination
+
 """
 
 # Import all task modules to register them with Celery
