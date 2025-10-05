@@ -54,6 +54,7 @@ from .opportunity_tasks import (
 from .snap_count_tasks import (
     update_team_snap_counts,
     update_all_teams_snap_counts,
+    get_snap_count_summary,
     get_team_snap_summary,
     get_weekly_snap_breakdown,
     check_snap_count_availability
