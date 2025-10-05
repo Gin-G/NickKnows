@@ -12,6 +12,8 @@ spec:
       labels:
         app: {{ .Values.webapp.name }}-flower
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: gingworker
       containers:
       - name: {{ .Values.webapp.name }}-flower
         image: {{ .Values.webapp.container.image }}

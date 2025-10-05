@@ -17,6 +17,8 @@ spec:
       labels:
         app: {{ .Values.webapp.name }}-worker
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: gingworker
       containers:
       - name: {{ .Values.webapp.name }}-worker
         image: {{ .Values.webapp.container.image }}

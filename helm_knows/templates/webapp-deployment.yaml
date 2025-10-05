@@ -17,7 +17,7 @@ spec:
         app: {{ .Values.webapp.name }}
     spec:
       nodeSelector:
-        kubernetes.io/hostname: gingmachine
+        kubernetes.io/hostname: gingworker
       containers:
       - name: {{ .Values.webapp.name }}
         env:
