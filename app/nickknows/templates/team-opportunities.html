@@ -360,14 +360,54 @@
             }
         }
     </style>
+    <style>
+        .position-header {
+            background: linear-gradient(135deg, {{ team_info.primary_color if team_info else '#007bff' }}dd 0%, {{ team_info.primary_color if team_info else '#0056b3' }}99 100%);
+            padding: 18px;
+            margin: 25px 0 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            border-left: 5px solid {{ team_info.secondary_color if team_info and team_info.secondary_color else '#ffffff' }};
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .position-header:hover {
+            background: linear-gradient(135deg, {{ team_info.primary_color if team_info else '#0056b3' }}ee 0%, {{ team_info.primary_color if team_info else '#004494' }}bb 100%);
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .plot-btn.active {
+            background-color: {{ team_info.primary_color if team_info else '#007bff' }};
+            box-shadow: 0 4px 8px {{ team_info.primary_color if team_info else '#007bff' }}50;
+        }
+        
+        .plot-btn:hover {
+            background-color: {{ team_info.primary_color if team_info else '#495057' }};
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+    </style>
     
 </head>
 <body>
     <div id="header"></div>
     <div id="nfl_navbar"></div>
     
-    <h1>🎯 {{ fullname }} Opportunities</h1>
+    <!-- Team Header with Logo and Colors -->
+    {% if team_info %}
+    <div style="text-align: center; padding: 30px 20px; background: linear-gradient(135deg, {{ team_info.primary_color }}dd 0%, {{ team_info.primary_color }}99 100%); border-radius: 15px; margin: 20px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+        {% if team_info.logo %}
+        <img src="{{ team_info.logo }}" alt="{{ team_info.name }}" style="width: 120px; height: 120px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
+        {% endif %}
+        <h1 style="color: white; margin: 10px 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">{{ team_info.name }}</h1>
+        <h2 style="color: white; margin: 5px 0; font-size: 1.5em; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Opportunity Analysis - {{ selected_year }} Season</h2>
+    </div>
+    {% else %}
+    <h1>{{ fullname }} Opportunities</h1>
     <h2>{{ selected_year }} Season</h2>
+    {% endif %}
     
     {% if loading %}
         <div class="loading-message">
@@ -379,12 +419,10 @@
             <a href="{{ url_for('update_opportunities') }}" style="font-size: 16px; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
                 🔄 Update Data
             </a>
-            <a href="{{ url_for('opportunities_home') }}" style="font-size: 16px; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">
+            <a href="{{ url_for('opportunities_home') }}" style="font-size: 16px; padding: 10px 20px; background-color: {{ team_info.primary_color if team_info else '#6c757d' }}; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">
                 ← Back to Overview
             </a>
         </div>
-        
-
         
         <!-- Interactive Plots Section -->
         {% if plot_data %}

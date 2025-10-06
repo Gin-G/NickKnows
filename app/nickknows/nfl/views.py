@@ -1187,6 +1187,51 @@ def team_opportunities(team):
         selected_year = get_selected_year()
         fullname = get_team_fullname(team)
         
+        # Get team branding data
+        try:
+            import nfl_data_py as nfl_legacy
+            team_desc = nfl_legacy.import_team_desc()
+            
+            # Map current team abbreviations to those in team_desc
+            team_mapping = {
+                'LV': 'OAK',
+                'LAC': 'SD',
+                'LA': 'LAR'
+            }
+            
+            lookup_abbr = team_mapping.get(team, team)
+            team_row = team_desc[team_desc['team_abbr'] == lookup_abbr]
+            
+            if not team_row.empty:
+                team_info = {
+                    'abbr': team,
+                    'name': fullname,
+                    'primary_color': team_row.iloc[0]['team_color'] if pd.notna(team_row.iloc[0]['team_color']) else '#333333',
+                    'secondary_color': team_row.iloc[0]['team_color2'] if pd.notna(team_row.iloc[0]['team_color2']) else None,
+                    'logo': team_row.iloc[0]['team_logo_squared'] if pd.notna(team_row.iloc[0]['team_logo_squared']) else team_row.iloc[0]['team_logo_espn'],
+                    'logo_espn': team_row.iloc[0]['team_logo_espn'] if pd.notna(team_row.iloc[0]['team_logo_espn']) else None
+                }
+            else:
+                # Fallback
+                team_info = {
+                    'abbr': team,
+                    'name': fullname,
+                    'primary_color': '#333333',
+                    'secondary_color': None,
+                    'logo': f'https://via.placeholder.com/120x120?text={team}',
+                    'logo_espn': None
+                }
+        except Exception as e:
+            logger.warning(f"Could not load team description: {str(e)}")
+            team_info = {
+                'abbr': team,
+                'name': fullname,
+                'primary_color': '#333333',
+                'secondary_color': None,
+                'logo': f'https://via.placeholder.com/120x120?text={team}',
+                'logo_espn': None
+            }
+        
         # Load opportunity data
         opp_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_data.csv'
         trend_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_trends.csv'
@@ -1196,6 +1241,7 @@ def team_opportunities(team):
             flash(f'Opportunity data for {fullname} is updating. Please refresh in a moment.')
             return render_template('team-opportunities.html',
                                  team=team,
+                                 team_info=team_info,
                                  fullname=fullname,
                                  years=available_years,
                                  selected_year=selected_year,
@@ -1366,15 +1412,17 @@ def team_opportunities(team):
         # Generate plots
         plot_data = create_team_opportunity_plots(team, weekly_position_data, available_weeks, selected_year)
         
+        
         return render_template('team-opportunities.html',
                             team=team,
+                            team_info=team_info,  # Add team_info
                             fullname=fullname,
                             years=available_years,
                             selected_year=selected_year,
                             weekly_position_data=weekly_position_data,
                             available_weeks=available_weeks,
                             insights=team_insights,
-                            plot_data=plot_data,  # Add plot data
+                            plot_data=plot_data,
                             loading=False)
                              
     except Exception as e:
