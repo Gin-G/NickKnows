@@ -113,12 +113,7 @@ def update_player_stats_data(year=None):
     logger.info(f"Updating player stats for {season_display}")
     
     try:
-        # nflreadpy uses load_player_stats()
-        # stat_type can be 'weekly' or 'season'
-        player_stats = nfl.load_player_stats(
-            seasons=[year],
-            stat_type='weekly'
-        )
+        player_stats = nfl.load_player_stats(seasons=[year])
         if hasattr(player_stats, 'to_pandas'):
             player_stats = player_stats.to_pandas()
         player_stats.to_csv(file_path)
