@@ -31,7 +31,6 @@ def get_data_path(year, data_type):
     """Get standardized data file path"""
     return os.getcwd() + f'/nickknows/nfl/data/{year}_{data_type}.csv'
 
-
 @celery.task(name='nfl.core.update_pbp')
 def update_pbp_data(year=None):
     """Update play-by-play data for specified year"""
@@ -43,15 +42,19 @@ def update_pbp_data(year=None):
     logger.info(f"Updating PBP data for {season_display}")
     
     try:
-        # nflreadpy uses load_pbp() instead of import_pbp_data()
+        # nflreadpy uses load_pbp() and returns polars DataFrame
         pbp_data = nfl.load_pbp(seasons=[year])
-        pbp_data.to_csv(file_path)
+        
+        # Convert polars to pandas if needed
+        if hasattr(pbp_data, 'to_pandas'):
+            pbp_data = pbp_data.to_pandas()
+        
+        pbp_data.to_csv(file_path, index=False)
         logger.info(f"✅ PBP data for {season_display} saved to {file_path}")
         return f"Successfully updated PBP data for {season_display}"
     except Exception as e:
         logger.error(f"❌ Error updating PBP data for {season_display}: {str(e)}")
         raise
-
 
 @celery.task(name='nfl.core.update_rosters')
 def update_roster_data(year=None):
@@ -66,6 +69,8 @@ def update_roster_data(year=None):
     try:
         # nflreadpy uses load_rosters_weekly()
         roster_data = nfl.load_rosters_weekly(seasons=[year])
+        if hasattr(roster_data, 'to_pandas'):
+            roster_data = roster_data.to_pandas()
         roster_data.to_csv(file_path)
         logger.info(f"✅ Roster data for {season_display} saved to {file_path}")
         return f"Successfully updated roster data for {season_display}"
@@ -87,6 +92,8 @@ def update_schedule_data(year=None):
     try:
         # nflreadpy uses load_schedules()
         schedule = nfl.load_schedules(seasons=[year])
+        if hasattr(schedule, 'to_pandas'):
+            schedule = schedule.to_pandas()
         schedule.to_csv(file_path)
         logger.info(f"✅ Schedule data for {season_display} saved to {file_path}")
         return f"Successfully updated schedule data for {season_display}"
@@ -112,6 +119,8 @@ def update_player_stats_data(year=None):
             seasons=[year],
             stat_type='weekly'
         )
+        if hasattr(player_stats, 'to_pandas'):
+            player_stats = player_stats.to_pandas()
         player_stats.to_csv(file_path)
         logger.info(f"✅ Player stats for {season_display} saved to {file_path}")
         logger.info(f"Created {len(player_stats)} player-week records")
@@ -134,6 +143,8 @@ def update_snap_counts_data(year=None):
     try:
         # nflreadpy uses load_snap_counts()
         snap_counts = nfl.load_snap_counts(seasons=[year])
+        if hasattr(snap_counts, 'to_pandas'):
+            snap_counts = snap_counts.to_pandas()
         snap_counts.to_csv(file_path)
         logger.info(f"✅ Snap counts for {season_display} saved to {file_path}")
         return f"Successfully updated snap counts for {season_display}"
@@ -151,6 +162,8 @@ def update_players_data():
     try:
         # nflreadpy uses load_players()
         players = nfl.load_players()
+        if hasattr(players, 'to_pandas'):
+            players = players.to_pandas()
         players.to_csv(file_path)
         logger.info(f"✅ Player database saved to {file_path}")
         return "Successfully updated player database"
