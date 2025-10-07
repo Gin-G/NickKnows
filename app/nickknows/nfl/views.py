@@ -39,7 +39,7 @@ from ..celery_setup.tasks import (
     get_selected_year,
     format_nfl_season
 )
-from .plotting_functions import create_team_opportunity_plots
+from .plotting_functions import create_team_opportunity_plots, create_team_opportunity_plots_by_stat
 from celery import chain, chord
 import nflreadpy as nfl
 import pandas as pd
@@ -1181,56 +1181,11 @@ def opportunities_home():
 
 @app.route('/NFL/Opportunities/<team>')
 def team_opportunities(team):
-    """Team-specific opportunity analysis with detailed weekly breakdown"""
+    """Team-specific opportunity analysis organized by stat type instead of position"""
     try:
         available_years = get_available_years()
         selected_year = get_selected_year()
         fullname = get_team_fullname(team)
-        
-        # Get team branding data
-        try:
-            import nfl_data_py as nfl_legacy
-            team_desc = nfl_legacy.import_team_desc()
-            
-            # Map current team abbreviations to those in team_desc
-            team_mapping = {
-                'LV': 'OAK',
-                'LAC': 'SD',
-                'LA': 'LAR'
-            }
-            
-            lookup_abbr = team_mapping.get(team, team)
-            team_row = team_desc[team_desc['team_abbr'] == lookup_abbr]
-            
-            if not team_row.empty:
-                team_info = {
-                    'abbr': team,
-                    'name': fullname,
-                    'primary_color': team_row.iloc[0]['team_color'] if pd.notna(team_row.iloc[0]['team_color']) else '#333333',
-                    'secondary_color': team_row.iloc[0]['team_color2'] if pd.notna(team_row.iloc[0]['team_color2']) else None,
-                    'logo': team_row.iloc[0]['team_logo_squared'] if pd.notna(team_row.iloc[0]['team_logo_squared']) else team_row.iloc[0]['team_logo_espn'],
-                    'logo_espn': team_row.iloc[0]['team_logo_espn'] if pd.notna(team_row.iloc[0]['team_logo_espn']) else None
-                }
-            else:
-                # Fallback
-                team_info = {
-                    'abbr': team,
-                    'name': fullname,
-                    'primary_color': '#333333',
-                    'secondary_color': None,
-                    'logo': f'https://via.placeholder.com/120x120?text={team}',
-                    'logo_espn': None
-                }
-        except Exception as e:
-            logger.warning(f"Could not load team description: {str(e)}")
-            team_info = {
-                'abbr': team,
-                'name': fullname,
-                'primary_color': '#333333',
-                'secondary_color': None,
-                'logo': f'https://via.placeholder.com/120x120?text={team}',
-                'logo_espn': None
-            }
         
         # Load opportunity data
         opp_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_data.csv'
@@ -1241,7 +1196,6 @@ def team_opportunities(team):
             flash(f'Opportunity data for {fullname} is updating. Please refresh in a moment.')
             return render_template('team-opportunities.html',
                                  team=team,
-                                 team_info=team_info,
                                  fullname=fullname,
                                  years=available_years,
                                  selected_year=selected_year,
@@ -1257,70 +1211,100 @@ def team_opportunities(team):
         # Get available weeks
         available_weeks = sorted(team_opportunities['week'].unique()) if len(team_opportunities) > 0 else []
         
-        # Process weekly position data
-        weekly_position_data = {}
+        # Process data by STAT TYPE instead of position
+        stat_type_data = {}
         
-        for position in ['QB', 'RB', 'WR', 'TE']:
-            pos_opportunities = team_opportunities[team_opportunities['position'] == position]
-            pos_trends = team_trends[team_trends['position'] == position]
+        # Define stat types we want to track
+        stat_configs = [
+            {
+                'name': 'Targets',
+                'key': 'targets',
+                'filter': lambda df: df['targets'] > 0,
+                'primary_stat': 'targets',
+                'secondary_stat': 'target_share',
+                'description': 'Players receiving pass targets'
+            },
+            {
+                'name': 'Carries', 
+                'key': 'carries',
+                'filter': lambda df: df['carries'] > 0,
+                'primary_stat': 'carries',
+                'secondary_stat': 'carry_share',
+                'description': 'Players with rushing attempts'
+            },
+            {
+                'name': 'Receptions',
+                'key': 'receptions',
+                'filter': lambda df: df['targets'] > 0,  # Use targets as proxy since we track that
+                'primary_stat': 'targets',
+                'secondary_stat': 'target_share', 
+                'description': 'Players catching passes'
+            },
+            {
+                'name': 'Red Zone',
+                'key': 'red_zone',
+                'filter': lambda df: (df['red_zone_targets'] > 0) | (df['red_zone_carries'] > 0),
+                'primary_stat': 'red_zone_targets',
+                'secondary_stat': 'red_zone_carries',
+                'description': 'Red zone opportunities (inside 20 yard line)'
+            },
+            {
+                'name': 'Goal Line',
+                'key': 'goal_line',
+                'filter': lambda df: df['goal_line_touches'] > 0,
+                'primary_stat': 'goal_line_touches',
+                'secondary_stat': None,
+                'description': 'Goal line opportunities (inside 5 yard line)'
+            }
+        ]
+        
+        for stat_config in stat_configs:
+            stat_key = stat_config['key']
+            stat_opportunities = stat_config['filter'](team_opportunities)
             
-            if len(pos_opportunities) > 0:
-                position_players = []
+            if len(stat_opportunities) > 0:
+                stat_players = []
                 
-                for player_id in pos_opportunities['player_id'].unique():
-                    player_data = pos_opportunities[pos_opportunities['player_id'] == player_id]
-                    player_trends = pos_trends[pos_trends['player_id'] == player_id]
+                for player_id in stat_opportunities['player_id'].unique():
+                    player_data = stat_opportunities[stat_opportunities['player_id'] == player_id]
+                    player_trends = team_trends[team_trends['player_id'] == player_id]
                     
                     if len(player_data) == 0:
                         continue
-                        
-                    # Get player name
-                    player_name = player_data['player_display_name'].iloc[0] if 'player_display_name' in player_data.columns else player_data['player_name'].iloc[0] if 'player_name' in player_data.columns else player_id
                     
-                    # Create weekly breakdowns
-                    weekly_targets = {}
-                    weekly_carries = {}
-                    weekly_target_share = {}
-                    weekly_red_zone = {}
+                    # Get player info
+                    player_name = player_data['player_display_name'].iloc[0] if 'player_display_name' in player_data.columns else player_data['player_name'].iloc[0] if 'player_name' in player_data.columns else player_id
+                    position = player_data['position'].iloc[0] if 'position' in player_data.columns else 'Unknown'
+                    
+                    # Create weekly breakdowns for primary stat
+                    primary_stat = stat_config['primary_stat']
+                    weekly_primary = {}
                     
                     for week in available_weeks:
                         week_data = player_data[player_data['week'] == week]
                         if len(week_data) > 0:
                             row = week_data.iloc[0]
-                            weekly_targets[week] = int(row.get('targets', 0))
-                            weekly_carries[week] = int(row.get('carries', 0))
-                            weekly_target_share[week] = float(row.get('target_share', 0))
-                            weekly_red_zone[week] = int(row.get('red_zone_targets', 0)) + int(row.get('red_zone_carries', 0))
+                            if stat_key == 'red_zone':
+                                # For red zone, combine targets and carries
+                                weekly_primary[week] = int(row.get('red_zone_targets', 0)) + int(row.get('red_zone_carries', 0))
+                            else:
+                                weekly_primary[week] = int(row.get(primary_stat, 0))
                         else:
-                            weekly_targets[week] = 0
-                            weekly_carries[week] = 0
-                            weekly_target_share[week] = 0.0
-                            weekly_red_zone[week] = 0
+                            weekly_primary[week] = 0
                     
-                    # Calculate statistics
-                    targets_values = list(weekly_targets.values())
-                    carries_values = list(weekly_carries.values())
-                    target_share_values = list(weekly_target_share.values())
-                    red_zone_values = list(weekly_red_zone.values())
+                    # Get values and calculate stats
+                    primary_values = list(weekly_primary.values())
                     
                     # Get trend data if available
                     if len(player_trends) > 0:
                         trend_row = player_trends.iloc[0]
-                        targets_avg = trend_row.get('targets_avg', np.mean(targets_values))
-                        carries_avg = trend_row.get('carries_avg', np.mean(carries_values))
-                        target_share_avg = trend_row.get('target_share_avg', np.mean(target_share_values))
-                        targets_trend = trend_row.get('targets_trend', 0)
-                        carries_trend = trend_row.get('carries_trend', 0)
-                        target_share_trend = trend_row.get('target_share_trend', 0)
-                        weeks_played = trend_row.get('weeks_played', len([x for x in targets_values if x > 0]))
+                        primary_avg = trend_row.get(f'{primary_stat}_avg', np.mean(primary_values))
+                        primary_trend = trend_row.get(f'{primary_stat}_trend', 0)
+                        weeks_played = trend_row.get('weeks_played', len([x for x in primary_values if x > 0]))
                     else:
-                        targets_avg = np.mean(targets_values) if targets_values else 0
-                        carries_avg = np.mean(carries_values) if carries_values else 0
-                        target_share_avg = np.mean(target_share_values) if target_share_values else 0
-                        targets_trend = 0
-                        carries_trend = 0
-                        target_share_trend = 0
-                        weeks_played = len([x for x in targets_values if x > 0])
+                        primary_avg = np.mean(primary_values) if primary_values else 0
+                        primary_trend = 0
+                        weeks_played = len([x for x in primary_values if x > 0])
                     
                     # Calculate additional stats
                     def safe_stats(values):
@@ -1333,68 +1317,28 @@ def team_opportunities(team):
                             'std': np.std(values)
                         }
                     
-                    targets_stats = safe_stats(targets_values)
-                    carries_stats = safe_stats(carries_values)
-                    target_share_stats = safe_stats(target_share_values)
-                    red_zone_stats = safe_stats(red_zone_values)
-                    
-                    # Calculate red zone trend (simple: recent vs early)
-                    if len(red_zone_values) >= 2:
-                        recent_rz = np.mean(red_zone_values[-2:]) if len(red_zone_values) >= 2 else red_zone_values[-1]
-                        early_rz = np.mean(red_zone_values[:-2]) if len(red_zone_values) > 2 else red_zone_values[0]
-                        red_zone_trend = ((recent_rz - early_rz) / max(early_rz, 0.1) * 100) if early_rz > 0 else 0
-                    else:
-                        red_zone_trend = 0
+                    primary_stats = safe_stats(primary_values)
                     
                     player_summary = {
                         'player_id': player_id,
                         'player_name': player_name,
+                        'position': position,
                         'weeks_played': weeks_played,
-                        'weekly_targets': weekly_targets,
-                        'weekly_carries': weekly_carries,
-                        'weekly_target_share': weekly_target_share,
-                        'weekly_red_zone': weekly_red_zone,
-                        
-                        # Targets stats
-                        'targets_avg': targets_avg,
-                        'targets_max': targets_stats['max'],
-                        'targets_min': targets_stats['min'],
-                        'targets_std': targets_stats['std'],
-                        'targets_trend': targets_trend,
-                        
-                        # Carries stats
-                        'carries_avg': carries_avg,
-                        'carries_max': carries_stats['max'],
-                        'carries_min': carries_stats['min'],
-                        'carries_std': carries_stats['std'],
-                        'carries_trend': carries_trend,
-                        
-                        # Target share stats
-                        'target_share_avg': target_share_avg,
-                        'target_share_max': target_share_stats['max'],
-                        'target_share_min': target_share_stats['min'],
-                        'target_share_std': target_share_stats['std'],
-                        'target_share_trend': target_share_trend,
-                        
-                        # Red zone stats
-                        'red_zone_avg': np.mean(red_zone_values) if red_zone_values else 0,
-                        'red_zone_max': red_zone_stats['max'],
-                        'red_zone_min': red_zone_stats['min'],
-                        'red_zone_std': red_zone_stats['std'],
-                        'red_zone_trend': red_zone_trend,
+                        f'weekly_{stat_key}': weekly_primary,
+                        f'{stat_key}_avg': primary_avg,
+                        f'{stat_key}_max': primary_stats['max'],
+                        f'{stat_key}_min': primary_stats['min'],
+                        f'{stat_key}_std': primary_stats['std'],
+                        f'{stat_key}_trend': primary_trend,
                     }
                     
-                    position_players.append(player_summary)
+                    stat_players.append(player_summary)
                 
-                # Sort by most relevant metric for position
-                if position in ['QB', 'WR', 'TE']:
-                    position_players.sort(key=lambda x: x['targets_avg'], reverse=True)
-                else:  # RB
-                    position_players.sort(key=lambda x: x['carries_avg'] + x['targets_avg'], reverse=True)
-                
-                weekly_position_data[position] = position_players
+                # Sort by average of primary stat
+                stat_players.sort(key=lambda x: x[f'{stat_key}_avg'], reverse=True)
+                stat_type_data[stat_key] = stat_players
         
-        # Calculate team insights counts
+        # Calculate team insights
         team_insights = {
             'trending_up_targets': get_trending_players_view(team_trends, 'targets', 'up'),
             'trending_up_carries': get_trending_players_view(team_trends, 'carries', 'up'),
@@ -1402,24 +1346,21 @@ def team_opportunities(team):
             'carry_leaders': get_opportunity_leaders_view(team_trends, 'carries'),
             'declining_opportunities': get_trending_players_view(team_trends, 'touches', 'down'),
             
-            # Add counts for summary
             'trending_up_targets_count': len(team_trends[(team_trends['targets_trend'] >= 20) & (team_trends['targets_avg'] >= 1)]),
             'trending_up_carries_count': len(team_trends[(team_trends['carries_trend'] >= 20) & (team_trends['carries_avg'] >= 1)]),
             'declining_count': len(team_trends[(team_trends['touches_trend'] <= -20) & (team_trends['touches_avg'] >= 2)]),
             'declining_target_share_count': len(team_trends[(team_trends['target_share_trend'] <= -5) & (team_trends['target_share_avg'] >= 10)]),
         }
         
-        # Generate plots
-        plot_data = create_team_opportunity_plots(team, weekly_position_data, available_weeks, selected_year)
-        
+        # Generate plots organized by stat type
+        plot_data = create_team_opportunity_plots_by_stat(team, stat_type_data, available_weeks, selected_year)
         
         return render_template('team-opportunities.html',
                             team=team,
-                            team_info=team_info,  # Add team_info
                             fullname=fullname,
                             years=available_years,
                             selected_year=selected_year,
-                            weekly_position_data=weekly_position_data,
+                            stat_type_data=stat_type_data,
                             available_weeks=available_weeks,
                             insights=team_insights,
                             plot_data=plot_data,

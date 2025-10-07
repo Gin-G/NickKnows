@@ -39,9 +39,7 @@
     </script>
     
     <style>
-
-        
-        .position-header {
+        .stat-header {
             background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
             padding: 18px;
             margin: 25px 0 10px 0;
@@ -52,24 +50,24 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .position-header:hover {
+        .stat-header:hover {
             background: linear-gradient(135deg, #dee2e6 0%, #ced4da 100%);
             transform: translateX(5px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         
-        .position-header h3 {
+        .stat-header h3 {
             margin: 0;
             color: #FFFFFF;
             font-weight: 600;
         }
         
-        .position-header i {
+        .stat-header i {
             margin-right: 10px;
             transition: transform 0.3s ease;
         }
         
-        .position-content {
+        .stat-content {
             margin-bottom: 40px;
             animation: slideDown 0.3s ease-in-out;
         }
@@ -81,7 +79,7 @@
             }
             to {
                 opacity: 1;
-                max-height: 1000px;
+                max-height: 2000px;
             }
         }
         
@@ -135,8 +133,8 @@
             position: sticky;
             left: 0;
             z-index: 5;
-            min-width: 140px;
-            max-width: 140px;
+            min-width: 160px;
+            max-width: 160px;
             border-right: 2px solid #dee2e6 !important;
             box-shadow: 2px 0 4px rgba(0,0,0,0.1);
         }
@@ -153,6 +151,20 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+        
+        .position-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .position-QB { background-color: #e3f2fd; color: #1976d2; }
+        .position-RB { background-color: #f3e5f5; color: #7b1fa2; }
+        .position-WR { background-color: #e8f5e9; color: #388e3c; }
+        .position-TE { background-color: #fff3e0; color: #f57c00; }
         
         .stat-avg { 
             background-color: #e8f5e8 !important; 
@@ -172,22 +184,6 @@
         .stat-std { 
             background-color: #d1ecf1 !important; 
             font-style: italic;
-        }
-        
-        .targets { 
-            background-color: rgba(227, 242, 253, 0.3) !important;
-        }
-        
-        .carries { 
-            background-color: rgba(243, 229, 245, 0.3) !important;
-        }
-        
-        .shares { 
-            background-color: rgba(255, 248, 225, 0.3) !important;
-        }
-        
-        .situational { 
-            background-color: rgba(252, 228, 236, 0.3) !important;
         }
         
         .trend-positive { 
@@ -221,8 +217,6 @@
             margin-right: 2px;
             font-size: 10px;
         }
-        
-
         
         .loading-message {
             text-align: center;
@@ -361,7 +355,7 @@
         }
     </style>
     <style>
-        .position-header {
+        .stat-header {
             background: linear-gradient(135deg, {{ team_info.primary_color if team_info else '#007bff' }}dd 0%, {{ team_info.primary_color if team_info else '#0056b3' }}99 100%);
             padding: 18px;
             margin: 25px 0 10px 0;
@@ -372,7 +366,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .position-header:hover {
+        .stat-header:hover {
             background: linear-gradient(135deg, {{ team_info.primary_color if team_info else '#0056b3' }}ee 0%, {{ team_info.primary_color if team_info else '#004494' }}bb 100%);
             transform: translateX(5px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -431,29 +425,25 @@
             
             <!-- Plot Controls -->
             <div class="plot-controls">
-                <button onclick="showAllPlots()" class="plot-btn active" id="all-plots-btn">All Positions</button>
-                {% for position in ['QB', 'RB', 'WR', 'TE'] %}
-                    {% if position in weekly_position_data %}
-                        <button onclick="showPositionPlots('{{ position|lower }}')" class="plot-btn" id="{{ position|lower }}-plots-btn">{{ position }}</button>
+                <button onclick="showAllPlots()" class="plot-btn active" id="all-plots-btn">All Stats Overview</button>
+                {% for stat_key in ['targets', 'carries', 'red_zone', 'goal_line'] %}
+                    {% if stat_key in stat_type_data %}
+                        <button onclick="showStatPlots('{{ stat_key }}')" class="plot-btn" id="{{ stat_key }}-plots-btn">
+                            {{ stat_key|replace('_', ' ')|title }}
+                        </button>
                     {% endif %}
                 {% endfor %}
                 <button onclick="showSummaryPlots()" class="plot-btn" id="summary-plots-btn">Team Summary</button>
             </div>
             
             <!-- Team Summary Plots -->
-            <div id="summary-plots" class="plot-container">
+            <div id="summary-plots" class="plot-container" style="display: none;">
                 <h3>Team Overview</h3>
                 {% if plot_data and 'summary' in plot_data %}
                     <div class="plot-grid">
-                        {% if plot_data['summary']['distribution'] %}
+                        {% if plot_data['summary'].get('weekly_totals') %}
                             <div class="plot-item">
-                                <h4>Opportunity Distribution by Position</h4>
-                                <img src="{{ url_for('static', filename=plot_data['summary']['distribution']) }}" alt="Team Distribution" class="plot-image">
-                            </div>
-                        {% endif %}
-                        {% if plot_data['summary']['weekly_totals'] %}
-                            <div class="plot-item">
-                                <h4>Weekly Team Totals</h4>
+                                <h4>Weekly Team Totals by Stat Type</h4>
                                 <img src="{{ url_for('static', filename=plot_data['summary']['weekly_totals']) }}" alt="Weekly Totals" class="plot-image">
                             </div>
                         {% endif %}
@@ -461,37 +451,30 @@
                 {% endif %}
             </div>
             
-            <!-- Position-Specific Plots -->
-            {% for position in ['QB', 'RB', 'WR', 'TE'] %}
-                {% if position in weekly_position_data and position in plot_data %}
-                    <div id="{{ position|lower }}-plots" class="plot-container" style="display: none;">
-                        <h3>{{ position }} Analysis</h3>
+            <!-- Stat-Specific Plots -->
+            {% for stat_key in ['targets', 'carries', 'red_zone', 'goal_line'] %}
+                {% if stat_key in stat_type_data and stat_key in plot_data %}
+                    <div id="{{ stat_key }}-plots" class="plot-container" style="display: none;">
+                        <h3>{{ stat_key|replace('_', ' ')|title }} Analysis</h3>
                         <div class="plot-grid">
-                            {% if plot_data[position]['weekly_trends'] %}
+                            {% if plot_data[stat_key].get('weekly_trends') %}
                                 <div class="plot-item">
-                                    <h4>Weekly Trends with 3 & 5 Game Moving Averages</h4>
-                                    <img src="{{ url_for('static', filename=plot_data[position]['weekly_trends']) }}" alt="{{ position }} Trends" class="plot-image">
+                                    <h4>Weekly Trends with 3-Game Moving Average</h4>
+                                    <img src="{{ url_for('static', filename=plot_data[stat_key]['weekly_trends']) }}" alt="{{ stat_key }} Trends" class="plot-image">
                                 </div>
                             {% endif %}
                             
-                            {% if plot_data[position]['target_share'] %}
+                            {% if plot_data[stat_key].get('distribution') %}
                                 <div class="plot-item">
-                                    <h4>Target Share Evolution</h4>
-                                    <img src="{{ url_for('static', filename=plot_data[position]['target_share']) }}" alt="{{ position }} Target Share" class="plot-image">
+                                    <h4>{{ stat_key|replace('_', ' ')|title }} Distribution</h4>
+                                    <img src="{{ url_for('static', filename=plot_data[stat_key]['distribution']) }}" alt="{{ stat_key }} Distribution" class="plot-image">
                                 </div>
                             {% endif %}
                             
-                            {% if plot_data[position]['correlation'] %}
+                            {% if plot_data[stat_key].get('trend_analysis') %}
                                 <div class="plot-item">
-                                    <h4>Targets vs Carries Correlation</h4>
-                                    <img src="{{ url_for('static', filename=plot_data[position]['correlation']) }}" alt="{{ position }} Correlation" class="plot-image">
-                                </div>
-                            {% endif %}
-                            
-                            {% if plot_data[position]['red_zone'] %}
-                                <div class="plot-item">
-                                    <h4>Red Zone Opportunities</h4>
-                                    <img src="{{ url_for('static', filename=plot_data[position]['red_zone']) }}" alt="{{ position }} Red Zone" class="plot-image">
+                                    <h4>Trending Players</h4>
+                                    <img src="{{ url_for('static', filename=plot_data[stat_key]['trend_analysis']) }}" alt="{{ stat_key }} Trend Analysis" class="plot-image">
                                 </div>
                             {% endif %}
                         </div>
@@ -499,15 +482,15 @@
                 {% endif %}
             {% endfor %}
             
-            <!-- All Positions Overview -->
+            <!-- All Stats Overview -->
             <div id="all-plots" class="plot-container">
-                <h3>All Positions Overview</h3>
+                <h3>All Stats Overview</h3>
                 <div class="plot-grid-compact">
-                    {% for position in ['QB', 'RB', 'WR', 'TE'] %}
-                        {% if position in weekly_position_data and position in plot_data and plot_data[position]['weekly_trends'] %}
+                    {% for stat_key in ['targets', 'carries', 'red_zone', 'goal_line'] %}
+                        {% if stat_key in stat_type_data and stat_key in plot_data and plot_data[stat_key].get('weekly_trends') %}
                             <div class="plot-item">
-                                <h4>{{ position }} Trends</h4>
-                                <img src="{{ url_for('static', filename=plot_data[position]['weekly_trends']) }}" alt="{{ position }} Overview" class="plot-image">
+                                <h4>{{ stat_key|replace('_', ' ')|title }} Trends</h4>
+                                <img src="{{ url_for('static', filename=plot_data[stat_key]['weekly_trends']) }}" alt="{{ stat_key }} Overview" class="plot-image">
                             </div>
                         {% endif %}
                     {% endfor %}
@@ -516,30 +499,29 @@
         </div>
         {% endif %}
         
-
-        
-        <!-- Position Sections -->
-        {% if weekly_position_data %}
-        {% for position in ['QB', 'RB', 'WR', 'TE'] %}
-            {% if position in weekly_position_data %}
-                <div class="position-header" onclick="togglePositionSection('{{ position|lower }}-section')" data-position="{{ position|lower }}-section">
+        <!-- Stat Type Sections -->
+        {% if stat_type_data %}
+        {% for stat_key in ['targets', 'carries', 'red_zone', 'goal_line'] %}
+            {% if stat_key in stat_type_data %}
+                <div class="stat-header" onclick="toggleStatSection('{{ stat_key }}-section')" data-stat="{{ stat_key }}-section">
                     <h3 style="margin: 0;">
                         <i class="fas fa-chevron-down"></i>
-                        {% if position == 'QB' %}🎯 Quarterbacks
-                        {% elif position == 'RB' %}🏃 Running Backs  
-                        {% elif position == 'WR' %}📡 Wide Receivers
-                        {% elif position == 'TE' %}🙌 Tight Ends
+                        {% if stat_key == 'targets' %}🎯 Targets
+                        {% elif stat_key == 'carries' %}🏃 Carries  
+                        {% elif stat_key == 'red_zone' %}🚨 Red Zone Opportunities
+                        {% elif stat_key == 'goal_line' %}🏆 Goal Line Touches
                         {% endif %}
-                        ({{ weekly_position_data[position]|length }} players)
+                        ({{ stat_type_data[stat_key]|length }} players)
                     </h3>
                 </div>
                 
-                <div id="{{ position|lower }}-section" class="position-content">
+                <div id="{{ stat_key }}-section" class="stat-content">
                     <div class="weekly-table">
-                        <table class="table" id="{{ position|lower }}-table">
+                        <table class="table" id="{{ stat_key }}-table">
                             <thead>
                                 <tr>
                                     <th class="player-name">Player</th>
+                                    <th class="stat-avg">Pos</th>
                                     <th class="stat-avg">Weeks</th>
                                     
                                     <!-- Weekly Columns -->
@@ -558,100 +540,30 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for player_data in weekly_position_data[position] %}
-                                    <!-- Targets Row -->
-                                    <tr class="targets">
+                                {% for player_data in stat_type_data[stat_key] %}
+                                    <tr>
                                         <td class="player-name">
-                                            <strong>{{ player_data.player_name }}</strong><br>
-                                            <small>Targets</small>
+                                            <strong>{{ player_data.player_name }}</strong>
+                                        </td>
+                                        <td class="stat-avg">
+                                            <span class="position-badge position-{{ player_data.position }}">{{ player_data.position }}</span>
                                         </td>
                                         <td class="stat-avg">{{ player_data.weeks_played }}</td>
                                         
                                         {% if available_weeks %}
                                             {% for week in available_weeks %}
-                                                <td>{{ player_data.weekly_targets.get(week, 0) }}</td>
+                                                <td>{{ player_data['weekly_' + stat_key].get(week, 0) }}</td>
                                             {% endfor %}
                                         {% endif %}
                                         
-                                        <td class="stat-avg">{{ "%.1f"|format(player_data.targets_avg) }}</td>
-                                        <td class="stat-max">{{ player_data.targets_max }}</td>
-                                        <td class="stat-min">{{ player_data.targets_min }}</td>
-                                        <td class="stat-std">{{ "%.1f"|format(player_data.targets_std) }}</td>
-                                        <td class="stat-avg {% if player_data.targets_trend > 10 %}trend-positive{% elif player_data.targets_trend < -10 %}trend-negative{% else %}trend-neutral{% endif %}">
-                                            {{ "%.0f"|format(player_data.targets_trend) }}%
+                                        <td class="stat-avg">{{ "%.1f"|format(player_data[stat_key + '_avg']) }}</td>
+                                        <td class="stat-max">{{ player_data[stat_key + '_max'] }}</td>
+                                        <td class="stat-min">{{ player_data[stat_key + '_min'] }}</td>
+                                        <td class="stat-std">{{ "%.1f"|format(player_data[stat_key + '_std']) }}</td>
+                                        <td class="stat-avg {% if player_data[stat_key + '_trend'] > 10 %}trend-positive{% elif player_data[stat_key + '_trend'] < -10 %}trend-negative{% else %}trend-neutral{% endif %}">
+                                            {{ "%.0f"|format(player_data[stat_key + '_trend']) }}%
                                         </td>
                                     </tr>
-                                    
-                                    <!-- Carries Row (for RB primarily) -->
-                                    {% if position in ['RB', 'QB'] %}
-                                    <tr class="carries">
-                                        <td class="player-name">
-                                            <small>Carries</small>
-                                        </td>
-                                        <td class="stat-avg">{{ player_data.weeks_played }}</td>
-                                        
-                                        {% if available_weeks %}
-                                            {% for week in available_weeks %}
-                                                <td>{{ player_data.weekly_carries.get(week, 0) }}</td>
-                                            {% endfor %}
-                                        {% endif %}
-                                        
-                                        <td class="stat-avg">{{ "%.1f"|format(player_data.carries_avg) }}</td>
-                                        <td class="stat-max">{{ player_data.carries_max }}</td>
-                                        <td class="stat-min">{{ player_data.carries_min }}</td>
-                                        <td class="stat-std">{{ "%.1f"|format(player_data.carries_std) }}</td>
-                                        <td class="stat-avg {% if player_data.carries_trend > 10 %}trend-positive{% elif player_data.carries_trend < -10 %}trend-negative{% else %}trend-neutral{% endif %}">
-                                            {{ "%.0f"|format(player_data.carries_trend) }}%
-                                        </td>
-                                    </tr>
-                                    {% endif %}
-                                    
-                                    <!-- Target Share Row -->
-                                    <tr class="shares">
-                                        <td class="player-name">
-                                            <small>Target %</small>
-                                        </td>
-                                        <td class="stat-avg">{{ player_data.weeks_played }}</td>
-                                        
-                                        {% if available_weeks %}
-                                            {% for week in available_weeks %}
-                                                <td>{{ "%.1f"|format(player_data.weekly_target_share.get(week, 0)) }}%</td>
-                                            {% endfor %}
-                                        {% endif %}
-                                        
-                                        <td class="stat-avg">{{ "%.1f"|format(player_data.target_share_avg) }}%</td>
-                                        <td class="stat-max">{{ "%.1f"|format(player_data.target_share_max) }}%</td>
-                                        <td class="stat-min">{{ "%.1f"|format(player_data.target_share_min) }}%</td>
-                                        <td class="stat-std">{{ "%.1f"|format(player_data.target_share_std) }}</td>
-                                        <td class="stat-avg {% if player_data.target_share_trend > 5 %}trend-positive{% elif player_data.target_share_trend < -5 %}trend-negative{% else %}trend-neutral{% endif %}">
-                                            {{ "%.1f"|format(player_data.target_share_trend) }}%
-                                        </td>
-                                    </tr>
-                                    
-                                    <!-- Red Zone Opportunities -->
-                                    <tr class="situational">
-                                        <td class="player-name">
-                                            <small>Red Zone</small>
-                                        </td>
-                                        <td class="stat-avg">{{ player_data.weeks_played }}</td>
-                                        
-                                        {% if available_weeks %}
-                                            {% for week in available_weeks %}
-                                                <td>{{ player_data.weekly_red_zone.get(week, 0) }}</td>
-                                            {% endfor %}
-                                        {% endif %}
-                                        
-                                        <td class="stat-avg">{{ "%.1f"|format(player_data.red_zone_avg) }}</td>
-                                        <td class="stat-max">{{ player_data.red_zone_max }}</td>
-                                        <td class="stat-min">{{ player_data.red_zone_min }}</td>
-                                        <td class="stat-std">{{ "%.1f"|format(player_data.red_zone_std) }}</td>
-                                        <td class="stat-avg {% if player_data.red_zone_trend > 10 %}trend-positive{% elif player_data.red_zone_trend < -10 %}trend-negative{% else %}trend-neutral{% endif %}">
-                                            {{ "%.0f"|format(player_data.red_zone_trend) }}%
-                                        </td>
-                                    </tr>
-                                    
-                                    <!-- Separator row -->
-                                    <tr style="height: 10px; background-color: #f8f9fa;"><td colspan="{{ (available_weeks|length if available_weeks else 0) + 6 }}"></td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -663,9 +575,9 @@
     {% endif %}
     
     <script>
-        function togglePositionSection(positionId) {
-            const section = document.getElementById(positionId);
-            const icon = document.querySelector(`[data-position="${positionId}"] i`);
+        function toggleStatSection(statId) {
+            const section = document.getElementById(statId);
+            const icon = document.querySelector(`[data-stat="${statId}"] i`);
             
             if (section.style.display === 'none') {
                 section.style.display = 'block';
@@ -682,10 +594,10 @@
             setActiveButton('all-plots-btn');
         }
         
-        function showPositionPlots(position) {
+        function showStatPlots(statKey) {
             hideAllPlotContainers();
-            document.getElementById(position + '-plots').style.display = 'block';
-            setActiveButton(position + '-plots-btn');
+            document.getElementById(statKey + '-plots').style.display = 'block';
+            setActiveButton(statKey + '-plots-btn');
         }
         
         function showSummaryPlots() {
@@ -765,7 +677,6 @@
             showAllPlots();
             {% endif %}
         });
-    </script>
     </script>
 </body>
 </html>

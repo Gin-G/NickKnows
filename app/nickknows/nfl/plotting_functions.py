@@ -630,3 +630,381 @@ def create_red_zone_opportunities_plot(position, players_data, available_weeks, 
     except Exception as e:
         logger.error(f"Error creating Red Zone plot: {str(e)}")
         return None
+
+def create_team_opportunity_plots_by_stat(team, stat_type_data, available_weeks, selected_year):
+    """
+    Create comprehensive opportunity plots organized by stat type
+    """
+    try:
+        plt.style.use('default')
+        
+        plots_dir = Path(f'nickknows/static/images/opportunities/{team}/')
+        plots_dir.mkdir(parents=True, exist_ok=True)
+        
+        plot_data = {}
+        
+        # Create plots for each stat type
+        stat_configs = [
+            {'key': 'targets', 'name': 'Targets', 'color': '#1f77b4'},
+            {'key': 'carries', 'name': 'Carries', 'color': '#2ca02c'},
+            {'key': 'red_zone', 'name': 'Red Zone', 'color': '#d62728'},
+            {'key': 'goal_line', 'name': 'Goal Line', 'color': '#ff7f0e'},
+        ]
+        
+        for stat_config in stat_configs:
+            stat_key = stat_config['key']
+            
+            if stat_key not in stat_type_data:
+                continue
+            
+            players_data = stat_type_data[stat_key]
+            if not players_data:
+                continue
+            
+            # Create stat-specific plots
+            stat_plots = create_stat_type_plots(
+                stat_config, players_data, available_weeks, team, selected_year, plots_dir
+            )
+            plot_data[stat_key] = stat_plots
+        
+        # Create team summary plots
+        summary_plots = create_team_summary_plots_by_stat(
+            stat_type_data, available_weeks, team, selected_year, plots_dir
+        )
+        plot_data['summary'] = summary_plots
+        
+        return plot_data
+        
+    except Exception as e:
+        logger.error(f"Error creating plots for {team}: {str(e)}")
+        return {}
+
+
+def create_stat_type_plots(stat_config, players_data, available_weeks, team, selected_year, plots_dir):
+    """Create plots for a specific stat type"""
+    plots = {}
+    stat_key = stat_config['key']
+    stat_name = stat_config['name']
+    stat_color = stat_config['color']
+    
+    try:
+        # 1. Weekly Trends Plot - Top players for this stat
+        plots['weekly_trends'] = create_stat_weekly_trends_plot(
+            stat_config, players_data, available_weeks, team, selected_year, plots_dir
+        )
+        
+        # 2. Player Distribution - Bar chart of averages
+        plots['distribution'] = create_stat_distribution_plot(
+            stat_config, players_data, team, selected_year, plots_dir
+        )
+        
+        # 3. Trend Analysis - Show who's trending up/down
+        plots['trend_analysis'] = create_stat_trend_plot(
+            stat_config, players_data, team, selected_year, plots_dir
+        )
+        
+    except Exception as e:
+        logger.error(f"Error creating {stat_name} plots: {str(e)}")
+    
+    return plots
+
+
+def create_stat_weekly_trends_plot(stat_config, players_data, available_weeks, team, selected_year, plots_dir):
+    """Create weekly trends plot for a specific stat type"""
+    
+    try:
+        stat_key = stat_config['key']
+        stat_name = stat_config['name']
+        stat_color = stat_config['color']
+        
+        # Filter to top players by average
+        top_players = sorted(players_data, key=lambda x: x.get(f'{stat_key}_avg', 0), reverse=True)[:8]
+        
+        if not top_players:
+            return None
+        
+        fig, ax = plt.subplots(figsize=(14, 8))
+        
+        # Use a color palette
+        colors = plt.cm.tab10(np.linspace(0, 1, len(top_players)))
+        
+        for i, player in enumerate(top_players):
+            weekly_data = player.get(f'weekly_{stat_key}', {})
+            weeks = []
+            values = []
+            
+            for week in available_weeks:
+                if week in weekly_data:
+                    weeks.append(week)
+                    values.append(weekly_data[week])
+            
+            if len(weeks) < 2:
+                continue
+            
+            # Create label with position
+            label = f"{player['player_name'][:15]} ({player['position']})"
+            
+            # Plot actual values
+            ax.plot(weeks, values, 'o-', color=colors[i], label=label, 
+                    linewidth=2.5, markersize=6, alpha=0.8)
+            
+            # Add 3-game trend line
+            if len(weeks) >= 3:
+                trend_3 = calculate_rolling_trend(weeks, values, window=3)
+                if trend_3:
+                    ax.plot(weeks[2:], trend_3, '--', color=colors[i], alpha=0.6, linewidth=2)
+        
+        # Customize plot
+        ax.set_xlabel('Week', fontsize=12, fontweight='bold')
+        ax.set_ylabel(f'{stat_name} per Game', fontsize=12, fontweight='bold')
+        ax.set_title(f'{team} {stat_name} Trends ({selected_year})', 
+                    fontsize=14, fontweight='bold', pad=20)
+        
+        ax.set_xticks(available_weeks)
+        ax.set_xlim(min(available_weeks) - 0.5, max(available_weeks) + 0.5)
+        ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+        
+        legend = ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=9)
+        legend.set_title('Players (Position)', prop={'weight': 'bold'})
+        
+        ax.text(0.02, 0.98, 'Lines: — Actual  -- 3-game trend', 
+                transform=ax.transAxes, fontsize=9, verticalalignment='top',
+                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        
+        plt.tight_layout()
+        
+        filename = f'{stat_key}_trends_{selected_year}.png'
+        filepath = plots_dir / filename
+        plt.savefig(filepath, dpi=300, bbox_inches='tight', facecolor='white')
+        plt.close(fig)
+        
+        return str(filepath.relative_to('nickknows/static/'))
+        
+    except Exception as e:
+        logger.error(f"Error creating stat weekly trends plot: {str(e)}")
+        return None
+
+
+def create_stat_distribution_plot(stat_config, players_data, team, selected_year, plots_dir):
+    """Create distribution bar chart for stat type"""
+    
+    try:
+        stat_key = stat_config['key']
+        stat_name = stat_config['name']
+        stat_color = stat_config['color']
+        
+        # Top 12 players
+        top_players = sorted(players_data, key=lambda x: x.get(f'{stat_key}_avg', 0), reverse=True)[:12]
+        
+        if not top_players:
+            return None
+        
+        fig, ax = plt.subplots(figsize=(12, 8))
+        
+        # Prepare data
+        player_labels = []
+        averages = []
+        
+        for player in top_players:
+            # Include position in label
+            label = f"{player['player_name'][:12]} ({player['position']})"
+            player_labels.append(label)
+            averages.append(player.get(f'{stat_key}_avg', 0))
+        
+        # Create horizontal bar chart
+        y_pos = np.arange(len(player_labels))
+        bars = ax.barh(y_pos, averages, color=stat_color, alpha=0.7)
+        
+        # Add value labels
+        for i, (bar, value) in enumerate(zip(bars, averages)):
+            ax.text(value + 0.1, i, f'{value:.1f}', 
+                   va='center', fontweight='bold', fontsize=9)
+        
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(player_labels, fontsize=10)
+        ax.set_xlabel(f'Average {stat_name} per Game', fontweight='bold', fontsize=12)
+        ax.set_title(f'{team} {stat_name} Distribution ({selected_year})', 
+                    fontweight='bold', fontsize=14)
+        ax.grid(True, alpha=0.3, axis='x')
+        
+        # Invert y-axis so highest is on top
+        ax.invert_yaxis()
+        
+        plt.tight_layout()
+        
+        filename = f'{stat_key}_distribution_{selected_year}.png'
+        filepath = plots_dir / filename
+        plt.savefig(filepath, dpi=300, bbox_inches='tight', facecolor='white')
+        plt.close(fig)
+        
+        return str(filepath.relative_to('nickknows/static/'))
+        
+    except Exception as e:
+        logger.error(f"Error creating stat distribution plot: {str(e)}")
+        return None
+
+
+def create_stat_trend_plot(stat_config, players_data, team, selected_year, plots_dir):
+    """Create trend analysis plot showing trending up/down"""
+    
+    try:
+        stat_key = stat_config['key']
+        stat_name = stat_config['name']
+        stat_color = stat_config['color']
+        
+        # Filter players with meaningful trends
+        trending_players = [p for p in players_data if abs(p.get(f'{stat_key}_trend', 0)) >= 10][:15]
+        
+        if not trending_players:
+            return None
+        
+        # Sort by trend
+        trending_players.sort(key=lambda x: x.get(f'{stat_key}_trend', 0), reverse=True)
+        
+        fig, ax = plt.subplots(figsize=(12, 8))
+        
+        # Prepare data
+        player_labels = []
+        trends = []
+        colors = []
+        
+        for player in trending_players:
+            label = f"{player['player_name'][:12]} ({player['position']})"
+            player_labels.append(label)
+            trend = player.get(f'{stat_key}_trend', 0)
+            trends.append(trend)
+            # Green for positive, red for negative
+            colors.append('#2ca02c' if trend > 0 else '#d62728')
+        
+        # Create horizontal bar chart
+        y_pos = np.arange(len(player_labels))
+        bars = ax.barh(y_pos, trends, color=colors, alpha=0.7)
+        
+        # Add value labels
+        for i, (bar, value) in enumerate(zip(bars, trends)):
+            x_pos = value + (0.5 if value > 0 else -0.5)
+            ax.text(x_pos, i, f'{value:+.1f}%', 
+                   va='center', ha='left' if value > 0 else 'right',
+                   fontweight='bold', fontsize=9)
+        
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(player_labels, fontsize=10)
+        ax.set_xlabel(f'{stat_name} Trend (%)', fontweight='bold', fontsize=12)
+        ax.set_title(f'{team} {stat_name} Trends ({selected_year})', 
+                    fontweight='bold', fontsize=14)
+        ax.axvline(x=0, color='black', linestyle='-', linewidth=1)
+        ax.grid(True, alpha=0.3, axis='x')
+        
+        # Invert y-axis
+        ax.invert_yaxis()
+        
+        plt.tight_layout()
+        
+        filename = f'{stat_key}_trend_analysis_{selected_year}.png'
+        filepath = plots_dir / filename
+        plt.savefig(filepath, dpi=300, bbox_inches='tight', facecolor='white')
+        plt.close(fig)
+        
+        return str(filepath.relative_to('nickknows/static/'))
+        
+    except Exception as e:
+        logger.error(f"Error creating stat trend plot: {str(e)}")
+        return None
+
+
+def create_team_summary_plots_by_stat(stat_type_data, available_weeks, team, selected_year, plots_dir):
+    """Create team-level summary comparing all stat types"""
+    plots = {}
+    
+    try:
+        # Create a combined weekly totals plot
+        plots['weekly_totals'] = create_combined_weekly_totals_plot(
+            stat_type_data, available_weeks, team, selected_year, plots_dir
+        )
+        
+    except Exception as e:
+        logger.error(f"Error creating team summary plots: {str(e)}")
+    
+    return plots
+
+
+def create_combined_weekly_totals_plot(stat_type_data, available_weeks, team, selected_year, plots_dir):
+    """Create combined plot showing all stat types over time"""
+    
+    try:
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
+        
+        stat_configs = [
+            {'key': 'targets', 'name': 'Targets', 'color': '#1f77b4', 'ax': ax1},
+            {'key': 'carries', 'name': 'Carries', 'color': '#2ca02c', 'ax': ax2},
+            {'key': 'red_zone', 'name': 'Red Zone', 'color': '#d62728', 'ax': ax3},
+            {'key': 'goal_line', 'name': 'Goal Line', 'color': '#ff7f0e', 'ax': ax4},
+        ]
+        
+        for config in stat_configs:
+            stat_key = config['key']
+            ax = config['ax']
+            
+            if stat_key not in stat_type_data:
+                ax.text(0.5, 0.5, f'No {config["name"]} Data', 
+                       ha='center', va='center', transform=ax.transAxes,
+                       fontsize=14, style='italic')
+                ax.set_title(f'Team {config["name"]}', fontweight='bold')
+                ax.set_xticks([])
+                ax.set_yticks([])
+                continue
+            
+            # Calculate weekly totals
+            weekly_totals = {week: 0 for week in available_weeks}
+            
+            for player in stat_type_data[stat_key]:
+                weekly_data = player.get(f'weekly_{stat_key}', {})
+                for week, value in weekly_data.items():
+                    weekly_totals[week] += value
+            
+            weeks = list(weekly_totals.keys())
+            totals = list(weekly_totals.values())
+            
+            # Plot
+            ax.plot(weeks, totals, 'o-', linewidth=3, markersize=8, 
+                   color=config['color'], label=config['name'])
+            ax.fill_between(weeks, totals, alpha=0.3, color=config['color'])
+            
+            # Add trend line
+            if len(weeks) >= 3:
+                try:
+                    z = np.polyfit(weeks, totals, 1)
+                    p = np.poly1d(z)
+                    trend_line = p(weeks)
+                    ax.plot(weeks, trend_line, '--', color='red', linewidth=2, 
+                           label='Trend', alpha=0.8)
+                    
+                    slope = z[0]
+                    trend_text = f"Trend: {'+' if slope > 0 else ''}{slope:.1f}/week"
+                    ax.text(0.02, 0.98, trend_text, transform=ax.transAxes,
+                           bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
+                           fontweight='bold', verticalalignment='top', fontsize=9)
+                except:
+                    pass
+            
+            ax.set_ylabel(f'Total {config["name"]}', fontweight='bold')
+            ax.set_title(f'Weekly Team {config["name"]}', fontweight='bold')
+            ax.set_xticks(weeks)
+            ax.set_xticklabels([f'W{w}' for w in weeks])
+            ax.grid(True, alpha=0.3)
+            ax.legend(fontsize=8)
+        
+        plt.suptitle(f'{team} Weekly Opportunity Totals by Stat Type ({selected_year})',
+                    fontsize=16, fontweight='bold')
+        plt.tight_layout()
+        
+        filename = f'team_weekly_totals_by_stat_{selected_year}.png'
+        filepath = plots_dir / filename
+        plt.savefig(filepath, dpi=300, bbox_inches='tight', facecolor='white')
+        plt.close(fig)
+        
+        return str(filepath.relative_to('nickknows/static/'))
+        
+    except Exception as e:
+        logger.error(f"Error creating combined weekly totals plot: {str(e)}")
+        return None
