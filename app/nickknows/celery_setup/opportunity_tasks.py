@@ -209,22 +209,60 @@ def process_week_opportunities(week_data, week, year):
 def add_roster_info(opportunity_df, roster_data):
     """Add roster information to opportunity data"""
     try:
+        # Get unique player info from roster (most recent info)
         player_info = roster_data.groupby('player_id').agg({
             'player_name': 'first',
             'position': 'first',
             'team': 'first'
         }).reset_index()
         
-        opportunity_df = opportunity_df.merge(player_info, on='player_id', how='left')
-        opportunity_df['player_display_name'] = opportunity_df['player_name']
+        logger.info(f"Extracted info for {len(player_info)} players from roster")
         
-        # Use roster team if available
-        opportunity_df['team'] = opportunity_df['team_y'].fillna(opportunity_df['team_x'])
-        opportunity_df.drop(['team_x', 'team_y'], axis=1, inplace=True, errors='ignore')
+        # Merge with opportunity data
+        # First, save the original team column
+        opportunity_df['opp_team'] = opportunity_df['team']
         
-        logger.info("Added roster info to opportunity data")
+        # Merge on player_id
+        opportunity_df = opportunity_df.merge(
+            player_info, 
+            on='player_id', 
+            how='left',
+            suffixes=('', '_roster')
+        )
+        
+        # Set player_display_name
+        opportunity_df['player_display_name'] = opportunity_df['player_name'].fillna(opportunity_df['player_id'])
+        
+        # Use roster team if available, otherwise use opportunity team
+        opportunity_df['team'] = opportunity_df['team_roster'].fillna(opportunity_df['opp_team'])
+        
+        # Clean up temporary columns
+        opportunity_df.drop(['opp_team', 'team_roster'], axis=1, inplace=True, errors='ignore')
+        
+        # Fill missing positions with 'Unknown'
+        if 'position' in opportunity_df.columns:
+            opportunity_df['position'] = opportunity_df['position'].fillna('Unknown')
+        else:
+            opportunity_df['position'] = 'Unknown'
+        
+        logger.info(f"Successfully added roster info to {len(opportunity_df)} opportunity records")
+        
+        # Log some examples for debugging
+        sample = opportunity_df[['player_id', 'player_name', 'player_display_name', 'position', 'team']].head(5)
+        logger.debug(f"Sample merged data:\n{sample}")
+        
     except Exception as e:
-        logger.warning(f"Could not add roster info: {e}")
+        logger.error(f"Error adding roster info: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        
+        # Add default columns if merge failed
+        if 'player_name' not in opportunity_df.columns:
+            opportunity_df['player_name'] = opportunity_df['player_id']
+        if 'player_display_name' not in opportunity_df.columns:
+            opportunity_df['player_display_name'] = opportunity_df['player_id']
+        if 'position' not in opportunity_df.columns:
+            opportunity_df['position'] = 'Unknown'
     
     return opportunity_df
 
