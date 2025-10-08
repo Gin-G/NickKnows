@@ -1187,6 +1187,26 @@ def team_opportunities(team):
         selected_year = get_selected_year()
         fullname = get_team_fullname(team)
         
+        # Get team info for styling
+        try:
+            team_desc = nfl.import_team_desc()
+            team_mapping = {'LV': 'OAK', 'LAC': 'SD', 'LA': 'LAR'}
+            lookup_abbr = team_mapping.get(team, team)
+            team_row = team_desc[team_desc['team_abbr'] == lookup_abbr]
+            
+            if not team_row.empty:
+                team_info = {
+                    'name': fullname,
+                    'primary_color': team_row.iloc[0]['team_color'] if pd.notna(team_row.iloc[0]['team_color']) else '#333333',
+                    'secondary_color': team_row.iloc[0]['team_color2'] if pd.notna(team_row.iloc[0]['team_color2']) else None,
+                    'logo': team_row.iloc[0]['team_logo_squared'] if pd.notna(team_row.iloc[0]['team_logo_squared']) else team_row.iloc[0]['team_logo_espn']
+                }
+            else:
+                team_info = None
+        except Exception as e:
+            logger.warning(f"Could not load team info: {e}")
+            team_info = None
+        
         # Load opportunity data
         opp_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_data.csv'
         trend_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_trends.csv'
@@ -1197,6 +1217,7 @@ def team_opportunities(team):
             return render_template('team-opportunities.html',
                                  team=team,
                                  fullname=fullname,
+                                 team_info=team_info,
                                  years=available_years,
                                  selected_year=selected_year,
                                  loading=True)
@@ -1231,14 +1252,6 @@ def team_opportunities(team):
                 'primary_stat': 'carries',
                 'secondary_stat': 'carry_share',
                 'description': 'Players with rushing attempts'
-            },
-            {
-                'name': 'Receptions',
-                'key': 'receptions',
-                'filter': lambda df: df['targets'] > 0,  # Use targets as proxy since we track that
-                'primary_stat': 'targets',
-                'secondary_stat': 'target_share', 
-                'description': 'Players catching passes'
             },
             {
                 'name': 'Red Zone',
@@ -1352,12 +1365,22 @@ def team_opportunities(team):
             'declining_target_share_count': len(team_trends[(team_trends['target_share_trend'] <= -5) & (team_trends['target_share_avg'] >= 10)]),
         }
         
-        # Generate plots organized by stat type
-        plot_data = create_team_opportunity_plots_by_stat(team, stat_type_data, available_weeks, selected_year)
+        # Generate plots using the stat-type specific plotting function
+        plot_data = {}
+        try:
+            from nickknows.nfl.plotting_functions import create_team_opportunity_plots_by_stat
+            plot_data = create_team_opportunity_plots_by_stat(team, stat_type_data, available_weeks, selected_year)
+            logger.info(f"Generated {len(plot_data)} plot categories for {team}")
+        except Exception as e:
+            logger.warning(f"Could not generate plots: {e}")
+            import traceback
+            logger.warning(traceback.format_exc())
+            plot_data = {}
         
         return render_template('team-opportunities.html',
                             team=team,
                             fullname=fullname,
+                            team_info=team_info,
                             years=available_years,
                             selected_year=selected_year,
                             stat_type_data=stat_type_data,
@@ -1368,12 +1391,19 @@ def team_opportunities(team):
                              
     except Exception as e:
         logger.error(f"Error loading team opportunity data for {team}: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         flash(f'Error loading team opportunity data: {str(e)}')
         return render_template('team-opportunities.html',
                              team=team,
                              fullname=fullname,
+                             team_info=None,
                              years=available_years,
                              selected_year=selected_year,
+                             stat_type_data={},
+                             available_weeks=[],
+                             insights={},
+                             plot_data={},
                              loading=False)
     
 @app.route('/NFL/Opportunities/update')
