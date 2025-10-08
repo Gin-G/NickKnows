@@ -209,6 +209,17 @@ def process_week_opportunities(week_data, week, year):
 def add_roster_info(opportunity_df, roster_data):
     """Add roster information to opportunity data"""
     try:
+        # nflreadpy uses 'gsis_id' and 'full_name' instead of 'player_id' and 'player_name'
+        # First, rename the roster columns to match what we expect
+        roster_rename = {
+            'gsis_id': 'player_id',
+            'full_name': 'player_name'
+        }
+        
+        # Only rename columns that exist
+        roster_rename_filtered = {k: v for k, v in roster_rename.items() if k in roster_data.columns}
+        roster_data = roster_data.rename(columns=roster_rename_filtered)
+        
         # Get unique player info from roster (most recent info)
         player_info = roster_data.groupby('player_id').agg({
             'player_name': 'first',
@@ -248,8 +259,8 @@ def add_roster_info(opportunity_df, roster_data):
         logger.info(f"Successfully added roster info to {len(opportunity_df)} opportunity records")
         
         # Log some examples for debugging
-        sample = opportunity_df[['player_id', 'player_name', 'player_display_name', 'position', 'team']].head(5)
-        logger.debug(f"Sample merged data:\n{sample}")
+        sample = opportunity_df[['player_id', 'player_name', 'player_display_name', 'position', 'team']].head(10)
+        logger.info(f"Sample merged data:\n{sample}")
         
     except Exception as e:
         logger.error(f"Error adding roster info: {e}")
@@ -276,7 +287,8 @@ def calculate_opportunity_trends(opportunity_df, min_weeks=2):
     # Metrics to analyze
     metrics = [
         'targets', 'carries', 'touches', 'target_share', 'carry_share',
-        'red_zone_targets', 'red_zone_carries', 'goal_line_touches'
+        'red_zone_targets', 'red_zone_carries', 'goal_line_touches',
+        'deep_targets', 'short_targets'
     ]
     
     for player_id, player_data in opportunity_df.groupby('player_id'):
@@ -285,15 +297,25 @@ def calculate_opportunity_trends(opportunity_df, min_weeks=2):
         if len(player_data) < min_weeks:
             continue
         
-        # Get player info - handle missing columns gracefully
-        player_name = player_id  # Default to player_id
-        if 'player_display_name' in player_data.columns:
+        # Get player info - prioritize player_display_name, then player_name, then player_id
+        if 'player_display_name' in player_data.columns and pd.notna(player_data['player_display_name'].iloc[0]):
             player_name = player_data['player_display_name'].iloc[0]
-        elif 'player_name' in player_data.columns:
+        elif 'player_name' in player_data.columns and pd.notna(player_data['player_name'].iloc[0]):
             player_name = player_data['player_name'].iloc[0]
+        else:
+            player_name = player_id
         
-        position = player_data['position'].iloc[0] if 'position' in player_data.columns else 'Unknown'
-        team = player_data['team'].iloc[0] if 'team' in player_data.columns else 'Unknown'
+        # Get position - default to 'Unknown' if missing
+        if 'position' in player_data.columns and pd.notna(player_data['position'].iloc[0]):
+            position = player_data['position'].iloc[0]
+        else:
+            position = 'Unknown'
+        
+        # Get team
+        if 'team' in player_data.columns and pd.notna(player_data['team'].iloc[0]):
+            team = player_data['team'].iloc[0]
+        else:
+            team = 'Unknown'
         
         trend_record = {
             'player_id': player_id,
@@ -335,6 +357,8 @@ def calculate_opportunity_trends(opportunity_df, min_weeks=2):
                     trend_record[f'{metric}_consistency'] = 0
         
         trend_records.append(trend_record)
+    
+    logger.info(f"Calculated trends for {len(trend_records)} players")
     
     return pd.DataFrame(trend_records)
 
