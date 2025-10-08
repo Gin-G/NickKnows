@@ -1,17 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <script>
-        function toggleMenu() {
-            const navLinks = document.getElementById('navLinks');
-            navLinks.classList.toggle('active');
-        }
-    </script>
-        
-    <!-- Google tag (gtag.js) -->
+    
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -20,25 +11,71 @@
         gtag('config', 'G-YMZBTB7JST');
     </script>
     
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
     <script>
         $(function(){
             $('#nfl_navbar').load("{{ url_for('nfl_navbar') }}")
-        })
-    </script>
-    <script>
-        $(function(){
             $('#header').load("{{ url_for('header') }}")
         })
     </script>
     
     <style>
+        .leaderboard-tabs {
+            margin: 30px 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            padding: 10px;
+            gap: 5px;
+        }
+        
+        .tab-btn {
+            padding: 12px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            flex: 1 1 auto;
+            min-width: 140px;
+        }
+        
+        .tab-btn:hover {
+            background-color: #495057;
+            transform: translateY(-2px);
+        }
+        
+        .tab-btn.active {
+            background-color: #007bff;
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 25px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         .opportunity-section {
             margin: 30px 0;
             padding: 20px;
@@ -52,24 +89,6 @@
             color: #495057;
             border-bottom: 2px solid #dee2e6;
             padding-bottom: 10px;
-        }
-        
-        .trend-positive {
-            color: #28a745;
-            font-weight: bold;
-        }
-        
-        .trend-negative {
-            color: #dc3545;
-            font-weight: bold;
-        }
-        
-        .trend-neutral {
-            color: #6c757d;
-        }
-        
-        .team-links {
-            margin: 30px 0;
         }
         
         .teams-grid {
@@ -93,53 +112,42 @@
         .team-link:hover {
             background-color: #0056b3;
             color: white;
-            text-decoration: none;
-        }
-        
-        .no-data {
-            text-align: center;
-            padding: 40px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            margin: 20px 0;
         }
         
         .loading-message {
             text-align: center;
-            padding: 40px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            margin: 20px 0;
+            padding: 60px 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            margin: 30px 0;
         }
         
-        .insights-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-        
-        .insights-table th,
-        .insights-table td {
-            border: 1px solid #dee2e6;
-            padding: 8px 12px;
-            text-align: left;
-        }
-        
-        .insights-table th {
-            background-color: #e9ecef;
-            font-weight: 600;
-        }
-        
-        .insights-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        
-        .stat-highlight {
+        .stat-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
             font-weight: bold;
-            color: #495057;
+            margin-left: 5px;
+        }
+        
+        .stat-badge.high { background-color: #d4edda; color: #155724; }
+        .stat-badge.medium { background-color: #fff3cd; color: #856404; }
+        .stat-badge.low { background-color: #f8d7da; color: #721c24; }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .tab-btn {
+                min-width: 100px;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+            
+            .tab-buttons {
+                padding: 5px;
+            }
         }
     </style>
-    
 </head>
 <body>
     <div id="header"></div>
@@ -151,6 +159,7 @@
     {% if loading %}
         <div class="loading-message">
             <p>📊 Opportunity data is being calculated from play-by-play data...</p>
+            <p>This analyzes every target, carry, and situational opportunity.</p>
             <p>Please refresh the page in a moment.</p>
         </div>
     {% else %}
@@ -160,57 +169,34 @@
             </a>
         </div>
         
+        <!-- Trending Insights Section -->
         {% if insights %}
-            <!-- Trending Up - Targets -->
-            {% if insights.trending_up_targets %}
-                <div class="opportunity-section">
-                    <h2>🔥 Trending Up - Targets</h2>
-                    <p>Players with increasing target opportunities (>20% increase)</p>
-                    <div class="table-wrapper">
-                        {{ insights.trending_up_targets | safe }}
-                    </div>
-                </div>
-            {% endif %}
-            
-            <!-- Trending Up - Carries -->
-            {% if insights.trending_up_carries %}
-                <div class="opportunity-section">
-                    <h2>🏃 Trending Up - Carries</h2>
-                    <p>Players with increasing rushing opportunities (>20% increase)</p>
-                    <div class="table-wrapper">
-                        {{ insights.trending_up_carries | safe }}
-                    </div>
-                </div>
-            {% endif %}
-            
-            <!-- Target Leaders and Carry Leaders side by side -->
             <div class="nfl-row">
-                {% if insights.target_leaders %}
+                {% if insights.trending_up_targets %}
                 <div class="nfl-column">
                     <div class="opportunity-section">
-                        <h2>👑 Target Leaders</h2>
-                        <p>Highest average targets per game</p>
+                        <h2>🔥 Trending Up - Targets</h2>
+                        <p>Players with increasing target opportunities (>20% increase)</p>
                         <div class="table-wrapper">
-                            {{ insights.target_leaders | safe }}
+                            {{ insights.trending_up_targets | safe }}
                         </div>
                     </div>
                 </div>
                 {% endif %}
                 
-                {% if insights.carry_leaders %}
+                {% if insights.trending_up_carries %}
                 <div class="nfl-column">
                     <div class="opportunity-section">
-                        <h2>🏃‍♂️ Carry Leaders</h2>
-                        <p>Highest average carries per game</p>
+                        <h2>🏃 Trending Up - Carries</h2>
+                        <p>Players with increasing rushing opportunities (>20% increase)</p>
                         <div class="table-wrapper">
-                            {{ insights.carry_leaders | safe }}
+                            {{ insights.trending_up_carries | safe }}
                         </div>
                     </div>
                 </div>
                 {% endif %}
             </div>
             
-            <!-- Declining Opportunities -->
             {% if insights.declining_opportunities %}
                 <div class="opportunity-section">
                     <h2>📉 Declining Opportunities</h2>
@@ -222,10 +208,107 @@
             {% endif %}
         {% endif %}
         
+        <!-- Comprehensive Leaderboards with Tabs -->
+        {% if leaderboards %}
+        <div class="leaderboard-tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="showTab('targets')">
+                    🎯 Targets
+                </button>
+                <button class="tab-btn" onclick="showTab('carries')">
+                    🏃 Carries
+                </button>
+                <button class="tab-btn" onclick="showTab('touches')">
+                    🤲 Total Touches
+                </button>
+                <button class="tab-btn" onclick="showTab('red_zone_targets')">
+                    🚨 RZ Targets
+                </button>
+                <button class="tab-btn" onclick="showTab('red_zone_carries')">
+                    🚨 RZ Carries
+                </button>
+                <button class="tab-btn" onclick="showTab('goal_line_touches')">
+                    🏆 GL Touches
+                </button>
+                <button class="tab-btn" onclick="showTab('target_share')">
+                    📊 Target Share
+                </button>
+                <button class="tab-btn" onclick="showTab('deep_targets')">
+                    💣 Deep Targets
+                </button>
+            </div>
+            
+            <!-- Tab Contents -->
+            <div id="targets-tab" class="tab-content active">
+                <h3>🎯 Top 25 Target Leaders</h3>
+                <p>Players receiving the most pass targets per game</p>
+                <div class="table-wrapper">
+                    {{ leaderboards.targets | safe }}
+                </div>
+            </div>
+            
+            <div id="carries-tab" class="tab-content">
+                <h3>🏃 Top 25 Carry Leaders</h3>
+                <p>Players with the most rushing attempts per game</p>
+                <div class="table-wrapper">
+                    {{ leaderboards.carries | safe }}
+                </div>
+            </div>
+            
+            <div id="touches-tab" class="tab-content">
+                <h3>🤲 Top 25 Total Touches</h3>
+                <p>Combined targets and carries per game</p>
+                <div class="table-wrapper">
+                    {{ leaderboards.touches | safe }}
+                </div>
+            </div>
+            
+            <div id="red_zone_targets-tab" class="tab-content">
+                <h3>🚨 Top 25 Red Zone Target Leaders</h3>
+                <p>Targets inside the opponent's 20-yard line</p>
+                <div class="table-wrapper">
+                    {{ leaderboards.red_zone_targets | safe }}
+                </div>
+            </div>
+            
+            <div id="red_zone_carries-tab" class="tab-content">
+                <h3>🚨 Top 25 Red Zone Carry Leaders</h3>
+                <p>Rushing attempts inside the opponent's 20-yard line</p>
+                <div class="table-wrapper">
+                    {{ leaderboards.red_zone_carries | safe }}
+                </div>
+            </div>
+            
+            <div id="goal_line_touches-tab" class="tab-content">
+                <h3>🏆 Top 25 Goal Line Touch Leaders</h3>
+                <p>Opportunities inside the 5-yard line (prime scoring position)</p>
+                <div class="table-wrapper">
+                    {{ leaderboards.goal_line_touches | safe }}
+                </div>
+            </div>
+            
+            <div id="target_share-tab" class="tab-content">
+                <h3>📊 Top 25 Target Share Leaders</h3>
+                <p>Percentage of team's total targets</p>
+                <div class="table-wrapper">
+                    {{ leaderboards.target_share | safe }}
+                </div>
+            </div>
+            
+            <div id="deep_targets-tab" class="tab-content">
+                <h3>💣 Top 25 Deep Target Leaders</h3>
+                <p>Targets traveling 20+ yards downfield</p>
+                <div class="table-wrapper">
+                    {{ leaderboards.deep_targets | safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
         <!-- Team Links -->
-        <div class="team-links">
+        <div class="opportunity-section">
             <h2>🏈 Team Opportunity Analysis</h2>
-            <p>Click a team to see detailed opportunity breakdowns:</p>
+            <p>Click a team to see detailed weekly opportunity breakdowns:</p>
             <div class="teams-grid">
                 <a href="{{url_for('team_opportunities', team='ARI')}}" class="team-link">Arizona Cardinals</a>
                 <a href="{{url_for('team_opportunities', team='ATL')}}" class="team-link">Atlanta Falcons</a>
@@ -261,13 +344,31 @@
                 <a href="{{url_for('team_opportunities', team='WAS')}}" class="team-link">Washington Commanders</a>
             </div>
         </div>
-        
-        {% if not insights %}
-        <div class="no-data">
-            <p>No opportunity insights available.</p>
-            <p>Click "Update Opportunity Data" to generate the latest analysis.</p>
-        </div>
-        {% endif %}
     {% endif %}
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName + '-tab');
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Highlight selected button
+            event.target.classList.add('active');
+        }
+    </script>
 </body>
 </html>

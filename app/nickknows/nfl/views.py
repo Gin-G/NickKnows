@@ -1106,18 +1106,15 @@ def update_all_snap_counts():
 
 @app.route('/NFL/Opportunities')
 def opportunities_home():
-    """Opportunity tracking home page"""
+    """Opportunity tracking home page with comprehensive leaderboards"""
     try:
         available_years = get_available_years()
         selected_year = get_selected_year()
         
-        print(f"DEBUG: Loading opportunity home for {selected_year}")
+        logger.info(f"Loading opportunity home for {selected_year}")
         
         # Load trend data
         trend_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_trends.csv'
-        
-        print(f"DEBUG: Looking for trend file: {trend_file_path}")
-        print(f"DEBUG: File exists: {os.path.exists(trend_file_path)}")
         
         if not os.path.exists(trend_file_path):
             update_opportunity_data.delay(selected_year)
@@ -1129,10 +1126,9 @@ def opportunities_home():
         
         try:
             trend_data = pd.read_csv(trend_file_path)
-            print(f"DEBUG: Loaded trend data: {len(trend_data)} records")
-            print(f"DEBUG: Trend data columns: {list(trend_data.columns)}")
+            logger.info(f"Loaded trend data: {len(trend_data)} records")
         except Exception as e:
-            print(f"DEBUG: Error loading trend data: {str(e)}")
+            logger.error(f"Error loading trend data: {str(e)}")
             flash(f'Error loading opportunity data: {str(e)}')
             return render_template('opportunities-home.html',
                                  years=available_years,
@@ -1141,37 +1137,50 @@ def opportunities_home():
         
         # Get key insights using the helper functions
         insights = {}
+        leaderboards = {}
         
         try:
+            # Trending insights
             insights['trending_up_targets'] = get_trending_players_view(trend_data, 'targets', 'up')
             insights['trending_up_carries'] = get_trending_players_view(trend_data, 'carries', 'up')
-            insights['target_leaders'] = get_opportunity_leaders_view(trend_data, 'targets')
-            insights['carry_leaders'] = get_opportunity_leaders_view(trend_data, 'carries')
             insights['declining_opportunities'] = get_trending_players_view(trend_data, 'touches', 'down')
             
-            print(f"DEBUG: Generated insights successfully")
+            # Generate comprehensive leaderboards (Top 25)
+            leaderboards['targets'] = get_leaderboard_view(trend_data, 'targets', top_n=25)
+            leaderboards['carries'] = get_leaderboard_view(trend_data, 'carries', top_n=25)
+            leaderboards['touches'] = get_leaderboard_view(trend_data, 'touches', top_n=25)
+            leaderboards['red_zone_targets'] = get_leaderboard_view(trend_data, 'red_zone_targets', top_n=25)
+            leaderboards['red_zone_carries'] = get_leaderboard_view(trend_data, 'red_zone_carries', top_n=25)
+            leaderboards['goal_line_touches'] = get_leaderboard_view(trend_data, 'goal_line_touches', top_n=25)
+            leaderboards['target_share'] = get_leaderboard_view(trend_data, 'target_share', top_n=25)
+            leaderboards['deep_targets'] = get_leaderboard_view(trend_data, 'deep_targets', top_n=25)
+            
+            logger.info("Generated all insights and leaderboards successfully")
             
         except Exception as e:
-            print(f"DEBUG: Error generating insights: {str(e)}")
+            logger.error(f"Error generating insights: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            
             # Provide empty insights rather than failing
             insights = {
-                'trending_up_targets': "<p>No trending data available</p>",
-                'trending_up_carries': "<p>No trending data available</p>",
-                'target_leaders': "<p>No target leader data available</p>",
-                'carry_leaders': "<p>No carry leader data available</p>",
-                'declining_opportunities': "<p>No declining opportunity data available</p>"
+                'trending_up_targets': "<p class='text-muted'>No trending data available</p>",
+                'trending_up_carries': "<p class='text-muted'>No trending data available</p>",
+                'declining_opportunities': "<p class='text-muted'>No declining data available</p>"
             }
+            leaderboards = {}
         
         return render_template('opportunities-home.html',
                              years=available_years,
                              selected_year=selected_year,
                              insights=insights,
+                             leaderboards=leaderboards,
                              loading=False)
                              
     except Exception as e:
-        print(f"DEBUG: Major error in opportunities_home: {str(e)}")
+        logger.error(f"Major error in opportunities_home: {str(e)}")
         import traceback
-        traceback.print_exc()
+        logger.error(traceback.format_exc())
         
         flash(f'Error loading opportunity data: {str(e)}')
         return render_template('opportunities-home.html',
@@ -1179,6 +1188,108 @@ def opportunities_home():
                              selected_year=selected_year,
                              loading=False)
 
+
+def get_leaderboard_view(trend_data, metric, top_n=25, min_weeks=2):
+    """Generate a leaderboard for a specific metric"""
+    if len(trend_data) == 0:
+        return f"<p class='text-muted'>No {metric} data available</p>"
+    
+    avg_col = f'{metric}_avg'
+    
+    if avg_col not in trend_data.columns:
+        return f"<p class='text-warning'>Missing {metric} average data</p>"
+    
+    try:
+        # Filter for minimum weeks and positive averages
+        filters = (
+            (trend_data['weeks_played'] >= min_weeks) &
+            (trend_data[avg_col] > 0)
+        )
+        
+        leaders = trend_data[filters].copy()
+        
+        if len(leaders) == 0:
+            return f"<p class='text-muted'>No {metric} leaders available</p>"
+        
+        # Sort by average and take top N
+        leaders = leaders.sort_values(avg_col, ascending=False).head(top_n)
+        
+        # Add rank column
+        leaders = leaders.reset_index(drop=True)
+        leaders['rank'] = leaders.index + 1
+        
+        # Select columns for display
+        display_cols = ['rank']
+        available_cols = list(leaders.columns)
+        
+        if 'player_name' in available_cols:
+            display_cols.append('player_name')
+        if 'position' in available_cols:
+            display_cols.append('position')
+        if 'team' in available_cols:
+            display_cols.append('team')
+        if 'weeks_played' in available_cols:
+            display_cols.append('weeks_played')
+        if avg_col in available_cols:
+            display_cols.append(avg_col)
+        if f'{metric}_latest' in available_cols:
+            display_cols.append(f'{metric}_latest')
+        if f'{metric}_max' in available_cols:
+            display_cols.append(f'{metric}_max')
+        if f'{metric}_trend' in available_cols:
+            display_cols.append(f'{metric}_trend')
+        
+        if len(display_cols) < 3:
+            return f"<p class='text-warning'>Insufficient data for {metric} leaderboard</p>"
+        
+        leaders_display = leaders[display_cols].copy()
+        
+        # Round numeric columns
+        numeric_cols = leaders_display.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            if col == 'rank' or col == 'weeks_played':
+                continue  # Keep these as integers
+            leaders_display[col] = leaders_display[col].round(2)
+        
+        # Format column names
+        col_rename = {
+            'rank': 'Rank',
+            'player_name': 'Player',
+            'position': 'Pos',
+            'team': 'Team',
+            'weeks_played': 'Weeks',
+            f'{metric}_avg': f'Avg',
+            f'{metric}_latest': 'Latest',
+            f'{metric}_max': 'Max',
+            f'{metric}_trend': 'Trend %'
+        }
+        
+        leaders_display = leaders_display.rename(columns=col_rename)
+        
+        # Style the output
+        styled = leaders_display.style.hide(axis="index")
+        
+        # Add background gradient to the average column
+        if 'Avg' in leaders_display.columns:
+            styled = styled.background_gradient(subset=['Avg'], cmap='YlGn')
+        
+        # Add trend color coding if trend exists
+        if 'Trend %' in leaders_display.columns:
+            def trend_color(val):
+                if val > 10:
+                    return 'background-color: #d4edda; color: #155724'
+                elif val < -10:
+                    return 'background-color: #f8d7da; color: #721c24'
+                else:
+                    return ''
+            styled = styled.applymap(trend_color, subset=['Trend %'])
+        
+        return styled.to_html(classes="table table-sm table-striped", escape=False)
+        
+    except Exception as e:
+        logger.error(f"Error in get_leaderboard_view for {metric}: {str(e)}")
+        return f"<p class='text-danger'>Error generating {metric} leaderboard: {str(e)}</p>"
+    
 @app.route('/NFL/Opportunities/<team>')
 def team_opportunities(team):
     """Team-specific opportunity analysis organized by stat type instead of position"""
