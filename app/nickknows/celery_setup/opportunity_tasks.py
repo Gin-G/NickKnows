@@ -1,6 +1,7 @@
 """
 NFL Opportunity Tracking Tasks
 Handles calculation and analysis of player opportunities (targets, carries, etc.)
+FIXED: Compatible with Polars DataFrames from nflreadpy
 """
 from nickknows import celery
 import os
@@ -31,20 +32,33 @@ def calculate_opportunity_data(year):
     try:
         # Load PBP data
         import nflreadpy as nfl
-        pbp_data = nfl.load_pbp(seasons=[year])
+        
+        # nflreadpy returns Polars DataFrames, convert to Pandas
+        if year >= 2024:
+            pbp_data = nfl.load_pbp(seasons=[year])
+        else:
+            pbp_data = nfl.load_pbp(seasons=[year])
+        
+        # Convert Polars to Pandas
+        if hasattr(pbp_data, 'to_pandas'):
+            pbp_data = pbp_data.to_pandas()
+        # Otherwise it's already a Pandas DataFrame
         
         logger.info(f"Loaded {len(pbp_data)} PBP records")
         
         # Load roster data for player info
         try:
             roster_data = nfl.load_rosters_weekly(seasons=[year])
+            # Convert Polars to Pandas
+            if hasattr(roster_data, 'to_pandas'):
+                roster_data = roster_data.to_pandas()
             has_roster = True
         except Exception as e:
             logger.warning(f"Could not load roster data: {e}")
             roster_data = pd.DataFrame()
             has_roster = False
         
-        # Filter to regular season
+        # Filter to regular season (now using Pandas syntax)
         reg_season = pbp_data[pbp_data['season_type'] == 'REG'].copy()
         logger.info(f"Processing {len(reg_season)} regular season plays")
         
@@ -82,6 +96,8 @@ def calculate_opportunity_data(year):
         
     except Exception as e:
         logger.error(f"❌ Error calculating opportunities for {season_display}: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise
 
 
@@ -231,10 +247,15 @@ def calculate_opportunity_trends(opportunity_df, min_weeks=2):
         if len(player_data) < min_weeks:
             continue
         
-        # Get player info
-        player_name = player_data.get('player_display_name', player_data.get('player_name', pd.Series([player_id]))).iloc[0]
-        position = player_data.get('position', pd.Series(['Unknown'])).iloc[0]
-        team = player_data.get('team', pd.Series(['Unknown'])).iloc[0]
+        # Get player info - handle missing columns gracefully
+        player_name = player_id  # Default to player_id
+        if 'player_display_name' in player_data.columns:
+            player_name = player_data['player_display_name'].iloc[0]
+        elif 'player_name' in player_data.columns:
+            player_name = player_data['player_name'].iloc[0]
+        
+        position = player_data['position'].iloc[0] if 'position' in player_data.columns else 'Unknown'
+        team = player_data['team'].iloc[0] if 'team' in player_data.columns else 'Unknown'
         
         trend_record = {
             'player_id': player_id,
