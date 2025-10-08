@@ -1282,27 +1282,8 @@ def get_leaderboard_view(trend_data, metric, top_n=25, min_weeks=2):
                     return 'background-color: #f8d7da; color: #721c24'
                 else:
                     return ''
-            styled = styled.applymap(trend_color, subset=[2025-10-08 17:35:20,831] WARNING in views: Could not load team info: module 'nflreadpy' has no attribute 'import_team_desc'
-[2025-10-08 17:35:20,845] ERROR in views: Error loading team opportunity data for BUF: 'player_id'
-[2025-10-08 17:35:20,845] ERROR in views: Traceback (most recent call last):
-  File "/usr/local/lib/python3.10/site-packages/pandas/core/indexes/base.py", line 3802, in get_loc
-    return self._engine.get_loc(casted_key)
-  File "pandas/_libs/index.pyx", line 138, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index.pyx", line 146, in pandas._libs.index.IndexEngine.get_loc
-  File "pandas/_libs/index_class_helper.pxi", line 49, in pandas._libs.index.Int64Engine._check_type
-KeyError: 'player_id'
-The above exception was the direct cause of the following exception:
-Traceback (most recent call last):
-  File "/NickKnows/app/nickknows/nfl/views.py", line 1392, in team_opportunities
-    for player_id in stat_opportunities['player_id'].unique():
-  File "/usr/local/lib/python3.10/site-packages/pandas/core/series.py", line 981, in __getitem__
-    return self._get_value(key)
-  File "/usr/local/lib/python3.10/site-packages/pandas/core/series.py", line 1089, in _get_value
-    loc = self.index.get_loc(label)
-  File "/usr/local/lib/python3.10/site-packages/pandas/core/indexes/base.py", line 3804, in get_loc
-    raise KeyError(key) from err
-KeyError: 'player_id'['Trend %'])
-        
+            styled = styled.applymap(trend_color, subset=['Trend %'])
+
         return styled.to_html(classes="table table-sm table-striped", escape=False)
         
     except Exception as e:
