@@ -1282,7 +1282,26 @@ def get_leaderboard_view(trend_data, metric, top_n=25, min_weeks=2):
                     return 'background-color: #f8d7da; color: #721c24'
                 else:
                     return ''
-            styled = styled.applymap(trend_color, subset=['Trend %'])
+            styled = styled.applymap(trend_color, subset=[2025-10-08 17:35:20,831] WARNING in views: Could not load team info: module 'nflreadpy' has no attribute 'import_team_desc'
+[2025-10-08 17:35:20,845] ERROR in views: Error loading team opportunity data for BUF: 'player_id'
+[2025-10-08 17:35:20,845] ERROR in views: Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/pandas/core/indexes/base.py", line 3802, in get_loc
+    return self._engine.get_loc(casted_key)
+  File "pandas/_libs/index.pyx", line 138, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 146, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index_class_helper.pxi", line 49, in pandas._libs.index.Int64Engine._check_type
+KeyError: 'player_id'
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+  File "/NickKnows/app/nickknows/nfl/views.py", line 1392, in team_opportunities
+    for player_id in stat_opportunities['player_id'].unique():
+  File "/usr/local/lib/python3.10/site-packages/pandas/core/series.py", line 981, in __getitem__
+    return self._get_value(key)
+  File "/usr/local/lib/python3.10/site-packages/pandas/core/series.py", line 1089, in _get_value
+    loc = self.index.get_loc(label)
+  File "/usr/local/lib/python3.10/site-packages/pandas/core/indexes/base.py", line 3804, in get_loc
+    raise KeyError(key) from err
+KeyError: 'player_id'['Trend %'])
         
         return styled.to_html(classes="table table-sm table-striped", escape=False)
         
@@ -1298,9 +1317,10 @@ def team_opportunities(team):
         selected_year = get_selected_year()
         fullname = get_team_fullname(team)
         
-        # Get team info for styling
+        # Get team info for styling - FIX: Use correct import
         try:
-            team_desc = nfl.import_team_desc()
+            import nfl_data_py as nfl_legacy
+            team_desc = nfl_legacy.import_team_desc()
             team_mapping = {'LV': 'OAK', 'LAC': 'SD', 'LA': 'LAR'}
             lookup_abbr = team_mapping.get(team, team)
             team_row = team_desc[team_desc['team_abbr'] == lookup_abbr]
@@ -1335,6 +1355,10 @@ def team_opportunities(team):
         
         opportunity_data = pd.read_csv(opp_file_path)
         trend_data = pd.read_csv(trend_file_path)
+        
+        # Debug: Log column names to understand data structure
+        logger.info(f"Opportunity data columns: {list(opportunity_data.columns)}")
+        logger.info(f"Trend data columns: {list(trend_data.columns)}")
         
         # Filter to team
         team_opportunities = opportunity_data[opportunity_data['team'] == team]
@@ -1389,15 +1413,37 @@ def team_opportunities(team):
             if len(stat_opportunities) > 0:
                 stat_players = []
                 
-                for player_id in stat_opportunities['player_id'].unique():
-                    player_data = stat_opportunities[stat_opportunities['player_id'] == player_id]
-                    player_trends = team_trends[team_trends['player_id'] == player_id]
+                # FIX: Dynamically determine which ID column to use
+                id_column = None
+                for possible_id in ['player_id', 'gsis_id', 'player_name', 'player_display_name']:
+                    if possible_id in stat_opportunities.columns:
+                        id_column = possible_id
+                        break
+                
+                if id_column is None:
+                    logger.error(f"No player identifier column found in opportunity data for {stat_key}. Columns: {list(stat_opportunities.columns)}")
+                    continue
+                
+                logger.info(f"Using '{id_column}' as player identifier for {stat_key}")
+                
+                for player_id in stat_opportunities[id_column].unique():
+                    player_data = stat_opportunities[stat_opportunities[id_column] == player_id]
+                    # FIX: Check if id_column exists in trend data before filtering
+                    player_trends = team_trends[team_trends[id_column] == player_id] if id_column in team_trends.columns else pd.DataFrame()
                     
                     if len(player_data) == 0:
                         continue
                     
-                    # Get player info
-                    player_name = player_data['player_display_name'].iloc[0] if 'player_display_name' in player_data.columns else player_data['player_name'].iloc[0] if 'player_name' in player_data.columns else player_id
+                    # Get player info - handle different possible name columns
+                    player_name = None
+                    for name_col in ['player_display_name', 'player_name']:
+                        if name_col in player_data.columns:
+                            player_name = player_data[name_col].iloc[0]
+                            break
+                    
+                    if player_name is None:
+                        player_name = str(player_id)  # Fallback to ID
+                    
                     position = player_data['position'].iloc[0] if 'position' in player_data.columns else 'Unknown'
                     
                     # Create weekly breakdowns for primary stat
