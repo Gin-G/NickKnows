@@ -1,163 +1,414 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-YMZBTB7JST');
+    </script>
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}" type="text/css">
     <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
     <script>
         $(function(){
             $('#nfl_navbar').load("{{ url_for('nfl_navbar') }}")
-        })
-        $(function(){
             $('#header').load("{{ url_for('header') }}")
         })
     </script>
+    
+    <style>
+        .team-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, {{ team_info.primary_color if team_info else '#343a40' }} 0%, {{ team_info.secondary_color if team_info and team_info.secondary_color else '#495057' }} 100%);
+            border-radius: 12px;
+            color: white;
+        }
+        
+        .team-logo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            padding: 10px;
+        }
+        
+        .leaderboard-tabs {
+            margin: 30px 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            padding: 10px;
+            gap: 5px;
+        }
+        
+        .tab-btn {
+            padding: 12px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+        
+        .tab-btn:hover {
+            background-color: #495057;
+            transform: translateY(-2px);
+        }
+        
+        .tab-btn.active {
+            background-color: #007bff;
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 25px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .insight-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .insight-section h2 {
+            margin-top: 0;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+        
+        .loading-message {
+            text-align: center;
+            padding: 60px 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            margin: 30px 0;
+        }
+        
+        .weekly-chart {
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .player-card {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-left: 4px solid {{ team_info.primary_color if team_info else '#007bff' }};
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .player-card h4 {
+            margin: 0 0 10px 0;
+            color: #343a40;
+        }
+        
+        .stat-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin: 2px;
+        }
+        
+        .stat-badge.targets { background-color: #d4edda; color: #155724; }
+        .stat-badge.carries { background-color: #cce5ff; color: #004085; }
+        .stat-badge.red-zone { background-color: #f8d7da; color: #721c24; }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .tab-btn {
+                min-width: 100px;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+            
+            .team-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="header"></div>
     <div id="nfl_navbar"></div>
     
-    <h1>{{ fullname }} Opportunities - DEBUG</h1>
+    <!-- Team Header -->
+    {% if team_info %}
+    <div class="team-header">
+        <img src="{{ team_info.logo }}" alt="{{ fullname }}" class="team-logo">
+        <div>
+            <h1 style="margin: 0;">{{ fullname }} Opportunities</h1>
+            <h2 style="margin: 5px 0 0 0;">{{ selected_year }} Season</h2>
+        </div>
+    </div>
+    {% else %}
+    <h1>{{ fullname }} Opportunities</h1>
     <h2>{{ selected_year }} Season</h2>
+    {% endif %}
     
     {% if loading %}
-        <div style="background: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 8px;">
+        <div class="loading-message">
             <p>📊 Opportunity data is being calculated...</p>
             <p>Please refresh the page in a moment.</p>
         </div>
     {% else %}
-        <!-- Debug Information -->
-        <div style="background: #e7f3ff; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #0066cc;">
-            <h3>🔍 Debug Information</h3>
-            
-            <div style="margin: 15px 0;">
-                <strong>Team Info:</strong>
-                {% if team_info %}
-                    <pre style="background: white; padding: 10px; overflow-x: auto;">{{ team_info }}</pre>
-                {% else %}
-                    <p style="color: red;">❌ No team info available</p>
-                {% endif %}
-            </div>
-            
-            <div style="margin: 15px 0;">
-                <strong>Available Weeks:</strong>
-                {% if available_weeks %}
-                    <p>{{ available_weeks }}</p>
-                {% else %}
-                    <p style="color: red;">❌ No weeks available</p>
-                {% endif %}
-            </div>
-            
-            <div style="margin: 15px 0;">
-                <strong>Stat Type Data Keys:</strong>
-                {% if stat_type_data %}
-                    <p>{{ stat_type_data.keys()|list }}</p>
-                    <p>Total stats: {{ stat_type_data|length }}</p>
-                    
-                    {% for stat_key, players in stat_type_data.items() %}
-                        <div style="margin: 10px 0; padding: 10px; background: white; border-left: 3px solid #28a745;">
-                            <strong>{{ stat_key }}:</strong> {{ players|length }} players
-                            {% if players|length > 0 %}
-                                <details style="margin-top: 10px;">
-                                    <summary>Show first player data</summary>
-                                    <pre style="font-size: 11px; overflow-x: auto;">{{ players[0] }}</pre>
-                                </details>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <p style="color: red;">❌ No stat_type_data available</p>
-                {% endif %}
-            </div>
-            
-            <div style="margin: 15px 0;">
-                <strong>Plot Data:</strong>
-                {% if plot_data %}
-                    <p>Plot data keys: {{ plot_data.keys()|list }}</p>
-                {% else %}
-                    <p style="color: orange;">⚠️ No plot data available</p>
-                {% endif %}
-            </div>
-            
-            <div style="margin: 15px 0;">
-                <strong>Insights:</strong>
-                {% if insights %}
-                    <p>Insight keys: {{ insights.keys()|list }}</p>
-                {% else %}
-                    <p style="color: orange;">⚠️ No insights available</p>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Simple Data Display Test -->
-        {% if stat_type_data %}
-            <div style="margin: 30px 0;">
-                <h2>📊 Simple Data Display Test</h2>
-                
-                {% for stat_key, players in stat_type_data.items() %}
-                    <div style="background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                        <h3>{{ stat_key|replace('_', ' ')|title }} ({{ players|length }} players)</h3>
-                        
-                        {% if players|length > 0 %}
-                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                                <thead>
-                                    <tr style="background: #343a40; color: white;">
-                                        <th style="padding: 10px; text-align: left;">Player</th>
-                                        <th style="padding: 10px; text-align: center;">Position</th>
-                                        <th style="padding: 10px; text-align: center;">Weeks</th>
-                                        <th style="padding: 10px; text-align: center;">Avg</th>
-                                        <th style="padding: 10px; text-align: center;">Max</th>
-                                        <th style="padding: 10px; text-align: center;">Trend %</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for player in players[:10] %}
-                                        <tr style="border-bottom: 1px solid #dee2e6;">
-                                            <td style="padding: 8px;">{{ player.player_name }}</td>
-                                            <td style="padding: 8px; text-align: center;">{{ player.position }}</td>
-                                            <td style="padding: 8px; text-align: center;">{{ player.weeks_played }}</td>
-                                            <td style="padding: 8px; text-align: center;">{{ "%.1f"|format(player[stat_key + '_avg']) }}</td>
-                                            <td style="padding: 8px; text-align: center;">{{ player[stat_key + '_max'] }}</td>
-                                            <td style="padding: 8px; text-align: center; {% if player[stat_key + '_trend'] > 10 %}color: green;{% elif player[stat_key + '_trend'] < -10 %}color: red;{% endif %}">
-                                                {{ "%.0f"|format(player[stat_key + '_trend']) }}%
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                            
-                            {% if players|length > 10 %}
-                                <p style="margin-top: 10px; color: #6c757d; font-style: italic;">Showing 10 of {{ players|length }} players</p>
-                            {% endif %}
-                        {% else %}
-                            <p style="color: #6c757d; font-style: italic;">No players with {{ stat_key }} data</p>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div style="background: #f8d7da; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #dc3545;">
-                <h3>❌ No Data Available</h3>
-                <p>stat_type_data is empty or None</p>
-                <p>This usually means:</p>
-                <ul>
-                    <li>No opportunity data file exists for this year</li>
-                    <li>The data file is empty</li>
-                    <li>The team has no recorded opportunities</li>
-                    <li>There was an error processing the data</li>
-                </ul>
-                <p><strong>Check the server logs for more details.</strong></p>
-            </div>
-        {% endif %}
-        
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="{{ url_for('update_opportunities') }}" style="display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
-                🔄 Update Opportunity Data
+        <div style="text-align: center; margin: 20px 0;">
+            <a href="{{ url_for('update_opportunities') }}" style="font-size: 16px; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
+                🔄 Update Data
             </a>
-            <a href="{{ url_for('opportunities_home') }}" style="display: inline-block; padding: 12px 24px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin-left: 10px;">
+            <a href="{{ url_for('opportunities_home') }}" style="font-size: 16px; padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">
                 ← Back to Overview
             </a>
         </div>
+        
+        <!-- Trending Insights -->
+        {% if insights %}
+            <div class="nfl-row">
+                {% if insights.trending_up_targets_count and insights.trending_up_targets_count > 0 %}
+                <div class="nfl-column">
+                    <div class="insight-section">
+                        <h2>🔥 Trending Up - Targets ({{ insights.trending_up_targets_count }})</h2>
+                        <div class="table-wrapper">
+                            {{ insights.trending_up_targets | safe }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if insights.trending_up_carries_count and insights.trending_up_carries_count > 0 %}
+                <div class="nfl-column">
+                    <div class="insight-section">
+                        <h2>🏃 Trending Up - Carries ({{ insights.trending_up_carries_count }})</h2>
+                        <div class="table-wrapper">
+                            {{ insights.trending_up_carries | safe }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if insights.declining_count and insights.declining_count > 0 %}
+            <div class="insight-section">
+                <h2>📉 Declining Opportunities ({{ insights.declining_count }})</h2>
+                <div class="table-wrapper">
+                    {{ insights.declining_opportunities | safe }}
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+        
+        <!-- Leaderboards with Tabs -->
+        {% if leaderboards %}
+        <div class="leaderboard-tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="showTab(event, 'targets')">
+                    🎯 Targets
+                </button>
+                <button class="tab-btn" onclick="showTab(event, 'carries')">
+                    🏃 Carries
+                </button>
+                <button class="tab-btn" onclick="showTab(event, 'touches')">
+                    🤲 Touches
+                </button>
+                <button class="tab-btn" onclick="showTab(event, 'red_zone_targets')">
+                    🚨 RZ Targets
+                </button>
+                <button class="tab-btn" onclick="showTab(event, 'red_zone_carries')">
+                    🚨 RZ Carries
+                </button>
+                <button class="tab-btn" onclick="showTab(event, 'goal_line_touches')">
+                    🏆 GL Touches
+                </button>
+                <button class="tab-btn" onclick="showTab(event, 'target_share')">
+                    📊 Target Share
+                </button>
+            </div>
+            
+            <!-- Tab Contents -->
+            <div id="targets-tab" class="tab-content active">
+                <h3>🎯 Target Leaders</h3>
+                <div class="table-wrapper">
+                    {{ leaderboards.targets | safe }}
+                </div>
+            </div>
+            
+            <div id="carries-tab" class="tab-content">
+                <h3>🏃 Carry Leaders</h3>
+                <div class="table-wrapper">
+                    {{ leaderboards.carries | safe }}
+                </div>
+            </div>
+            
+            <div id="touches-tab" class="tab-content">
+                <h3>🤲 Touch Leaders</h3>
+                <div class="table-wrapper">
+                    {{ leaderboards.touches | safe }}
+                </div>
+            </div>
+            
+            <div id="red_zone_targets-tab" class="tab-content">
+                <h3>🚨 Red Zone Target Leaders</h3>
+                <div class="table-wrapper">
+                    {{ leaderboards.red_zone_targets | safe }}
+                </div>
+            </div>
+            
+            <div id="red_zone_carries-tab" class="tab-content">
+                <h3>🚨 Red Zone Carry Leaders</h3>
+                <div class="table-wrapper">
+                    {{ leaderboards.red_zone_carries | safe }}
+                </div>
+            </div>
+            
+            <div id="goal_line_touches-tab" class="tab-content">
+                <h3>🏆 Goal Line Touch Leaders</h3>
+                <div class="table-wrapper">
+                    {{ leaderboards.goal_line_touches | safe }}
+                </div>
+            </div>
+            
+            <div id="target_share-tab" class="tab-content">
+                <h3>📊 Target Share Leaders</h3>
+                <div class="table-wrapper">
+                    {{ leaderboards.target_share | safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Weekly Breakdown -->
+        {% if weekly_data and available_weeks %}
+        <div class="weekly-chart">
+            <h2>📈 Weekly Opportunity Trends - Top Players</h2>
+            <p>Showing top 8 players by total touches</p>
+            
+            {% for player_name, player_info in weekly_data.items() %}
+            <div class="player-card">
+                <h4>{{ player_name }} ({{ player_info.position }})</h4>
+                <div>
+                    <span class="stat-badge targets">Avg Targets: {{ "%.1f"|format(player_info.targets_avg) }}</span>
+                    <span class="stat-badge carries">Avg Carries: {{ "%.1f"|format(player_info.carries_avg) }}</span>
+                    <span class="stat-badge red-zone">Avg Touches: {{ "%.1f"|format(player_info.touches_avg) }}</span>
+                </div>
+                
+                <table style="width: 100%; margin-top: 10px; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 5px;">Week</th>
+                            {% for week in available_weeks %}
+                            <th style="padding: 5px; text-align: center;">{{ week }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold;">Targets</td>
+                            {% for week in available_weeks %}
+                            <td style="padding: 5px; text-align: center;">
+                                {{ player_info.weeks[week].targets if week in player_info.weeks else 0 }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr style="background: #f8f9fa;">
+                            <td style="padding: 5px; font-weight: bold;">Carries</td>
+                            {% for week in available_weeks %}
+                            <td style="padding: 5px; text-align: center;">
+                                {{ player_info.weeks[week].carries if week in player_info.weeks else 0 }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px; font-weight: bold;">Total</td>
+                            {% for week in available_weeks %}
+                            <td style="padding: 5px; text-align: center; font-weight: bold;">
+                                {{ player_info.weeks[week].touches if week in player_info.weeks else 0 }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% if not leaderboards and not insights and not weekly_data %}
+        <div class="insight-section">
+            <h2>⚠️ No Data Available</h2>
+            <p>No opportunity data found for {{ fullname }} in the {{ selected_year }} season.</p>
+            <p>This could mean:</p>
+            <ul>
+                <li>The season hasn't started yet</li>
+                <li>No games have been played</li>
+                <li>The data needs to be updated</li>
+            </ul>
+        </div>
+        {% endif %}
     {% endif %}
+    
+    <script>
+        function showTab(event, tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName + '-tab');
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Highlight selected button
+            event.target.classList.add('active');
+        }
+    </script>
 </body>
 </html>

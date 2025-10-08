@@ -1188,120 +1188,210 @@ def opportunities_home():
                              selected_year=selected_year,
                              loading=False)
 
-
-def get_leaderboard_view(trend_data, metric, top_n=25, min_weeks=2):
-    """Generate a leaderboard for a specific metric"""
+def get_leaderboard_view(trend_data, metric, top_n=15, min_weeks=2):
+    """Generate HTML leaderboard view for a specific metric - works for both home and team pages"""
     if len(trend_data) == 0:
-        return f"<p class='text-muted'>No {metric} data available</p>"
+        return "<p class='text-muted'>No data available</p>"
     
     avg_col = f'{metric}_avg'
     
+    # Check if column exists
     if avg_col not in trend_data.columns:
-        return f"<p class='text-warning'>Missing {metric} average data</p>"
+        logger.warning(f"Column {avg_col} not found in trend data. Available: {list(trend_data.columns)}")
+        return f"<p class='text-warning'>Missing {metric} data</p>"
     
     try:
-        # Filter for minimum weeks and positive averages
+        # Filter and sort
         filters = (
-            (trend_data['weeks_played'] >= min_weeks) &
+            (trend_data.get('weeks_played', 0) >= min_weeks) &
             (trend_data[avg_col] > 0)
         )
         
         leaders = trend_data[filters].copy()
-        
         if len(leaders) == 0:
             return f"<p class='text-muted'>No {metric} leaders available</p>"
         
-        # Sort by average and take top N
-        leaders = leaders.sort_values(avg_col, ascending=False).head(top_n)
+        leaders = leaders.nlargest(top_n, avg_col)
         
-        # Add rank column
-        leaders = leaders.reset_index(drop=True)
-        leaders['rank'] = leaders.index + 1
+        # Build display columns dynamically
+        display_cols = []
+        col_rename = {}
         
-        # Select columns for display
-        display_cols = ['rank']
-        available_cols = list(leaders.columns)
-        
-        if 'player_name' in available_cols:
+        # Core columns - include if they exist
+        if 'player_name' in leaders.columns:
             display_cols.append('player_name')
-        if 'position' in available_cols:
+            col_rename['player_name'] = 'Player'
+        
+        if 'position' in leaders.columns:
             display_cols.append('position')
-        if 'team' in available_cols:
+            col_rename['position'] = 'Pos'
+        
+        if 'team' in leaders.columns:
             display_cols.append('team')
-        if 'weeks_played' in available_cols:
+            col_rename['team'] = 'Team'
+        
+        if 'weeks_played' in leaders.columns:
             display_cols.append('weeks_played')
-        if avg_col in available_cols:
+            col_rename['weeks_played'] = 'Weeks'
+        
+        # Metric-specific columns
+        if avg_col in leaders.columns:
             display_cols.append(avg_col)
-        if f'{metric}_latest' in available_cols:
-            display_cols.append(f'{metric}_latest')
-        if f'{metric}_max' in available_cols:
-            display_cols.append(f'{metric}_max')
-        if f'{metric}_trend' in available_cols:
-            display_cols.append(f'{metric}_trend')
+            col_rename[avg_col] = f'Avg {metric.replace("_", " ").title()}'
         
-        if len(display_cols) < 3:
-            return f"<p class='text-warning'>Insufficient data for {metric} leaderboard</p>"
+        latest_col = f'{metric}_latest'
+        if latest_col in leaders.columns:
+            display_cols.append(latest_col)
+            col_rename[latest_col] = 'Latest'
         
+        max_col = f'{metric}_max'
+        if max_col in leaders.columns:
+            display_cols.append(max_col)
+            col_rename[max_col] = 'Max'
+        
+        trend_col = f'{metric}_trend'
+        if trend_col in leaders.columns:
+            display_cols.append(trend_col)
+            col_rename[trend_col] = 'Trend %'
+        
+        if len(display_cols) == 0:
+            return f"<p class='text-warning'>No displayable columns for {metric}</p>"
+        
+        # Create display dataframe
         leaders_display = leaders[display_cols].copy()
         
         # Round numeric columns
         numeric_cols = leaders_display.select_dtypes(include=[np.number]).columns
-        for col in numeric_cols:
-            if col == 'rank' or col == 'weeks_played':
-                continue  # Keep these as integers
-            leaders_display[col] = leaders_display[col].round(2)
+        leaders_display[numeric_cols] = leaders_display[numeric_cols].round(2)
         
-        # Format column names
-        col_rename = {
-            'rank': 'Rank',
-            'player_name': 'Player',
-            'position': 'Pos',
-            'team': 'Team',
-            'weeks_played': 'Weeks',
-            f'{metric}_avg': f'Avg',
-            f'{metric}_latest': 'Latest',
-            f'{metric}_max': 'Max',
-            f'{metric}_trend': 'Trend %'
-        }
-        
+        # Rename columns
         leaders_display = leaders_display.rename(columns=col_rename)
         
-        # Style the output
-        styled = leaders_display.style.hide(axis="index")
+        # Convert to HTML with styling
+        html = leaders_display.style\
+            .hide(axis="index")\
+            .to_html(classes="table table-sm table-striped", escape=False)
         
-        # Add background gradient to the average column
-        if 'Avg' in leaders_display.columns:
-            styled = styled.background_gradient(subset=['Avg'], cmap='YlGn')
-        
-        # Add trend color coding if trend exists
-        if 'Trend %' in leaders_display.columns:
-            def trend_color(val):
-                if val > 10:
-                    return 'background-color: #d4edda; color: #155724'
-                elif val < -10:
-                    return 'background-color: #f8d7da; color: #721c24'
-                else:
-                    return ''
-            styled = styled.applymap(trend_color, subset=['Trend %'])
-
-        return styled.to_html(classes="table table-sm table-striped", escape=False)
+        return html
         
     except Exception as e:
         logger.error(f"Error in get_leaderboard_view for {metric}: {str(e)}")
-        return f"<p class='text-danger'>Error generating {metric} leaderboard: {str(e)}</p>"
+        import traceback
+        logger.error(traceback.format_exc())
+        return f"<p class='text-danger'>Error: {str(e)}</p>"
+
+
+def get_trending_players_view(trend_data, metric, direction='up', min_trend=20, min_avg=1):
+    """Get trending players for view - supports both increasing and decreasing trends"""
+    if len(trend_data) == 0:
+        return "<p class='text-muted'>No trend data available</p>"
     
+    trend_col = f'{metric}_trend'
+    avg_col = f'{metric}_avg'
+    
+    # Check if required columns exist
+    if trend_col not in trend_data.columns or avg_col not in trend_data.columns:
+        logger.warning(f"Missing {metric} trend columns. Available: {list(trend_data.columns)}")
+        return f"<p class='text-warning'>Missing {metric} trend data</p>"
+    
+    try:
+        if direction == 'up':
+            filters = (
+                (trend_data[trend_col] >= min_trend) &
+                (trend_data[avg_col] >= min_avg)
+            )
+            sort_ascending = False
+            emoji = "📈"
+        else:  # direction == 'down'
+            filters = (
+                (trend_data[trend_col] <= -min_trend) &
+                (trend_data[avg_col] >= min_avg)
+            )
+            sort_ascending = True
+            emoji = "📉"
+        
+        result = trend_data[filters].copy()
+        
+        if len(result) == 0:
+            direction_text = "increasing" if direction == 'up' else "declining"
+            return f"<p class='text-muted'>{emoji} No players with significantly {direction_text} {metric}</p>"
+        
+        # Sort and limit results
+        result = result.sort_values(trend_col, ascending=sort_ascending).head(10)
+        
+        # Select and format columns for display
+        display_cols = []
+        col_rename = {}
+        
+        # Add columns that exist
+        if 'player_name' in result.columns:
+            display_cols.append('player_name')
+            col_rename['player_name'] = 'Player'
+        
+        if 'position' in result.columns:
+            display_cols.append('position')
+            col_rename['position'] = 'Pos'
+        
+        if 'team' in result.columns:
+            display_cols.append('team')
+            col_rename['team'] = 'Team'
+        
+        if 'weeks_played' in result.columns:
+            display_cols.append('weeks_played')
+            col_rename['weeks_played'] = 'Weeks'
+        
+        if avg_col in result.columns:
+            display_cols.append(avg_col)
+            col_rename[avg_col] = f'Avg {metric.replace("_", " ").title()}'
+        
+        latest_col = f'{metric}_latest'
+        if latest_col in result.columns:
+            display_cols.append(latest_col)
+            col_rename[latest_col] = 'Latest'
+        
+        if trend_col in result.columns:
+            display_cols.append(trend_col)
+            col_rename[trend_col] = 'Trend %'
+        
+        if len(display_cols) < 3:
+            return f"<p class='text-warning'>Insufficient data columns for {metric} display</p>"
+        
+        result_display = result[display_cols].copy()
+        
+        # Round numeric columns
+        numeric_cols = result_display.select_dtypes(include=[np.number]).columns
+        result_display[numeric_cols] = result_display[numeric_cols].round(2)
+        
+        # Rename columns
+        result_display = result_display.rename(columns=col_rename)
+        
+        return result_display.style.hide(axis="index").to_html(classes="table table-sm", escape=False)
+               
+    except Exception as e:
+        logger.error(f"Error in get_trending_players_view for {metric}: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return f"<p class='text-danger'>Error generating {metric} trends: {str(e)}</p>"
+
+
+def get_opportunity_leaders_view(trend_data, metric, min_weeks=2):
+    """Get opportunity leaders for view - simpler version for specific use cases"""
+    # This is just a wrapper around get_leaderboard_view for backward compatibility
+    return get_leaderboard_view(trend_data, metric, top_n=15, min_weeks=min_weeks)
+
 @app.route('/NFL/Opportunities/<team>')
 def team_opportunities(team):
-    """Team-specific opportunity analysis organized by stat type instead of position"""
+    """Team-specific opportunity analysis with comprehensive stat tracking"""
     try:
         available_years = get_available_years()
         selected_year = get_selected_year()
         fullname = get_team_fullname(team)
         
-        # Get team info for styling - FIX: Use correct import
+        logger.info(f"Loading team opportunities for {team} - {selected_year}")
+        
+        # Get team info for styling
         try:
-            import nfl_data_py as nfl_legacy
-            team_desc = nfl_legacy.import_team_desc()
+            team_desc = nfl.import_team_desc()
             team_mapping = {'LV': 'OAK', 'LAC': 'SD', 'LA': 'LAR'}
             lookup_abbr = team_mapping.get(team, team)
             team_row = team_desc[team_desc['team_abbr'] == lookup_abbr]
@@ -1334,186 +1424,125 @@ def team_opportunities(team):
                                  selected_year=selected_year,
                                  loading=True)
         
+        # Load data
         opportunity_data = pd.read_csv(opp_file_path)
         trend_data = pd.read_csv(trend_file_path)
         
-        # Debug: Log column names to understand data structure
-        logger.info(f"Opportunity data columns: {list(opportunity_data.columns)}")
-        logger.info(f"Trend data columns: {list(trend_data.columns)}")
+        logger.info(f"Loaded opportunity data: {len(opportunity_data)} records")
+        logger.info(f"Loaded trend data: {len(trend_data)} records")
+        logger.info(f"Opportunity columns: {list(opportunity_data.columns)}")
+        logger.info(f"Trend columns: {list(trend_data.columns)}")
         
         # Filter to team
-        team_opportunities = opportunity_data[opportunity_data['team'] == team]
-        team_trends = trend_data[trend_data['team'] == team]
+        team_opportunities = opportunity_data[opportunity_data['team'] == team].copy()
+        team_trends = trend_data[trend_data['team'] == team].copy()
+        
+        logger.info(f"Team opportunities: {len(team_opportunities)} records")
+        logger.info(f"Team trends: {len(team_trends)} records")
+        
+        if len(team_opportunities) == 0:
+            flash(f'No opportunity data found for {fullname} in {selected_year}')
+            return render_template('team-opportunities.html',
+                                 team=team,
+                                 fullname=fullname,
+                                 team_info=team_info,
+                                 years=available_years,
+                                 selected_year=selected_year,
+                                 stat_type_data={},
+                                 available_weeks=[],
+                                 insights={},
+                                 leaderboards={},
+                                 loading=False)
         
         # Get available weeks
-        available_weeks = sorted(team_opportunities['week'].unique()) if len(team_opportunities) > 0 else []
+        available_weeks = sorted(team_opportunities['week'].unique())
+        logger.info(f"Available weeks: {available_weeks}")
         
-        # Process data by STAT TYPE instead of position
-        stat_type_data = {}
-        
-        # Define stat types we want to track
-        stat_configs = [
-            {
-                'name': 'Targets',
-                'key': 'targets',
-                'filter': lambda df: df['targets'] > 0,
-                'primary_stat': 'targets',
-                'secondary_stat': 'target_share',
-                'description': 'Players receiving pass targets'
-            },
-            {
-                'name': 'Carries', 
-                'key': 'carries',
-                'filter': lambda df: df['carries'] > 0,
-                'primary_stat': 'carries',
-                'secondary_stat': 'carry_share',
-                'description': 'Players with rushing attempts'
-            },
-            {
-                'name': 'Red Zone',
-                'key': 'red_zone',
-                'filter': lambda df: (df['red_zone_targets'] > 0) | (df['red_zone_carries'] > 0),
-                'primary_stat': 'red_zone_targets',
-                'secondary_stat': 'red_zone_carries',
-                'description': 'Red zone opportunities (inside 20 yard line)'
-            },
-            {
-                'name': 'Goal Line',
-                'key': 'goal_line',
-                'filter': lambda df: df['goal_line_touches'] > 0,
-                'primary_stat': 'goal_line_touches',
-                'secondary_stat': None,
-                'description': 'Goal line opportunities (inside 5 yard line)'
-            }
-        ]
-        
-        for stat_config in stat_configs:
-            stat_key = stat_config['key']
-            stat_opportunities = stat_config['filter'](team_opportunities)
+        # Generate leaderboards using same function as home page
+        leaderboards = {}
+        try:
+            leaderboards['targets'] = get_leaderboard_view(team_trends, 'targets', top_n=15)
+            leaderboards['carries'] = get_leaderboard_view(team_trends, 'carries', top_n=15)
+            leaderboards['touches'] = get_leaderboard_view(team_trends, 'touches', top_n=15)
+            leaderboards['red_zone_targets'] = get_leaderboard_view(team_trends, 'red_zone_targets', top_n=10)
+            leaderboards['red_zone_carries'] = get_leaderboard_view(team_trends, 'red_zone_carries', top_n=10)
+            leaderboards['goal_line_touches'] = get_leaderboard_view(team_trends, 'goal_line_touches', top_n=10)
+            leaderboards['target_share'] = get_leaderboard_view(team_trends, 'target_share', top_n=10)
             
-            if len(stat_opportunities) > 0:
-                stat_players = []
-                
-                # FIX: Dynamically determine which ID column to use
-                id_column = None
-                for possible_id in ['player_id', 'gsis_id', 'player_name', 'player_display_name']:
-                    if possible_id in stat_opportunities.columns:
-                        id_column = possible_id
-                        break
-                
-                if id_column is None:
-                    logger.error(f"No player identifier column found in opportunity data for {stat_key}. Columns: {list(stat_opportunities.columns)}")
-                    continue
-                
-                logger.info(f"Using '{id_column}' as player identifier for {stat_key}")
-                
-                for player_id in stat_opportunities[id_column].unique():
-                    player_data = stat_opportunities[stat_opportunities[id_column] == player_id]
-                    # FIX: Check if id_column exists in trend data before filtering
-                    player_trends = team_trends[team_trends[id_column] == player_id] if id_column in team_trends.columns else pd.DataFrame()
-                    
-                    if len(player_data) == 0:
-                        continue
-                    
-                    # Get player info - handle different possible name columns
-                    player_name = None
-                    for name_col in ['player_display_name', 'player_name']:
-                        if name_col in player_data.columns:
-                            player_name = player_data[name_col].iloc[0]
-                            break
-                    
-                    if player_name is None:
-                        player_name = str(player_id)  # Fallback to ID
-                    
-                    position = player_data['position'].iloc[0] if 'position' in player_data.columns else 'Unknown'
-                    
-                    # Create weekly breakdowns for primary stat
-                    primary_stat = stat_config['primary_stat']
-                    weekly_primary = {}
-                    
-                    for week in available_weeks:
-                        week_data = player_data[player_data['week'] == week]
-                        if len(week_data) > 0:
-                            row = week_data.iloc[0]
-                            if stat_key == 'red_zone':
-                                # For red zone, combine targets and carries
-                                weekly_primary[week] = int(row.get('red_zone_targets', 0)) + int(row.get('red_zone_carries', 0))
-                            else:
-                                weekly_primary[week] = int(row.get(primary_stat, 0))
-                        else:
-                            weekly_primary[week] = 0
-                    
-                    # Get values and calculate stats
-                    primary_values = list(weekly_primary.values())
-                    
-                    # Get trend data if available
-                    if len(player_trends) > 0:
-                        trend_row = player_trends.iloc[0]
-                        primary_avg = trend_row.get(f'{primary_stat}_avg', np.mean(primary_values))
-                        primary_trend = trend_row.get(f'{primary_stat}_trend', 0)
-                        weeks_played = trend_row.get('weeks_played', len([x for x in primary_values if x > 0]))
-                    else:
-                        primary_avg = np.mean(primary_values) if primary_values else 0
-                        primary_trend = 0
-                        weeks_played = len([x for x in primary_values if x > 0])
-                    
-                    # Calculate additional stats
-                    def safe_stats(values):
-                        if not values or all(v == 0 for v in values):
-                            return {'max': 0, 'min': 0, 'std': 0.0}
-                        non_zero_values = [v for v in values if v > 0] or [0]
-                        return {
-                            'max': max(values),
-                            'min': min(non_zero_values),
-                            'std': np.std(values)
-                        }
-                    
-                    primary_stats = safe_stats(primary_values)
-                    
-                    player_summary = {
-                        'player_id': player_id,
-                        'player_name': player_name,
-                        'position': position,
-                        'weeks_played': weeks_played,
-                        f'weekly_{stat_key}': weekly_primary,
-                        f'{stat_key}_avg': primary_avg,
-                        f'{stat_key}_max': primary_stats['max'],
-                        f'{stat_key}_min': primary_stats['min'],
-                        f'{stat_key}_std': primary_stats['std'],
-                        f'{stat_key}_trend': primary_trend,
-                    }
-                    
-                    stat_players.append(player_summary)
-                
-                # Sort by average of primary stat
-                stat_players.sort(key=lambda x: x[f'{stat_key}_avg'], reverse=True)
-                stat_type_data[stat_key] = stat_players
+            logger.info("Generated all leaderboards successfully")
+        except Exception as e:
+            logger.error(f"Error generating leaderboards: {str(e)}")
+            leaderboards = {}
         
         # Calculate team insights
-        team_insights = {
-            'trending_up_targets': get_trending_players_view(team_trends, 'targets', 'up'),
-            'trending_up_carries': get_trending_players_view(team_trends, 'carries', 'up'),
-            'target_leaders': get_opportunity_leaders_view(team_trends, 'targets'),
-            'carry_leaders': get_opportunity_leaders_view(team_trends, 'carries'),
-            'declining_opportunities': get_trending_players_view(team_trends, 'touches', 'down'),
-            
-            'trending_up_targets_count': len(team_trends[(team_trends['targets_trend'] >= 20) & (team_trends['targets_avg'] >= 1)]),
-            'trending_up_carries_count': len(team_trends[(team_trends['carries_trend'] >= 20) & (team_trends['carries_avg'] >= 1)]),
-            'declining_count': len(team_trends[(team_trends['touches_trend'] <= -20) & (team_trends['touches_avg'] >= 2)]),
-            'declining_target_share_count': len(team_trends[(team_trends['target_share_trend'] <= -5) & (team_trends['target_share_avg'] >= 10)]),
-        }
-        
-        # Generate plots using the stat-type specific plotting function
-        plot_data = {}
+        team_insights = {}
         try:
-            from nickknows.nfl.plotting_functions import create_team_opportunity_plots_by_stat
-            plot_data = create_team_opportunity_plots_by_stat(team, stat_type_data, available_weeks, selected_year)
-            logger.info(f"Generated {len(plot_data)} plot categories for {team}")
+            team_insights['trending_up_targets'] = get_trending_players_view(team_trends, 'targets', 'up')
+            team_insights['trending_up_carries'] = get_trending_players_view(team_trends, 'carries', 'up')
+            team_insights['declining_opportunities'] = get_trending_players_view(team_trends, 'touches', 'down')
+            
+            # Add summary counts
+            team_insights['trending_up_targets_count'] = len(team_trends[
+                (team_trends['targets_trend'] >= 20) & 
+                (team_trends['targets_avg'] >= 1)
+            ])
+            team_insights['trending_up_carries_count'] = len(team_trends[
+                (team_trends['carries_trend'] >= 20) & 
+                (team_trends['carries_avg'] >= 1)
+            ])
+            team_insights['declining_count'] = len(team_trends[
+                (team_trends['touches_trend'] <= -20) & 
+                (team_trends['touches_avg'] >= 2)
+            ])
+            
+            logger.info("Generated team insights successfully")
         except Exception as e:
-            logger.warning(f"Could not generate plots: {e}")
-            import traceback
-            logger.warning(traceback.format_exc())
-            plot_data = {}
+            logger.error(f"Error generating insights: {str(e)}")
+            team_insights = {}
+        
+        # Generate weekly breakdown data for charts
+        weekly_data = {}
+        try:
+            # Get top players by touches
+            top_players = team_trends.nlargest(8, 'touches_avg') if len(team_trends) > 0 else pd.DataFrame()
+            
+            for _, player in top_players.iterrows():
+                player_id = player['player_id']
+                player_name = player.get('player_name', str(player_id))
+                
+                # Get this player's weekly data
+                player_weeks = team_opportunities[team_opportunities['player_id'] == player_id]
+                
+                weekly_stats = {}
+                for week in available_weeks:
+                    week_data = player_weeks[player_weeks['week'] == week]
+                    if len(week_data) > 0:
+                        row = week_data.iloc[0]
+                        weekly_stats[week] = {
+                            'targets': int(row.get('targets', 0)),
+                            'carries': int(row.get('carries', 0)),
+                            'touches': int(row.get('touches', 0)),
+                            'red_zone': int(row.get('red_zone_targets', 0)) + int(row.get('red_zone_carries', 0)),
+                            'target_share': float(row.get('target_share', 0))
+                        }
+                    else:
+                        weekly_stats[week] = {
+                            'targets': 0, 'carries': 0, 'touches': 0, 
+                            'red_zone': 0, 'target_share': 0.0
+                        }
+                
+                weekly_data[player_name] = {
+                    'position': player.get('position', 'Unknown'),
+                    'weeks': weekly_stats,
+                    'targets_avg': player.get('targets_avg', 0),
+                    'carries_avg': player.get('carries_avg', 0),
+                    'touches_avg': player.get('touches_avg', 0)
+                }
+            
+            logger.info(f"Generated weekly data for {len(weekly_data)} players")
+        except Exception as e:
+            logger.error(f"Error generating weekly data: {str(e)}")
+            weekly_data = {}
         
         return render_template('team-opportunities.html',
                             team=team,
@@ -1521,10 +1550,10 @@ def team_opportunities(team):
                             team_info=team_info,
                             years=available_years,
                             selected_year=selected_year,
-                            stat_type_data=stat_type_data,
                             available_weeks=available_weeks,
                             insights=team_insights,
-                            plot_data=plot_data,
+                            leaderboards=leaderboards,
+                            weekly_data=weekly_data,
                             loading=False)
                              
     except Exception as e:
@@ -1532,18 +1561,20 @@ def team_opportunities(team):
         import traceback
         logger.error(traceback.format_exc())
         flash(f'Error loading team opportunity data: {str(e)}')
+        
         return render_template('team-opportunities.html',
                              team=team,
-                             fullname=fullname,
+                             fullname=get_team_fullname(team),
                              team_info=None,
-                             years=available_years,
-                             selected_year=selected_year,
+                             years=get_available_years(),
+                             selected_year=get_selected_year(),
                              stat_type_data={},
                              available_weeks=[],
                              insights={},
-                             plot_data={},
+                             leaderboards={},
+                             weekly_data={},
                              loading=False)
-    
+
 @app.route('/NFL/Opportunities/update')
 def update_opportunities():
     """Trigger opportunity data update"""
