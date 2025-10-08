@@ -201,42 +201,6 @@
             </a>
         </div>
         
-        <!-- Trending Insights -->
-        {% if insights %}
-            <div class="nfl-row">
-                {% if insights.trending_up_targets_count and insights.trending_up_targets_count > 0 %}
-                <div class="nfl-column">
-                    <div class="insight-section">
-                        <h2>🔥 Trending Up - Targets ({{ insights.trending_up_targets_count }})</h2>
-                        <div class="table-wrapper">
-                            {{ insights.trending_up_targets | safe }}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-                
-                {% if insights.trending_up_carries_count and insights.trending_up_carries_count > 0 %}
-                <div class="nfl-column">
-                    <div class="insight-section">
-                        <h2>🏃 Trending Up - Carries ({{ insights.trending_up_carries_count }})</h2>
-                        <div class="table-wrapper">
-                            {{ insights.trending_up_carries | safe }}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-            
-            {% if insights.declining_count and insights.declining_count > 0 %}
-            <div class="insight-section">
-                <h2>📉 Declining Opportunities ({{ insights.declining_count }})</h2>
-                <div class="table-wrapper">
-                    {{ insights.declining_opportunities | safe }}
-                </div>
-            </div>
-            {% endif %}
-        {% endif %}
-        
         <!-- Leaderboards with Tabs -->
         {% if leaderboards %}
         <div class="leaderboard-tabs">
