@@ -75,7 +75,6 @@ def update_team_schedule(team, year):
         logger.error(f"❌ Error updating team schedule for {team} ({season_display}): {str(e)}")
         raise
 
-
 @celery.task(name='nfl.team.update_weekly_team_data')
 def update_weekly_team_data(team, year):
     """Update weekly team data for opponents faced"""
@@ -108,30 +107,78 @@ def update_weekly_team_data(team, year):
             week = row['week']
             opponent = row['opponent']
             
+            logger.debug(f"Processing {opponent} week {week} for team {team}")
+            
             # Get opponent roster
             opp_roster = roster_data[roster_data['team'] == opponent]
-            opp_players = opp_roster['player_name'].tolist()
+            
+            if len(opp_roster) == 0:
+                logger.debug(f"No roster data for {opponent} in week {week}")
+                continue
+            
+            # Get player names and IDs from roster
+            if 'full_name' in opp_roster.columns:
+                opp_players = opp_roster['full_name'].tolist()
+            elif 'player_name' in opp_roster.columns:
+                opp_players = opp_roster['player_name'].tolist()
+            else:
+                logger.warning(f"Could not find player name column in roster. Available: {list(opp_roster.columns)}")
+                continue
+            
+            # Get player IDs for more reliable matching
+            opp_player_ids = []
+            if 'gsis_id' in opp_roster.columns:
+                opp_player_ids = opp_roster['gsis_id'].dropna().tolist()
+            elif 'player_id' in opp_roster.columns:
+                opp_player_ids = opp_roster['player_id'].dropna().tolist()
             
             # Get opponent player stats for that week
-            week_stats = player_stats[
-                (player_stats['player_display_name'].isin(opp_players)) &
-                (player_stats['week'] == week) &
-                (player_stats['recent_team'] == opponent)
-            ]
+            # Try ID-based matching first (most reliable)
+            week_stats = pd.DataFrame()
             
-            weekly_team_data = pd.concat([weekly_team_data, week_stats])
+            if opp_player_ids and 'player_id' in player_stats.columns:
+                week_stats = player_stats[
+                    (player_stats['player_id'].isin(opp_player_ids)) & 
+                    (player_stats['week'] == week)
+                ]
+                if len(week_stats) > 0:
+                    logger.debug(f"Matched {len(week_stats)} players by ID for {opponent} week {week}")
+            
+            # If no ID matches, try name-based matching
+            if len(week_stats) == 0:
+                # Try different name columns in order of preference
+                for name_col in ['player_display_name', 'player_name', 'full_name']:
+                    if name_col in player_stats.columns:
+                        week_stats = player_stats[
+                            (player_stats[name_col].isin(opp_players)) & 
+                            (player_stats['week'] == week)
+                        ]
+                        if len(week_stats) > 0:
+                            logger.debug(f"Matched {len(week_stats)} players by {name_col} for {opponent} week {week}")
+                            break
+            
+            # Filter by team to ensure we only get opponent's players
+            if len(week_stats) > 0:
+                if 'team' in week_stats.columns:
+                    week_stats = week_stats[week_stats['team'] == opponent]
+                elif 'recent_team' in week_stats.columns:
+                    week_stats = week_stats[week_stats['recent_team'] == opponent]
+                
+                weekly_team_data = pd.concat([weekly_team_data, week_stats])
+            else:
+                logger.debug(f"No stats found for {opponent} week {week}")
         
         # Save team data
         output_path = get_team_data_path(team, year, 'data')
         weekly_team_data.to_csv(output_path)
         
-        logger.info(f"✅ Weekly team data for {team} ({season_display}) saved")
+        logger.info(f"✅ Weekly team data for {team} ({season_display}) saved to {output_path}")
+        logger.info(f"Processed {len(weekly_team_data)} player-week records")
         return f"Successfully processed weekly data for {team} ({season_display})"
         
     except Exception as e:
         logger.error(f"❌ Error processing weekly team data for {team} ({season_display}): {str(e)}")
         raise
-
 
 @celery.task(name='nfl.team.process_team_fpa')
 def process_team_fpa(team, year):
