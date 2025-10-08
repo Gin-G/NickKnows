@@ -1,682 +1,163 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <script>
-        function toggleMenu() {
-            const navLinks = document.getElementById('navLinks');
-            navLinks.classList.toggle('active');
-        }
-    </script>
-        
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
     <script>
         $(function(){
             $('#nfl_navbar').load("{{ url_for('nfl_navbar') }}")
         })
-    </script>
-    <script>
         $(function(){
             $('#header').load("{{ url_for('header') }}")
         })
     </script>
-    
-    <style>
-        .stat-header {
-            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-            padding: 18px;
-            margin: 25px 0 10px 0;
-            border-radius: 10px;
-            cursor: pointer;
-            border-left: 5px solid #007bff;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .stat-header:hover {
-            background: linear-gradient(135deg, #dee2e6 0%, #ced4da 100%);
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .stat-header h3 {
-            margin: 0;
-            color: #FFFFFF;
-            font-weight: 600;
-        }
-        
-        .stat-header i {
-            margin-right: 10px;
-            transition: transform 0.3s ease;
-        }
-        
-        .stat-content {
-            margin-bottom: 40px;
-            animation: slideDown 0.3s ease-in-out;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                max-height: 0;
-            }
-            to {
-                opacity: 1;
-                max-height: 2000px;
-            }
-        }
-        
-        .weekly-table {
-            overflow-x: auto;
-            margin: 20px 0;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            background-color: white;
-        }
-        
-        .weekly-table table {
-            min-width: 100%;
-            font-size: 11px;
-            border-collapse: collapse;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .weekly-table th {
-            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
-            color: white;
-            padding: 12px 6px;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            font-weight: 600;
-            font-size: 10px;
-            border-right: 1px solid #6c757d;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .weekly-table td {
-            padding: 8px 6px;
-            text-align: center;
-            border-bottom: 1px solid #dee2e6;
-            border-right: 1px solid #f8f9fa;
-            transition: background-color 0.2s ease;
-            font-weight: 500;
-        }
-        
-        .weekly-table tbody tr:hover td {
-            background-color: #f8f9fa !important;
-        }
-        
-        .player-name {
-            background-color: #f8f9fa !important;
-            font-weight: bold;
-            text-align: left !important;
-            position: sticky;
-            left: 0;
-            z-index: 5;
-            min-width: 160px;
-            max-width: 160px;
-            border-right: 2px solid #dee2e6 !important;
-            box-shadow: 2px 0 4px rgba(0,0,0,0.1);
-        }
-        
-        .player-name strong {
-            color: #495057;
-            font-size: 12px;
-        }
-        
-        .player-name small {
-            color: #6c757d;
-            font-size: 9px;
-            font-weight: normal;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .position-badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 9px;
-            font-weight: bold;
-            margin-left: 5px;
-        }
-        
-        .position-QB { background-color: #e3f2fd; color: #1976d2; }
-        .position-RB { background-color: #f3e5f5; color: #7b1fa2; }
-        .position-WR { background-color: #e8f5e9; color: #388e3c; }
-        .position-TE { background-color: #fff3e0; color: #f57c00; }
-        
-        .stat-avg { 
-            background-color: #e8f5e8 !important; 
-            font-weight: 600;
-        }
-        
-        .stat-max { 
-            background-color: #fff3cd !important; 
-            font-weight: 600;
-        }
-        
-        .stat-min { 
-            background-color: #f8d7da !important; 
-            font-weight: 600;
-        }
-        
-        .stat-std { 
-            background-color: #d1ecf1 !important; 
-            font-style: italic;
-        }
-        
-        .trend-positive { 
-            color: #28a745 !important; 
-            font-weight: bold;
-        }
-        
-        .trend-positive::before {
-            content: "↗";
-            margin-right: 2px;
-            font-size: 10px;
-        }
-        
-        .trend-negative { 
-            color: #dc3545 !important; 
-            font-weight: bold;
-        }
-        
-        .trend-negative::before {
-            content: "↘";
-            margin-right: 2px;
-            font-size: 10px;
-        }
-        
-        .trend-neutral { 
-            color: #6c757d !important;
-        }
-        
-        .trend-neutral::before {
-            content: "→";
-            margin-right: 2px;
-            font-size: 10px;
-        }
-        
-        .loading-message {
-            text-align: center;
-            padding: 60px 40px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 12px;
-            margin: 30px 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        /* Plot Styles */
-        .plots-section {
-            margin: 30px 0;
-            padding: 25px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .plot-controls {
-            text-align: center;
-            margin: 20px 0;
-            padding: 15px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .plot-btn {
-            display: inline-block;
-            margin: 5px 10px;
-            padding: 10px 20px;
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-        
-        .plot-btn:hover {
-            background-color: #495057;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        .plot-btn.active {
-            background-color: #007bff;
-            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
-        }
-        
-        .plot-container {
-            margin: 20px 0;
-            padding: 20px;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .plot-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
-        }
-        
-        .plot-grid-compact {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .plot-item {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.2s ease;
-        }
-        
-        .plot-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .plot-item h4 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #495057;
-            font-size: 16px;
-            font-weight: 600;
-            text-align: center;
-        }
-        
-        .plot-image {
-            width: 100%;
-            height: auto;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        
-        .plot-image:hover {
-            transform: scale(1.02);
-        }
-        
-        /* Mobile responsive */
-        @media (max-width: 768px) {
-            .weekly-table {
-                font-size: 10px;
-            }
-            
-            .weekly-table th,
-            .weekly-table td {
-                padding: 6px 4px;
-            }
-            
-            .player-name {
-                min-width: 120px;
-                max-width: 120px;
-            }
-            
-            .plot-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .plot-btn {
-                display: block;
-                margin: 5px auto;
-                width: 90%;
-                max-width: 200px;
-            }
-        }
-    </style>
-    <style>
-        .stat-header {
-            background: linear-gradient(135deg, {{ team_info.primary_color if team_info else '#007bff' }}dd 0%, {{ team_info.primary_color if team_info else '#0056b3' }}99 100%);
-            padding: 18px;
-            margin: 25px 0 10px 0;
-            border-radius: 10px;
-            cursor: pointer;
-            border-left: 5px solid {{ team_info.secondary_color if team_info and team_info.secondary_color else '#ffffff' }};
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .stat-header:hover {
-            background: linear-gradient(135deg, {{ team_info.primary_color if team_info else '#0056b3' }}ee 0%, {{ team_info.primary_color if team_info else '#004494' }}bb 100%);
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .plot-btn.active {
-            background-color: {{ team_info.primary_color if team_info else '#007bff' }};
-            box-shadow: 0 4px 8px {{ team_info.primary_color if team_info else '#007bff' }}50;
-        }
-        
-        .plot-btn:hover {
-            background-color: {{ team_info.primary_color if team_info else '#495057' }};
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-    </style>
-    
 </head>
 <body>
     <div id="header"></div>
     <div id="nfl_navbar"></div>
     
-    <!-- Team Header with Logo and Colors -->
-    {% if team_info %}
-    <div style="text-align: center; padding: 30px 20px; background: linear-gradient(135deg, {{ team_info.primary_color }}dd 0%, {{ team_info.primary_color }}99 100%); border-radius: 15px; margin: 20px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-        {% if team_info.logo %}
-        <img src="{{ team_info.logo }}" alt="{{ team_info.name }}" style="width: 120px; height: 120px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
-        {% endif %}
-        <h1 style="color: white; margin: 10px 0; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">{{ team_info.name }}</h1>
-        <h2 style="color: white; margin: 5px 0; font-size: 1.5em; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Opportunity Analysis - {{ selected_year }} Season</h2>
-    </div>
-    {% else %}
-    <h1>{{ fullname }} Opportunities</h1>
+    <h1>{{ fullname }} Opportunities - DEBUG</h1>
     <h2>{{ selected_year }} Season</h2>
-    {% endif %}
     
     {% if loading %}
-        <div class="loading-message">
+        <div style="background: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 8px;">
             <p>📊 Opportunity data is being calculated...</p>
             <p>Please refresh the page in a moment.</p>
         </div>
     {% else %}
-        <div style="text-align: center; margin: 20px 0;">
-            <a href="{{ url_for('update_opportunities') }}" style="font-size: 16px; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">
-                🔄 Update Data
+        <!-- Debug Information -->
+        <div style="background: #e7f3ff; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #0066cc;">
+            <h3>🔍 Debug Information</h3>
+            
+            <div style="margin: 15px 0;">
+                <strong>Team Info:</strong>
+                {% if team_info %}
+                    <pre style="background: white; padding: 10px; overflow-x: auto;">{{ team_info }}</pre>
+                {% else %}
+                    <p style="color: red;">❌ No team info available</p>
+                {% endif %}
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <strong>Available Weeks:</strong>
+                {% if available_weeks %}
+                    <p>{{ available_weeks }}</p>
+                {% else %}
+                    <p style="color: red;">❌ No weeks available</p>
+                {% endif %}
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <strong>Stat Type Data Keys:</strong>
+                {% if stat_type_data %}
+                    <p>{{ stat_type_data.keys()|list }}</p>
+                    <p>Total stats: {{ stat_type_data|length }}</p>
+                    
+                    {% for stat_key, players in stat_type_data.items() %}
+                        <div style="margin: 10px 0; padding: 10px; background: white; border-left: 3px solid #28a745;">
+                            <strong>{{ stat_key }}:</strong> {{ players|length }} players
+                            {% if players|length > 0 %}
+                                <details style="margin-top: 10px;">
+                                    <summary>Show first player data</summary>
+                                    <pre style="font-size: 11px; overflow-x: auto;">{{ players[0] }}</pre>
+                                </details>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: red;">❌ No stat_type_data available</p>
+                {% endif %}
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <strong>Plot Data:</strong>
+                {% if plot_data %}
+                    <p>Plot data keys: {{ plot_data.keys()|list }}</p>
+                {% else %}
+                    <p style="color: orange;">⚠️ No plot data available</p>
+                {% endif %}
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <strong>Insights:</strong>
+                {% if insights %}
+                    <p>Insight keys: {{ insights.keys()|list }}</p>
+                {% else %}
+                    <p style="color: orange;">⚠️ No insights available</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Simple Data Display Test -->
+        {% if stat_type_data %}
+            <div style="margin: 30px 0;">
+                <h2>📊 Simple Data Display Test</h2>
+                
+                {% for stat_key, players in stat_type_data.items() %}
+                    <div style="background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <h3>{{ stat_key|replace('_', ' ')|title }} ({{ players|length }} players)</h3>
+                        
+                        {% if players|length > 0 %}
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                                <thead>
+                                    <tr style="background: #343a40; color: white;">
+                                        <th style="padding: 10px; text-align: left;">Player</th>
+                                        <th style="padding: 10px; text-align: center;">Position</th>
+                                        <th style="padding: 10px; text-align: center;">Weeks</th>
+                                        <th style="padding: 10px; text-align: center;">Avg</th>
+                                        <th style="padding: 10px; text-align: center;">Max</th>
+                                        <th style="padding: 10px; text-align: center;">Trend %</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for player in players[:10] %}
+                                        <tr style="border-bottom: 1px solid #dee2e6;">
+                                            <td style="padding: 8px;">{{ player.player_name }}</td>
+                                            <td style="padding: 8px; text-align: center;">{{ player.position }}</td>
+                                            <td style="padding: 8px; text-align: center;">{{ player.weeks_played }}</td>
+                                            <td style="padding: 8px; text-align: center;">{{ "%.1f"|format(player[stat_key + '_avg']) }}</td>
+                                            <td style="padding: 8px; text-align: center;">{{ player[stat_key + '_max'] }}</td>
+                                            <td style="padding: 8px; text-align: center; {% if player[stat_key + '_trend'] > 10 %}color: green;{% elif player[stat_key + '_trend'] < -10 %}color: red;{% endif %}">
+                                                {{ "%.0f"|format(player[stat_key + '_trend']) }}%
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                            {% if players|length > 10 %}
+                                <p style="margin-top: 10px; color: #6c757d; font-style: italic;">Showing 10 of {{ players|length }} players</p>
+                            {% endif %}
+                        {% else %}
+                            <p style="color: #6c757d; font-style: italic;">No players with {{ stat_key }} data</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="background: #f8d7da; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #dc3545;">
+                <h3>❌ No Data Available</h3>
+                <p>stat_type_data is empty or None</p>
+                <p>This usually means:</p>
+                <ul>
+                    <li>No opportunity data file exists for this year</li>
+                    <li>The data file is empty</li>
+                    <li>The team has no recorded opportunities</li>
+                    <li>There was an error processing the data</li>
+                </ul>
+                <p><strong>Check the server logs for more details.</strong></p>
+            </div>
+        {% endif %}
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{ url_for('update_opportunities') }}" style="display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                🔄 Update Opportunity Data
             </a>
-            <a href="{{ url_for('opportunities_home') }}" style="font-size: 16px; padding: 10px 20px; background-color: {{ team_info.primary_color if team_info else '#6c757d' }}; color: white; text-decoration: none; border-radius: 5px; margin-left: 10px;">
+            <a href="{{ url_for('opportunities_home') }}" style="display: inline-block; padding: 12px 24px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin-left: 10px;">
                 ← Back to Overview
             </a>
         </div>
-        
-        <!-- Interactive Plots Section -->
-        {% if plot_data %}
-        <div class="plots-section">
-            <h2>📊 Visual Analysis</h2>
-            
-            <!-- Plot Controls -->
-            <div class="plot-controls">
-                <button onclick="showAllPlots()" class="plot-btn active" id="all-plots-btn">All Stats Overview</button>
-                {% for stat_key in ['targets', 'carries', 'red_zone', 'goal_line'] %}
-                    {% if stat_key in stat_type_data %}
-                        <button onclick="showStatPlots('{{ stat_key }}')" class="plot-btn" id="{{ stat_key }}-plots-btn">
-                            {{ stat_key|replace('_', ' ')|title }}
-                        </button>
-                    {% endif %}
-                {% endfor %}
-                <button onclick="showSummaryPlots()" class="plot-btn" id="summary-plots-btn">Team Summary</button>
-            </div>
-            
-            <!-- Team Summary Plots -->
-            <div id="summary-plots" class="plot-container" style="display: none;">
-                <h3>Team Overview</h3>
-                {% if plot_data and 'summary' in plot_data %}
-                    <div class="plot-grid">
-                        {% if plot_data['summary'].get('weekly_totals') %}
-                            <div class="plot-item">
-                                <h4>Weekly Team Totals by Stat Type</h4>
-                                <img src="{{ url_for('static', filename=plot_data['summary']['weekly_totals']) }}" alt="Weekly Totals" class="plot-image">
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endif %}
-            </div>
-            
-            <!-- Stat-Specific Plots -->
-            {% for stat_key in ['targets', 'carries', 'red_zone', 'goal_line'] %}
-                {% if stat_key in stat_type_data and stat_key in plot_data %}
-                    <div id="{{ stat_key }}-plots" class="plot-container" style="display: none;">
-                        <h3>{{ stat_key|replace('_', ' ')|title }} Analysis</h3>
-                        <div class="plot-grid">
-                            {% if plot_data[stat_key].get('weekly_trends') %}
-                                <div class="plot-item">
-                                    <h4>Weekly Trends with 3-Game Moving Average</h4>
-                                    <img src="{{ url_for('static', filename=plot_data[stat_key]['weekly_trends']) }}" alt="{{ stat_key }} Trends" class="plot-image">
-                                </div>
-                            {% endif %}
-                            
-                            {% if plot_data[stat_key].get('distribution') %}
-                                <div class="plot-item">
-                                    <h4>{{ stat_key|replace('_', ' ')|title }} Distribution</h4>
-                                    <img src="{{ url_for('static', filename=plot_data[stat_key]['distribution']) }}" alt="{{ stat_key }} Distribution" class="plot-image">
-                                </div>
-                            {% endif %}
-                            
-                            {% if plot_data[stat_key].get('trend_analysis') %}
-                                <div class="plot-item">
-                                    <h4>Trending Players</h4>
-                                    <img src="{{ url_for('static', filename=plot_data[stat_key]['trend_analysis']) }}" alt="{{ stat_key }} Trend Analysis" class="plot-image">
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                {% endif %}
-            {% endfor %}
-            
-            <!-- All Stats Overview -->
-            <div id="all-plots" class="plot-container">
-                <h3>All Stats Overview</h3>
-                <div class="plot-grid-compact">
-                    {% for stat_key in ['targets', 'carries', 'red_zone', 'goal_line'] %}
-                        {% if stat_key in stat_type_data and stat_key in plot_data and plot_data[stat_key].get('weekly_trends') %}
-                            <div class="plot-item">
-                                <h4>{{ stat_key|replace('_', ' ')|title }} Trends</h4>
-                                <img src="{{ url_for('static', filename=plot_data[stat_key]['weekly_trends']) }}" alt="{{ stat_key }} Overview" class="plot-image">
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-        {% endif %}
-        
-        <!-- Stat Type Sections -->
-        {% if stat_type_data %}
-        {% for stat_key in ['targets', 'carries', 'red_zone', 'goal_line'] %}
-            {% if stat_key in stat_type_data %}
-                <div class="stat-header" onclick="toggleStatSection('{{ stat_key }}-section')" data-stat="{{ stat_key }}-section">
-                    <h3 style="margin: 0;">
-                        <i class="fas fa-chevron-down"></i>
-                        {% if stat_key == 'targets' %}🎯 Targets
-                        {% elif stat_key == 'carries' %}🏃 Carries  
-                        {% elif stat_key == 'red_zone' %}🚨 Red Zone Opportunities
-                        {% elif stat_key == 'goal_line' %}🏆 Goal Line Touches
-                        {% endif %}
-                        ({{ stat_type_data[stat_key]|length }} players)
-                    </h3>
-                </div>
-                
-                <div id="{{ stat_key }}-section" class="stat-content">
-                    <div class="weekly-table">
-                        <table class="table" id="{{ stat_key }}-table">
-                            <thead>
-                                <tr>
-                                    <th class="player-name">Player</th>
-                                    <th class="stat-avg">Pos</th>
-                                    <th class="stat-avg">Weeks</th>
-                                    
-                                    <!-- Weekly Columns -->
-                                    {% if available_weeks %}
-                                        {% for week in available_weeks %}
-                                            <th class="week-col">W{{ week }}</th>
-                                        {% endfor %}
-                                    {% endif %}
-                                    
-                                    <!-- Summary Stats -->
-                                    <th class="stat-avg">Avg</th>
-                                    <th class="stat-max">Max</th>
-                                    <th class="stat-min">Min</th>
-                                    <th class="stat-std">Std</th>
-                                    <th class="stat-avg">Trend</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for player_data in stat_type_data[stat_key] %}
-                                    <tr>
-                                        <td class="player-name">
-                                            <strong>{{ player_data.player_name }}</strong>
-                                        </td>
-                                        <td class="stat-avg">
-                                            <span class="position-badge position-{{ player_data.position }}">{{ player_data.position }}</span>
-                                        </td>
-                                        <td class="stat-avg">{{ player_data.weeks_played }}</td>
-                                        
-                                        {% if available_weeks %}
-                                            {% for week in available_weeks %}
-                                                <td>{{ player_data['weekly_' + stat_key].get(week, 0) }}</td>
-                                            {% endfor %}
-                                        {% endif %}
-                                        
-                                        <td class="stat-avg">{{ "%.1f"|format(player_data[stat_key + '_avg']) }}</td>
-                                        <td class="stat-max">{{ player_data[stat_key + '_max'] }}</td>
-                                        <td class="stat-min">{{ player_data[stat_key + '_min'] }}</td>
-                                        <td class="stat-std">{{ "%.1f"|format(player_data[stat_key + '_std']) }}</td>
-                                        <td class="stat-avg {% if player_data[stat_key + '_trend'] > 10 %}trend-positive{% elif player_data[stat_key + '_trend'] < -10 %}trend-negative{% else %}trend-neutral{% endif %}">
-                                            {{ "%.0f"|format(player_data[stat_key + '_trend']) }}%
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            {% endif %}
-        {% endfor %}
-        {% endif %}
     {% endif %}
-    
-    <script>
-        function toggleStatSection(statId) {
-            const section = document.getElementById(statId);
-            const icon = document.querySelector(`[data-stat="${statId}"] i`);
-            
-            if (section.style.display === 'none') {
-                section.style.display = 'block';
-                icon.className = 'fas fa-chevron-down';
-            } else {
-                section.style.display = 'none';
-                icon.className = 'fas fa-chevron-right';
-            }
-        }
-        
-        function showAllPlots() {
-            hideAllPlotContainers();
-            document.getElementById('all-plots').style.display = 'block';
-            setActiveButton('all-plots-btn');
-        }
-        
-        function showStatPlots(statKey) {
-            hideAllPlotContainers();
-            document.getElementById(statKey + '-plots').style.display = 'block';
-            setActiveButton(statKey + '-plots-btn');
-        }
-        
-        function showSummaryPlots() {
-            hideAllPlotContainers();
-            document.getElementById('summary-plots').style.display = 'block';
-            setActiveButton('summary-plots-btn');
-        }
-        
-        function hideAllPlotContainers() {
-            const containers = document.querySelectorAll('.plot-container');
-            containers.forEach(container => {
-                container.style.display = 'none';
-            });
-        }
-        
-        function setActiveButton(activeId) {
-            const buttons = document.querySelectorAll('.plot-btn');
-            buttons.forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.getElementById(activeId).classList.add('active');
-        }
-        
-        function openPlotModal(imgSrc) {
-            const modal = document.getElementById('plot-modal');
-            const modalImg = document.getElementById('modal-plot-img');
-            modal.style.display = 'block';
-            modalImg.src = imgSrc;
-        }
-        
-        function closePlotModal() {
-            document.getElementById('plot-modal').style.display = 'none';
-        }
-        
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add click handlers to plot images for modal viewing
-            const plotImages = document.querySelectorAll('.plot-image');
-            plotImages.forEach(img => {
-                img.addEventListener('click', function() {
-                    openPlotModal(this.src);
-                });
-            });
-            
-            // Add modal to body if it doesn't exist
-            if (!document.getElementById('plot-modal')) {
-                const modal = document.createElement('div');
-                modal.id = 'plot-modal';
-                modal.className = 'plot-modal';
-                modal.style.cssText = `
-                    display: none;
-                    position: fixed;
-                    z-index: 1000;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                    height: 100%;
-                    background-color: rgba(0,0,0,0.9);
-                    cursor: pointer;
-                `;
-                modal.innerHTML = `
-                    <span class="plot-modal-close" onclick="closePlotModal()" style="position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer;">&times;</span>
-                    <img id="modal-plot-img" src="" style="display: block; margin: auto; max-width: 95%; max-height: 95%; margin-top: 2.5%;">
-                `;
-                document.body.appendChild(modal);
-                
-                // Close modal when clicking outside image
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) {
-                        closePlotModal();
-                    }
-                });
-            }
-            
-            // Show appropriate plots by default
-            {% if plot_data %}
-            showAllPlots();
-            {% endif %}
-        });
-    </script>
 </body>
 </html>
