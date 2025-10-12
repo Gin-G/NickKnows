@@ -4,6 +4,7 @@ metadata:
   name: {{ .Values.webapp.name }}-flower
 spec:
   replicas: 1
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: {{ .Values.webapp.name }}-flower

@@ -9,6 +9,7 @@ metadata:
     component: worker
 spec:
   replicas: {{ .Values.worker.replicaCount }}
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: {{ .Values.webapp.name }}-worker
