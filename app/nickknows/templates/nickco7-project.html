@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-YMZBTB7JST');
+    </script>
+    
+    <!-- Google Adsense tag (gtag.js) -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
+    crossorigin="anonymous"></script>
+    
+    <title>NickCo7 Projects | Nick Knows</title>
+    <link rel="canonical" href="{{ url_for('nickco7_projects') }}"/>
+    <meta property="og:title" content="NickCo7 Projects | Nick Knows"/>
+    <meta property="og:url" content="{{ url_for('nickco7_projects') }}"/>
+    <meta property="og:site_name" content="nickknows"/>
+    <meta property="og:type" content="website"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    
+    <script>
+        $(function(){
+            $('#header').load("{{ url_for('header') }}")
+        })
+        $(function(){
+            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
+        })
+    </script>
+    
+    <style>
+        .projects-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .projects-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .projects-header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .projects-header p {
+            font-size: 1.2em;
+            color: #666;
+        }
+        
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .project-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+        
+        .project-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 3px solid #007bff;
+        }
+        
+        .project-info {
+            padding: 20px;
+        }
+        
+        .project-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .project-url {
+            color: #007bff;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        
+        @media (max-width: 768px) {
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .projects-header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="header"></div>
+    <div id="nick_nav"></div>
+    
+    <div class="projects-container">
+        <div class="projects-header">
+            <h1>NickCo7 Projects</h1>
+            <img src="static/projects/nickco7-logo.jpeg">
+            <p>A collection of web development projects and experiments</p>
+        </div>
+        
+        <div class="projects-grid">
+            <a href="https://v1.defs.dev" target="_blank" class="project-card">
+                <img src="{{url_for('static', filename='projects/defs-dev.png')}}" alt="v1.defs.dev screenshot" class="project-image">
+                <div class="project-info">
+                    <div class="project-title">Defs.dev</div>
+                    <div class="project-url">v1.defs.dev</div>
+                </div>
+            </a>
+            
+            <a href="https://ratetheslopes.com" target="_blank" class="project-card">
+                <img src="{{url_for('static', filename='projects/ratetheslopes.png')}}" alt="ratetheslopes.com screenshot" class="project-image">
+                <div class="project-info">
+                    <div class="project-title">Rate the Slopes</div>
+                    <div class="project-url">ratetheslopes.com</div>
+                </div>
+            </a>
+            
+            <a href="https://whokan.nickknows.net" target="_blank" class="project-card">
+                <img src="{{url_for('static', filename='projects/whokan.png')}}" alt="whokan.nickknows.net screenshot" class="project-image">
+                <div class="project-info">
+                    <div class="project-title">WhoKan</div>
+                    <div class="project-url">whokan.nickknows.net</div>
+                </div>
+            </a>
+            
+            <a href="https://skimoviewsongs.com" target="_blank" class="project-card">
+                <img src="{{url_for('static', filename='projects/skimoviewsongs.png')}}" alt="skimoviewsongs.com screenshot" class="project-image">
+                <div class="project-info">
+                    <div class="project-title">Ski Movie Songs</div>
+                    <div class="project-url">skimoviewsongs.com</div>
+                </div>
+            </a>
+        </div>
+        
+        <div style="text-align: center; margin-top: 60px;">
+            <a href="{{url_for('home')}}" style="color: #007bff; text-decoration: none; font-size: 1.1em;">← Back to Home</a>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 40px 20px; margin-top: 60px; border-top: 1px solid #ddd;">
+        <p style="color: #666; font-size: 14px; margin: 0;">
+            Developed by <strong>NickCo7</strong>
+        </p>
+    </footer>
+    
+</body>
+</html>

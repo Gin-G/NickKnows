@@ -28,6 +28,10 @@ def nfl_navbar():
 def nick_navbar():
     return render_template('navbar.html')
 
+@app.route('/nickco7')
+def nickco7_projects():
+    return render_template('nickco7_projects.html')
+
 @app.route('/arcade')
 def arcade():
     return render_template('arcade.html')
@@ -92,7 +96,7 @@ def job_post_resume():
     if request.method == 'POST':
         job_count = request.form.get('job_count')
         job_count = job_count.replace("'",'"')
-        job_count = job_count.replace("’","'")
+        job_count = job_count.replace("'","'")
         job_count = json.loads(job_count)
         return render_template('resume-compare.html', job_count = job_count)
 
@@ -108,7 +112,7 @@ def job_parse_resume():
         job_count = job_count.replace("{'",'{"')
         job_count = job_count.replace(", '",', "')
         job_count = job_count.replace("':",'":')
-        job_count = job_count.replace("’","'")
+        job_count = job_count.replace("'","'")
         job_count = json.loads(job_count)
         for word in job_count:
             if len(word) <= 1:
