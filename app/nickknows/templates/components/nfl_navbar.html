@@ -1,0 +1,382 @@
+<nav class="navbar">
+    <a href="{{url_for('home')}}" class="brand">Home</a>
+    <button class="navbar-toggle" onclick="toggleMenu()">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+    </button>
+    <div class="nav-links" id="navLinks">
+        <a href="{{url_for('NFL')}}">NFL Home</a>
+        <a href="{{url_for('schedule')}}">Schedule</a>
+        
+
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown(this)">
+                Teams <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>AFC East</strong>
+                </div>
+                <a href="{{url_for('team_page', team='BUF')}}">Buffalo Bills</a>
+                <a href="{{url_for('team_page', team='MIA')}}">Miami Dolphins</a>
+                <a href="{{url_for('team_page', team='NE')}}">New England Patriots</a>
+                <a href="{{url_for('team_page', team='NYJ')}}">New York Jets</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>AFC North</strong>
+                </div>
+                <a href="{{url_for('team_page', team='BAL')}}">Baltimore Ravens</a>
+                <a href="{{url_for('team_page', team='CIN')}}">Cincinnati Bengals</a>
+                <a href="{{url_for('team_page', team='CLE')}}">Cleveland Browns</a>
+                <a href="{{url_for('team_page', team='PIT')}}">Pittsburgh Steelers</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>AFC South</strong>
+                </div>
+                <a href="{{url_for('team_page', team='HOU')}}">Houston Texans</a>
+                <a href="{{url_for('team_page', team='IND')}}">Indianapolis Colts</a>
+                <a href="{{url_for('team_page', team='JAX')}}">Jacksonville Jaguars</a>
+                <a href="{{url_for('team_page', team='TEN')}}">Tennessee Titans</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>AFC West</strong>
+                </div>
+                <a href="{{url_for('team_page', team='DEN')}}">Denver Broncos</a>
+                <a href="{{url_for('team_page', team='KC')}}">Kansas City Chiefs</a>
+                <a href="{{url_for('team_page', team='LV')}}">Las Vegas Raiders</a>
+                <a href="{{url_for('team_page', team='LAC')}}">Los Angeles Chargers</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>NFC East</strong>
+                </div>
+                <a href="{{url_for('team_page', team='DAL')}}">Dallas Cowboys</a>
+                <a href="{{url_for('team_page', team='NYG')}}">New York Giants</a>
+                <a href="{{url_for('team_page', team='PHI')}}">Philadelphia Eagles</a>
+                <a href="{{url_for('team_page', team='WAS')}}">Washington Commanders</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>NFC North</strong>
+                </div>
+                <a href="{{url_for('team_page', team='CHI')}}">Chicago Bears</a>
+                <a href="{{url_for('team_page', team='DET')}}">Detroit Lions</a>
+                <a href="{{url_for('team_page', team='GB')}}">Green Bay Packers</a>
+                <a href="{{url_for('team_page', team='MIN')}}">Minnesota Vikings</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>NFC South</strong>
+                </div>
+                <a href="{{url_for('team_page', team='ATL')}}">Atlanta Falcons</a>
+                <a href="{{url_for('team_page', team='CAR')}}">Carolina Panthers</a>
+                <a href="{{url_for('team_page', team='NO')}}">New Orleans Saints</a>
+                <a href="{{url_for('team_page', team='TB')}}">Tampa Bay Buccaneers</a>
+                
+                <div style="padding: 10px; background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <strong>NFC West</strong>
+                </div>
+                <a href="{{url_for('team_page', team='ARI')}}">Arizona Cardinals</a>
+                <a href="{{url_for('team_page', team='LA')}}">Los Angeles Rams</a>
+                <a href="{{url_for('team_page', team='SEA')}}">Seattle Seahawks</a>
+                <a href="{{url_for('team_page', team='SF')}}">San Francisco 49ers</a>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown(this)">
+                {{ selected_year }} Season <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
+                {% for year in available_years %}
+                    <a href="{{ url_for('set_nfl_year', year=year) }}" 
+                    {% if year == selected_year %}class="selected-year"{% endif %}>
+                        {% if year == 2025 %}2024-2025 Season{% endif %}
+                        {% if year == 2024 %}2023-2024 Season{% endif %}
+                        {% if year == 2023 %}2022-2023 Season{% endif %}
+                        {% if year == 2022 %}2021-2022 Season{% endif %}
+                        {% if year == 2021 %}2020-2021 Season{% endif %}
+                        {% if year == 2020 %}2019-2020 Season{% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="dropdown">
+            <button class="dropbtn" onclick="toggleDropdown(this)">
+                Rosters <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-content">
+            <a href="{{url_for('roster', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
+            <a href="{{url_for('roster', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
+            <a href="{{url_for('roster', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>
+            <a href="{{url_for('roster', team='BUF', fullname='Buffalo Bills')}}">Buffalo Bills</a>
+            <a href="{{url_for('roster', team='CAR', fullname='Carolina Panthers')}}">Carolina Panthers</a>
+            <a href="{{url_for('roster', team='CHI', fullname='Chicago Bears')}}">Chicago Bears</a>
+            <a href="{{url_for('roster', team='CIN', fullname='Cincinnati Bengals')}}">Cincinnati Bengals</a>
+            <a href="{{url_for('roster', team='CLE', fullname='Cleveland Browns')}}">Cleveland Browns</a>
+            <a href="{{url_for('roster', team='DAL', fullname='Dallas Cowboys')}}">Dallas Cowboys</a>
+            <a href="{{url_for('roster', team='DEN', fullname='Denver Broncos')}}">Denver Broncos</a>
+            <a href="{{url_for('roster', team='DET', fullname='Detroit Lions')}}">Detroit Lions</a>
+            <a href="{{url_for('roster', team='GB', fullname='Green Bay Packers')}}">Green Bay Packers</a>
+            <a href="{{url_for('roster', team='HOU', fullname='Houston Texans')}}">Houston Texans</a>
+            <a href="{{url_for('roster', team='IND', fullname='Indianapolis Colts')}}">Indianapolis Colts</a>
+            <a href="{{url_for('roster', team='JAX', fullname='Jacksonville Jaguars')}}">Jacksonville Jaguars</a>
+            <a href="{{url_for('roster', team='KC', fullname='Kansas City Chiefs')}}">Kansas City Chiefs</a>
+            <a href="{{url_for('roster', team='LA', fullname='Los Angeles Rams')}}">Los Angeles Rams</a>
+            <a href="{{url_for('roster', team='LAC', fullname='Los Angeles Chargers')}}">Los Angeles Chargers</a>
+            <a href="{{url_for('roster', team='LV', fullname='Los Vegas Raiders')}}">Los Vegas Raiders</a>
+            <a href="{{url_for('roster', team='MIA', fullname='Miami Dolphins')}}">Miami Dolphins</a>
+            <a href="{{url_for('roster', team='MIN', fullname='Minnesota Vikings')}}">Minnesota Vikings</a>
+            <a href="{{url_for('roster', team='NE', fullname='New England Patriots')}}">New England Patriots</a>
+            <a href="{{url_for('roster', team='NO', fullname='New Orleans Saints')}}">New Orleans Saints</a>
+            <a href="{{url_for('roster', team='NYG', fullname='New York Giants')}}">New York Giants</a>
+            <a href="{{url_for('roster', team='NYJ', fullname='New York Jets')}}">New York Jets</a>
+            <a href="{{url_for('roster', team='PHI', fullname='Philadelphia Eagles')}}">Philadelphia Eagles</a>
+            <a href="{{url_for('roster', team='PIT', fullname='Pittsburgh Steelers')}}">Pittsburgh Steelers</a>
+            <a href="{{url_for('roster', team='SEA', fullname='Seattle Seahawks')}}">Seattle Seahawks</a>
+            <a href="{{url_for('roster', team='SF', fullname='San Fransisco 49ers')}}">San Fransisco 49ers</a>
+            <a href="{{url_for('roster', team='TB', fullname='Tampa Bay Buccaners')}}">Tampa Bay Buccaners</a>
+            <a href="{{url_for('roster', team='TEN', fullname='Tennessee Titans')}}">Tennessee Titans</a>
+            <a href="{{url_for('roster', team='WAS', fullname='Washington Commanders')}}">Washington Commanders</a>
+        </div>
+    </div>
+    
+    <!-- NEW SNAP COUNTS DROPDOWN -->
+    <div class="dropdown">
+        <button class="dropbtn" onclick="toggleDropdown(this)">
+            Snap Counts <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content">
+            <a href="{{url_for('snap_counts_home')}}">Snap Counts Home</a>
+            <a href="{{url_for('team_snap_counts', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
+            <a href="{{url_for('team_snap_counts', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
+            <a href="{{url_for('team_snap_counts', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>
+            <a href="{{url_for('team_snap_counts', team='BUF', fullname='Buffalo Bills')}}">Buffalo Bills</a>
+            <a href="{{url_for('team_snap_counts', team='CAR', fullname='Carolina Panthers')}}">Carolina Panthers</a>
+            <a href="{{url_for('team_snap_counts', team='CHI', fullname='Chicago Bears')}}">Chicago Bears</a>
+            <a href="{{url_for('team_snap_counts', team='CIN', fullname='Cincinnati Bengals')}}">Cincinnati Bengals</a>
+            <a href="{{url_for('team_snap_counts', team='CLE', fullname='Cleveland Browns')}}">Cleveland Browns</a>
+            <a href="{{url_for('team_snap_counts', team='DAL', fullname='Dallas Cowboys')}}">Dallas Cowboys</a>
+            <a href="{{url_for('team_snap_counts', team='DEN', fullname='Denver Broncos')}}">Denver Broncos</a>
+            <a href="{{url_for('team_snap_counts', team='DET', fullname='Detroit Lions')}}">Detroit Lions</a>
+            <a href="{{url_for('team_snap_counts', team='GB', fullname='Green Bay Packers')}}">Green Bay Packers</a>
+            <a href="{{url_for('team_snap_counts', team='HOU', fullname='Houston Texans')}}">Houston Texans</a>
+            <a href="{{url_for('team_snap_counts', team='IND', fullname='Indianapolis Colts')}}">Indianapolis Colts</a>
+            <a href="{{url_for('team_snap_counts', team='JAX', fullname='Jacksonville Jaguars')}}">Jacksonville Jaguars</a>
+            <a href="{{url_for('team_snap_counts', team='KC', fullname='Kansas City Chiefs')}}">Kansas City Chiefs</a>
+            <a href="{{url_for('team_snap_counts', team='LA', fullname='Los Angeles Rams')}}">Los Angeles Rams</a>
+            <a href="{{url_for('team_snap_counts', team='LAC', fullname='Los Angeles Chargers')}}">Los Angeles Chargers</a>
+            <a href="{{url_for('team_snap_counts', team='LV', fullname='Los Vegas Raiders')}}">Los Vegas Raiders</a>
+            <a href="{{url_for('team_snap_counts', team='MIA', fullname='Miami Dolphins')}}">Miami Dolphins</a>
+            <a href="{{url_for('team_snap_counts', team='MIN', fullname='Minnesota Vikings')}}">Minnesota Vikings</a>
+            <a href="{{url_for('team_snap_counts', team='NE', fullname='New England Patriots')}}">New England Patriots</a>
+            <a href="{{url_for('team_snap_counts', team='NO', fullname='New Orleans Saints')}}">New Orleans Saints</a>
+            <a href="{{url_for('team_snap_counts', team='NYG', fullname='New York Giants')}}">New York Giants</a>
+            <a href="{{url_for('team_snap_counts', team='NYJ', fullname='New York Jets')}}">New York Jets</a>
+            <a href="{{url_for('team_snap_counts', team='PHI', fullname='Philadelphia Eagles')}}">Philadelphia Eagles</a>
+            <a href="{{url_for('team_snap_counts', team='PIT', fullname='Pittsburgh Steelers')}}">Pittsburgh Steelers</a>
+            <a href="{{url_for('team_snap_counts', team='SEA', fullname='Seattle Seahawks')}}">Seattle Seahawks</a>
+            <a href="{{url_for('team_snap_counts', team='SF', fullname='San Francisco 49ers')}}">San Francisco 49ers</a>
+            <a href="{{url_for('team_snap_counts', team='TB', fullname='Tampa Bay Buccaneers')}}">Tampa Bay Buccaneers</a>
+            <a href="{{url_for('team_snap_counts', team='TEN', fullname='Tennessee Titans')}}">Tennessee Titans</a>
+            <a href="{{url_for('team_snap_counts', team='WAS', fullname='Washington Commanders')}}">Washington Commanders</a>
+        </div>
+    </div>
+
+    <div class="dropdown">
+        <button class="dropbtn" onclick="toggleDropdown(this)">
+            Opportunities <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content">
+            <a href="{{url_for('opportunities_home')}}">Opportunity Home</a>
+            <a href="{{url_for('update_opportunities')}}">Update Data</a>
+            <div class="dropdown-divider"></div>
+            <a href="{{url_for('team_opportunities', team='ARI')}}">Arizona Cardinals</a>
+            <a href="{{url_for('team_opportunities', team='ATL')}}">Atlanta Falcons</a>
+            <a href="{{url_for('team_opportunities', team='BAL')}}">Baltimore Ravens</a>
+            <a href="{{url_for('team_opportunities', team='BUF')}}">Buffalo Bills</a>
+            <a href="{{url_for('team_opportunities', team='CAR')}}">Carolina Panthers</a>
+            <a href="{{url_for('team_opportunities', team='CHI')}}">Chicago Bears</a>
+            <a href="{{url_for('team_opportunities', team='CIN')}}">Cincinnati Bengals</a>
+            <a href="{{url_for('team_opportunities', team='CLE')}}">Cleveland Browns</a>
+            <a href="{{url_for('team_opportunities', team='DAL')}}">Dallas Cowboys</a>
+            <a href="{{url_for('team_opportunities', team='DEN')}}">Denver Broncos</a>
+            <a href="{{url_for('team_opportunities', team='DET')}}">Detroit Lions</a>
+            <a href="{{url_for('team_opportunities', team='GB')}}">Green Bay Packers</a>
+            <a href="{{url_for('team_opportunities', team='HOU')}}">Houston Texans</a>
+            <a href="{{url_for('team_opportunities', team='IND')}}">Indianapolis Colts</a>
+            <a href="{{url_for('team_opportunities', team='JAX')}}">Jacksonville Jaguars</a>
+            <a href="{{url_for('team_opportunities', team='KC')}}">Kansas City Chiefs</a>
+            <a href="{{url_for('team_opportunities', team='LA')}}">Los Angeles Rams</a>
+            <a href="{{url_for('team_opportunities', team='LAC')}}">Los Angeles Chargers</a>
+            <a href="{{url_for('team_opportunities', team='LV')}}">Las Vegas Raiders</a>
+            <a href="{{url_for('team_opportunities', team='MIA')}}">Miami Dolphins</a>
+            <a href="{{url_for('team_opportunities', team='MIN')}}">Minnesota Vikings</a>
+            <a href="{{url_for('team_opportunities', team='NE')}}">New England Patriots</a>
+            <a href="{{url_for('team_opportunities', team='NO')}}">New Orleans Saints</a>
+            <a href="{{url_for('team_opportunities', team='NYG')}}">New York Giants</a>
+            <a href="{{url_for('team_opportunities', team='NYJ')}}">New York Jets</a>
+            <a href="{{url_for('team_opportunities', team='PHI')}}">Philadelphia Eagles</a>
+            <a href="{{url_for('team_opportunities', team='PIT')}}">Pittsburgh Steelers</a>
+            <a href="{{url_for('team_opportunities', team='SEA')}}">Seattle Seahawks</a>
+            <a href="{{url_for('team_opportunities', team='SF')}}">San Francisco 49ers</a>
+            <a href="{{url_for('team_opportunities', team='TB')}}">Tampa Bay Buccaneers</a>
+            <a href="{{url_for('team_opportunities', team='TEN')}}">Tennessee Titans</a>
+            <a href="{{url_for('team_opportunities', team='WAS')}}">Washington Commanders</a>
+        </div>
+    </div>
+
+    <div class="dropdown">
+        <button class="dropbtn" onclick="toggleDropdown(this)">Team Schedule
+        <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content">
+            <a href="{{url_for('team_schedule', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
+            <a href="{{url_for('team_schedule', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
+            <a href="{{url_for('team_schedule', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>
+            <a href="{{url_for('team_schedule', team='BUF', fullname='Buffalo Bills')}}">Buffalo Bills</a>
+            <a href="{{url_for('team_schedule', team='CAR', fullname='Carolina Panthers')}}">Carolina Panthers</a>
+            <a href="{{url_for('team_schedule', team='CHI', fullname='Chicago Bears')}}">Chicago Bears</a>
+            <a href="{{url_for('team_schedule', team='CIN', fullname='Cincinnati Bengals')}}">Cincinnati Bengals</a>
+            <a href="{{url_for('team_schedule', team='CLE', fullname='Cleveland Browns')}}">Cleveland Browns</a>
+            <a href="{{url_for('team_schedule', team='DAL', fullname='Dallas Cowboys')}}">Dallas Cowboys</a>
+            <a href="{{url_for('team_schedule', team='DEN', fullname='Denver Broncos')}}">Denver Broncos</a>
+            <a href="{{url_for('team_schedule', team='DET', fullname='Detroit Lions')}}">Detroit Lions</a>
+            <a href="{{url_for('team_schedule', team='GB', fullname='Green Bay Packers')}}">Green Bay Packers</a>
+            <a href="{{url_for('team_schedule', team='HOU', fullname='Houston Texans')}}">Houston Texans</a>
+            <a href="{{url_for('team_schedule', team='IND', fullname='Indianapolis Colts')}}">Indianapolis Colts</a>
+            <a href="{{url_for('team_schedule', team='JAX', fullname='Jacksonville Jaguars')}}">Jacksonville Jaguars</a>
+            <a href="{{url_for('team_schedule', team='KC', fullname='Kansas City Chiefs')}}">Kansas City Chiefs</a>
+            <a href="{{url_for('team_schedule', team='LA', fullname='Los Angeles Rams')}}">Los Angeles Rams</a>
+            <a href="{{url_for('team_schedule', team='LAC', fullname='Los Angeles Chargers')}}">Los Angeles Chargers</a>
+            <a href="{{url_for('team_schedule', team='LV', fullname='Los Vegas Raiders')}}">Los Vegas Raiders</a>
+            <a href="{{url_for('team_schedule', team='MIA', fullname='Miami Dolphins')}}">Miami Dolphins</a>
+            <a href="{{url_for('team_schedule', team='MIN', fullname='Minnesota Vikings')}}">Minnesota Vikings</a>
+            <a href="{{url_for('team_schedule', team='NE', fullname='New England Patriots')}}">New England Patriots</a>
+            <a href="{{url_for('team_schedule', team='NO', fullname='New Orleans Saints')}}">New Orleans Saints</a>
+            <a href="{{url_for('team_schedule', team='NYG', fullname='New York Giants')}}">New York Giants</a>
+            <a href="{{url_for('team_schedule', team='NYJ', fullname='New York Jets')}}">New York Jets</a>
+            <a href="{{url_for('team_schedule', team='PHI', fullname='Philadelphia Eagles')}}">Philadelphia Eagles</a>
+            <a href="{{url_for('team_schedule', team='PIT', fullname='Pittsburgh Steelers')}}">Pittsburgh Steelers</a>
+            <a href="{{url_for('team_schedule', team='SEA', fullname='Seattle Seahawks')}}">Seattle Seahawks</a>
+            <a href="{{url_for('team_schedule', team='SF', fullname='San Fransisco 49ers')}}">San Fransisco 49ers</a>
+            <a href="{{url_for('team_schedule', team='TB', fullname='Tampa Bay Buccaners')}}">Tampa Bay Buccaners</a>
+            <a href="{{url_for('team_schedule', team='TEN', fullname='Tennessee Titans')}}">Tennessee Titans</a>
+            <a href="{{url_for('team_schedule', team='WAS', fullname='Washington Commanders')}}">Washington Commanders</a>
+        </div>
+    </div>
+    <div class="dropdown">
+        <button class="dropbtn" onclick="toggleDropdown(this)">Team Results
+        <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content">
+            <a href="{{url_for('FPAupdate')}}">Update All Teams</a>
+            <a href="{{url_for('team_results', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
+            <a href="{{url_for('team_results', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
+            <a href="{{url_for('team_results', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>
+            <a href="{{url_for('team_results', team='BUF', fullname='Buffalo Bills')}}">Buffalo Bills</a>
+            <a href="{{url_for('team_results', team='CAR', fullname='Carolina Panthers')}}">Carolina Panthers</a>
+            <a href="{{url_for('team_results', team='CHI', fullname='Chicago Bears')}}">Chicago Bears</a>
+            <a href="{{url_for('team_results', team='CIN', fullname='Cincinnati Bengals')}}">Cincinnati Bengals</a>
+            <a href="{{url_for('team_results', team='CLE', fullname='Cleveland Browns')}}">Cleveland Browns</a>
+            <a href="{{url_for('team_results', team='DAL', fullname='Dallas Cowboys')}}">Dallas Cowboys</a>
+            <a href="{{url_for('team_results', team='DEN', fullname='Denver Broncos')}}">Denver Broncos</a>
+            <a href="{{url_for('team_results', team='DET', fullname='Detroit Lions')}}">Detroit Lions</a>
+            <a href="{{url_for('team_results', team='GB', fullname='Green Bay Packers')}}">Green Bay Packers</a>
+            <a href="{{url_for('team_results', team='HOU', fullname='Houston Texans')}}">Houston Texans</a>
+            <a href="{{url_for('team_results', team='IND', fullname='Indianapolis Colts')}}">Indianapolis Colts</a>
+            <a href="{{url_for('team_results', team='JAX', fullname='Jacksonville Jaguars')}}">Jacksonville Jaguars</a>
+            <a href="{{url_for('team_results', team='KC', fullname='Kansas City Chiefs')}}">Kansas City Chiefs</a>
+            <a href="{{url_for('team_results', team='LA', fullname='Los Angeles Rams')}}">Los Angeles Rams</a>
+            <a href="{{url_for('team_results', team='LAC', fullname='Los Angeles Chargers')}}">Los Angeles Chargers</a>
+            <a href="{{url_for('team_results', team='LV', fullname='Los Vegas Raiders')}}">Los Vegas Raiders</a>
+            <a href="{{url_for('team_results', team='MIA', fullname='Miami Dolphins')}}">Miami Dolphins</a>
+            <a href="{{url_for('team_results', team='MIN', fullname='Minnesota Vikings')}}">Minnesota Vikings</a>
+            <a href="{{url_for('team_results', team='NE', fullname='New England Patriots')}}">New England Patriots</a>
+            <a href="{{url_for('team_results', team='NO', fullname='New Orleans Saints')}}">New Orleans Saints</a>
+            <a href="{{url_for('team_results', team='NYG', fullname='New York Giants')}}">New York Giants</a>
+            <a href="{{url_for('team_results', team='NYJ', fullname='New York Jets')}}">New York Jets</a>
+            <a href="{{url_for('team_results', team='PHI', fullname='Philadelphia Eagles')}}">Philadelphia Eagles</a>
+            <a href="{{url_for('team_results', team='PIT', fullname='Pittsburgh Steelers')}}">Pittsburgh Steelers</a>
+            <a href="{{url_for('team_results', team='SEA', fullname='Seattle Seahawks')}}">Seattle Seahawks</a>
+            <a href="{{url_for('team_results', team='SF', fullname='San Fransisco 49ers')}}">San Fransisco 49ers</a>
+            <a href="{{url_for('team_results', team='TB', fullname='Tampa Bay Buccaners')}}">Tampa Bay Buccaners</a>
+            <a href="{{url_for('team_results', team='TEN', fullname='Tennessee Titans')}}">Tennessee Titans</a>
+            <a href="{{url_for('team_results', team='WAS', fullname='Washington Commanders')}}">Washington Commanders</a>
+        </div>
+    </div>
+    <div class="dropdown">
+        <button class="dropbtn" onclick="toggleDropdown(this)">Team FPA
+        <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content">
+            <a href="{{url_for('FPAupdate')}}">Update All Teams</a>
+            <a href="{{url_for('fpa', year=selected_year)}}">All Teams</a>
+            <a href="{{url_for('team_fpa', team='ARI', fullname='Arizona Cardinals')}}">Arizona Cardinals</a>
+            <a href="{{url_for('team_fpa', team='ATL', fullname='Atlanta Falcons')}}">Atlanta Falcons</a>
+            <a href="{{url_for('team_fpa', team='BAL', fullname='Baltimore Ravens')}}">Baltimore Ravens</a>
+            <a href="{{url_for('team_fpa', team='BUF', fullname='Buffalo Bills')}}">Buffalo Bills</a>
+            <a href="{{url_for('team_fpa', team='CAR', fullname='Carolina Panthers')}}">Carolina Panthers</a>
+            <a href="{{url_for('team_fpa', team='CHI', fullname='Chicago Bears')}}">Chicago Bears</a>
+            <a href="{{url_for('team_fpa', team='CIN', fullname='Cincinnati Bengals')}}">Cincinnati Bengals</a>
+            <a href="{{url_for('team_fpa', team='CLE', fullname='Cleveland Browns')}}">Cleveland Browns</a>
+            <a href="{{url_for('team_fpa', team='DAL', fullname='Dallas Cowboys')}}">Dallas Cowboys</a>
+            <a href="{{url_for('team_fpa', team='DEN', fullname='Denver Broncos')}}">Denver Broncos</a>
+            <a href="{{url_for('team_fpa', team='DET', fullname='Detroit Lions')}}">Detroit Lions</a>
+            <a href="{{url_for('team_fpa', team='GB', fullname='Green Bay Packers')}}">Green Bay Packers</a>
+            <a href="{{url_for('team_fpa', team='HOU', fullname='Houston Texans')}}">Houston Texans</a>
+            <a href="{{url_for('team_fpa', team='IND', fullname='Indianapolis Colts')}}">Indianapolis Colts</a>
+            <a href="{{url_for('team_fpa', team='JAX', fullname='Jacksonville Jaguars')}}">Jacksonville Jaguars</a>
+            <a href="{{url_for('team_fpa', team='KC', fullname='Kansas City Chiefs')}}">Kansas City Chiefs</a>
+            <a href="{{url_for('team_fpa', team='LA', fullname='Los Angeles Rams')}}">Los Angeles Rams</a>
+            <a href="{{url_for('team_fpa', team='LAC', fullname='Los Angeles Chargers')}}">Los Angeles Chargers</a>
+            <a href="{{url_for('team_fpa', team='LV', fullname='Los Vegas Raiders')}}">Los Vegas Raiders</a>
+            <a href="{{url_for('team_fpa', team='MIA', fullname='Miami Dolphins')}}">Miami Dolphins</a>
+            <a href="{{url_for('team_fpa', team='MIN', fullname='Minnesota Vikings')}}">Minnesota Vikings</a>
+            <a href="{{url_for('team_fpa', team='NE', fullname='New England Patriots')}}">New England Patriots</a>
+            <a href="{{url_for('team_fpa', team='NO', fullname='New Orleans Saints')}}">New Orleans Saints</a>
+            <a href="{{url_for('team_fpa', team='NYG', fullname='New York Giants')}}">New York Giants</a>
+            <a href="{{url_for('team_fpa', team='NYJ', fullname='New York Jets')}}">New York Jets</a>
+            <a href="{{url_for('team_fpa', team='PHI', fullname='Philadelphia Eagles')}}">Philadelphia Eagles</a>
+            <a href="{{url_for('team_fpa', team='PIT', fullname='Pittsburgh Steelers')}}">Pittsburgh Steelers</a>
+            <a href="{{url_for('team_fpa', team='SEA', fullname='Seattle Seahawks')}}">Seattle Seahawks</a>
+            <a href="{{url_for('team_fpa', team='SF', fullname='San Fransisco 49ers')}}">San Fransisco 49ers</a>
+            <a href="{{url_for('team_fpa', team='TB', fullname='Tampa Bay Buccaners')}}">Tampa Bay Buccaners</a>
+            <a href="{{url_for('team_fpa', team='TEN', fullname='Tennessee Titans')}}">Tennessee Titans</a>
+            <a href="{{url_for('team_fpa', team='WAS', fullname='Washington Commanders')}}">Washington Commanders</a>
+        </div>
+    </div>
+    </div>
+    <div class="social-links">
+        <a id="social-media" href="https://www.facebook.com/Nick.A.Cote"><img src="{{ url_for('static', filename='fb.jpg') }}" height="35px" width="35px"></a>
+        <a id="social-media" href="https://twitter.com/NCGingi"><img src="{{ url_for('static', filename='twit.jpg') }}" height="35px" width="35px"></a>
+        <a id="social-media" href="https://www.linkedin.com/in/nicholas-alan-cote/"><img src="{{ url_for('static', filename='in.jpg') }}" height="35px" width="35px"></a>
+        <a id="social-media" href="https://www.youtube.com/channel/UCttd2npS2zsDR0_VlxVA-PA"><img src="{{ url_for('static', filename='yt.jpg') }}" height="35px" width="35px"></a>
+        <a id="social-media" href="https://www.instagram.com/nickco7/"><img src="{{ url_for('static', filename='ig.jpg') }}" height="35px" width="35px"></a>
+    </div>
+</nav>
+
+<script>
+function toggleDropdown(button) {
+    const dropdown = button.parentElement;
+    const dropdownContent = dropdown.querySelector('.dropdown-content');
+    dropdownContent.classList.toggle('show');
+    
+    // Close other dropdowns
+    document.querySelectorAll('.dropdown-content').forEach(content => {
+        if (content !== dropdownContent) {
+            content.classList.remove('show');
+        }
+    });
+}
+
+// Close dropdowns when clicking outside
+window.onclick = function(event) {
+    if (!event.target.matches('.dropbtn')) {
+        const dropdowns = document.getElementsByClassName("dropdown-content");
+        for (let i = 0; i < dropdowns.length; i++) {
+            const openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) {
+                openDropdown.classList.remove('show');
+            }
+        }
+    }
+}
+</script>
