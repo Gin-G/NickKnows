@@ -20,7 +20,7 @@ spec:
   tls:
     - hosts:
       - {{ .Values.webapp.fqdn}}
-      secretName: nickknows-tls
+      secretName: nickknows-dev-tls
   rules:
   - host: {{ .Values.webapp.fqdn }}
     http:
