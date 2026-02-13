@@ -4,6 +4,8 @@ name: Nick Knows Flask CI/CD
 
 on: 
   push:
+    branches:
+      - main
     paths:
       - app/**
       - Dockerfile
