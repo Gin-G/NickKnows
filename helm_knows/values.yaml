@@ -1,6 +1,6 @@
 webapp:
-  name: nickknows
-  group: nickknows
+  name: nickknows-dev
+  group: nickknows-dev
   fqdn: dev.nickknows.net
   path: /
   replicaCount: 1
