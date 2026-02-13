@@ -1,6 +1,6 @@
 # This workflow checksout the most recent code, builds a container image for Flask, 
 # and pushes it to docker.io before updating the Helm chart and pushing the changes back to the code repository
-name: Nick Knows Flask CI/CD
+name: Nick Knows Dev CI/CD
 
 on: 
   push:
