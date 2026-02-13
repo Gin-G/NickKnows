@@ -2,7 +2,7 @@ FROM python:3.10
 
 RUN apt-get update && apt-get install -y libsnappy-dev
 
-RUN git clone https://github.com/Gin-G/NickKnows.git
+RUN git clone -b dev https://github.com/Gin-G/NickKnows.git
 
 WORKDIR NickKnows/app
 
