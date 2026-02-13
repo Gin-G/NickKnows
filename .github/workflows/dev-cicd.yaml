@@ -9,6 +9,7 @@ on:
     paths:
       - app/**
       - Dockerfile
+  workflow_dispatch:
 
 jobs:
   build-image-update-helm:
