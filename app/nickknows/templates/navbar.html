@@ -1,25 +1,39 @@
-<nav class="navbar">
-    <a href="{{url_for('home')}}" class="brand">Home</a>
-    <div class="nav-dropdown">
-        <button class="nav-dropbtn">Interests
-            <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="nav-dropdown-content">
-            <a href="{{url_for('arcade')}}">Arcade</a>
-            <a href="{{url_for('lemans')}}">Car Restoration</a>
-            <a href="{{url_for('fart')}}">Fährtbags</a>
-            <a href="{{url_for('guitar')}}">Guitar</a>
-            <a href="{{url_for('job_parse')}}">Job Description Parser</a>
-            <a href="{{url_for('NFL')}}">NFL</a>
-            <a href="{{url_for('skiing')}}">Skiing</a>
-            <a href="https://www.skimoviesongs.com/">Ski Movie Songs</a>
+<nav class="nk-nav">
+    <div class="nk-nav__inner">
+        <a href="{{ url_for('home') }}" class="nk-nav__brand">
+            <img src="{{ url_for('static', filename='nk_logo.jpg') }}" alt="NickKnows" class="nk-nav__logo">
+            <span class="nk-nav__wordmark">NickKnows</span>
+        </a>
+
+        <div class="nk-nav__links" id="navLinks">
+            <a href="{{ url_for('NFL') }}" class="nk-nav__link">NFL</a>
+            <a href="{{ url_for('skiing') }}" class="nk-nav__link">Skiing</a>
+            
+            <div class="nk-nav__dropdown">
+                <button class="nk-nav__link nk-nav__dropdown-btn">
+                    Projects <i class="fa fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i>
+                </button>
+                <div class="nk-nav__dropdown-content">
+                    <a href="{{ url_for('arcade') }}">Arcade Build</a>
+                    <a href="{{ url_for('lemans') }}">Car Restoration</a>
+                    <a href="{{ url_for('fart') }}">Fährtbags</a>
+                    <a href="{{ url_for('guitar') }}">Guitar</a>
+                    <a href="{{ url_for('values') }}">Values</a>
+                </div>
+            </div>
+
+            <a href="{{ url_for('job_parse') }}" class="nk-nav__link">Resume Parser</a>
+            <a href="https://www.skimoviesongs.com/" class="nk-nav__link" target="_blank" rel="noopener">Ski Movie Songs</a>
         </div>
-    </div>
-    <div class="social-links">
-        <a id="social-media" href="https://www.facebook.com/Nick.A.Cote"><img src="static/fb.jpg" height="35px" width="35px"></a>
-        <a id="social-media" href="https://twitter.com/NCGingi"><img src="static/twit.jpg" height="35px" width="35px"></a>
-        <a id="social-media" href="https://www.linkedin.com/in/nicholas-alan-cote/"><img src="static/in.jpg" height="35px" width="35px"></a>
-        <a id="social-media" href="https://www.youtube.com/channel/UCttd2npS2zsDR0_VlxVA-PA"><img src="static/yt.jpg" height="35px" width="35px"></a>
-        <a id="social-media" href="https://www.instagram.com/nickco7/"><img src="static/ig.jpg" height="35px" width="35px"></a>
+
+        <div class="nk-nav__social">
+            <a href="https://www.linkedin.com/in/nicholas-alan-cote/" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            <a href="https://www.youtube.com/channel/UCttd2npS2zsDR0_VlxVA-PA" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            <a href="https://www.instagram.com/nickco7/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        </div>
+
+        <button class="nk-nav__hamburger" onclick="document.getElementById('navLinks').classList.toggle('active')" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
     </div>
 </nav>

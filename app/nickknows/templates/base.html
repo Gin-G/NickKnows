@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO -->
+    <title>{% block title %}Nick Knows{% endblock %}</title>
+    <link rel="canonical" href="{% block canonical %}{{ request.url }}{% endblock %}"/>
+    <meta property="og:title" content="{% block og_title %}Nick Knows{% endblock %}"/>
+    <meta property="og:url" content="{{ request.url }}"/>
+    <meta property="og:site_name" content="nickknows"/>
+    <meta property="og:type" content="website"/>
+    <meta name="description" content="{% block meta_description %}Analytics, interests & projects by NickCo7{% endblock %}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/design-system.css') }}">
+    {% block extra_css %}{% endblock %}
+
+    <!-- Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-YMZBTB7JST');
+    </script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376" crossorigin="anonymous"></script>
+</head>
+<body>
+    {% include 'components/navbar.html' %}
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for message in messages %}
+        <div class="flash-message">
+            <span>{{ message }}</span>
+            <button onclick="this.parentElement.remove()" class="flash-close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <main id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include 'components/footer.html' %}
+
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        // Navbar shrink on scroll
+        const nav = document.querySelector('.nk-nav');
+        if (nav) {
+            window.addEventListener('scroll', () => {
+                nav.classList.toggle('nk-nav--shrunk', window.scrollY > 80);
+            }, { passive: true });
+        }
+
+        // Intersection observer for fade-in animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>

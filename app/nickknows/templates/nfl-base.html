@@ -1,0 +1,14 @@
+{# Extend this from any NFL page instead of duplicating boilerplate #}
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nfl.css') }}">
+{% endblock %}
+
+{% block content %}
+{% include 'components/nfl-navbar.html' %}
+
+<div class="nfl-content">
+    {% block nfl_content %}{% endblock %}
+</div>
+{% endblock %}
