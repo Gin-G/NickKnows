@@ -12,23 +12,18 @@
     <div class="hero__ambient hero__ambient--2"></div>
 
     <div class="hero__content fade-in">
-        <div class="hero__badge">
-            <span class="hero__badge-dot"></span>
-            2025 NFL Season
-        </div>
-
         <h1 class="hero__title">
-            Analytics, <em>Interests</em><br>& Everything In Between
+            Nick <em>Knows</em>
         </h1>
 
         <p class="hero__subtitle">
-            NFL play-by-play analytics. Ski resort intelligence. Handcrafted projects.
-            A personal platform built by someone who cares about the details.
+            I'm Nick — I like to build things, figure things out, and get my hands dirty.
+            This is where I share what I've learned, what I'm working on, and what I care about.
+            From restoring my first car to crunching NFL stats, if it caught my attention, it's probably here.
         </p>
 
         <div class="hero__actions">
-            <a href="{{ url_for('NFL') }}" class="btn btn--primary">Explore NFL Analytics</a>
-            <a href="#projects" class="btn btn--ghost">View All Projects</a>
+            <a href="#interests" class="btn btn--primary">See What I'm Into</a>
         </div>
     </div>
 
@@ -38,95 +33,122 @@
     </div>
 </section>
 
-<!-- Stats ribbon -->
-<section class="stats-ribbon">
-    <div class="stats-ribbon__item">
-        <span class="stats-ribbon__value">8+</span>
-        <span class="stats-ribbon__label">Content Sections</span>
-    </div>
-    <div class="stats-ribbon__item">
-        <span class="stats-ribbon__value">32</span>
-        <span class="stats-ribbon__label">NFL Teams Tracked</span>
-    </div>
-    <div class="stats-ribbon__item">
-        <span class="stats-ribbon__value">5yr</span>
-        <span class="stats-ribbon__label">Historical Data</span>
-    </div>
-    <div class="stats-ribbon__item">
-        <span class="stats-ribbon__value">24/7</span>
-        <span class="stats-ribbon__label">Auto-Updated</span>
-    </div>
-</section>
-
-<!-- Featured: NFL -->
-<section class="section">
+<!-- Interests -->
+<section class="section" id="interests">
     <div class="section__header">
         <div>
-            <span class="section__eyebrow">Featured</span>
-            <h2 class="section__title">NFL Analytics Platform</h2>
-        </div>
-        <a href="{{ url_for('NFL') }}" class="section__link">View All →</a>
-    </div>
-
-    <div class="feature-grid">
-        {% set nfl_features = [
-            {'icon': '📊', 'title': 'Stat Leaders', 'desc': 'Top 10 in passing, rushing, receiving yards & TDs'},
-            {'icon': '⏱️', 'title': 'Snap Counts', 'desc': 'Player usage rates and snap percentage trends'},
-            {'icon': '📈', 'title': 'Opportunities', 'desc': 'Targets, carries, touches with trending analysis'},
-            {'icon': '🎯', 'title': 'Fantasy Points Against', 'desc': 'Which defenses give up the most by position'},
-            {'icon': '📅', 'title': 'Team Schedules', 'desc': 'Full season schedules with game results'},
-            {'icon': '🔍', 'title': 'Play-by-Play', 'desc': 'Detailed game logs and drive charts'},
-        ] %}
-
-        {% for feat in nfl_features %}
-        <div class="feature-card fade-in">
-            <div class="feature-card__icon">{{ feat.icon }}</div>
-            <h3 class="feature-card__title">{{ feat.title }}</h3>
-            <p class="feature-card__desc">{{ feat.desc }}</p>
-        </div>
-        {% endfor %}
-    </div>
-</section>
-
-<!-- All Projects -->
-<section class="section" id="projects">
-    <div class="section__header">
-        <div>
-            <span class="section__eyebrow">Explore</span>
-            <h2 class="section__title">Everything Else</h2>
+            <span class="section__eyebrow">What I Know</span>
+            <h2 class="section__title">Interests & Projects</h2>
         </div>
     </div>
 
-    <div class="project-grid">
-        {% set projects = [
-            {'url': url_for('NFL'), 'icon': '🏈', 'title': 'NFL Analytics', 'subtitle': 'Stats, opportunities & fantasy insights', 'color': '#013369', 'accent': '#D50A0A', 'tags': ['Play-by-Play', 'Snap Counts', 'FPA']},
-            {'url': url_for('skiing'), 'icon': '⛷️', 'title': 'Ski Analytics', 'subtitle': 'Resort data, run ratings & trail maps', 'color': '#1a5276', 'accent': '#48c9b0', 'tags': ['Resort Data', 'Global']},
-            {'url': url_for('arcade'), 'icon': '🕹️', 'title': 'Arcade Build', 'subtitle': 'Custom arcade cabinet from scratch', 'color': '#6c3483', 'accent': '#f39c12', 'tags': ['Woodwork', 'Retro']},
-            {'url': url_for('guitar'), 'icon': '🎸', 'title': 'Guitar', 'subtitle': '15 years self-taught, acoustic & electric', 'color': '#784212', 'accent': '#e74c3c', 'tags': ['Acoustic', 'Self-Taught']},
-            {'url': url_for('lemans'), 'icon': '🏎️', 'title': 'Car Restoration', 'subtitle': 'Le Mans — bringing classics back to life', 'color': '#1c2833', 'accent': '#e67e22', 'tags': ['Le Mans', 'Mechanical']},
-            {'url': url_for('values'), 'icon': '💡', 'title': 'Values', 'subtitle': 'Life lessons worth preserving', 'color': '#0e6655', 'accent': '#f1c40f', 'tags': ['Family', 'Legacy']},
-            {'url': url_for('job_parse'), 'icon': '📄', 'title': 'Job Parser', 'subtitle': 'AI-powered resume matching', 'color': '#2c3e50', 'accent': '#3498db', 'tags': ['NLP', 'Resume']},
-            {'url': url_for('fart'), 'icon': '🧵', 'title': 'Fährtbags', 'subtitle': 'Handcrafted leather goods', 'color': '#5d4037', 'accent': '#ff7043', 'tags': ['Leather', 'Handmade']},
-        ] %}
+    <div class="interest-grid">
 
-        {% for project in projects %}
-        <a href="{{ project.url }}" class="project-card fade-in" style="--card-color: {{ project.color }}; --card-accent: {{ project.accent }};">
-            <div class="project-card__bar"></div>
-            <div class="project-card__body">
-                <div class="project-card__header">
-                    <div class="project-card__icon">{{ project.icon }}</div>
-                    <span class="project-card__arrow">→</span>
-                </div>
-                <h3 class="project-card__title">{{ project.title }}</h3>
-                <p class="project-card__subtitle">{{ project.subtitle }}</p>
-                <div class="project-card__tags">
-                    {% for tag in project.tags %}
-                    <span class="tag">{{ tag }}</span>
-                    {% endfor %}
-                </div>
+        <a href="{{ url_for('skiing') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='ski.jpg') }}" alt="Skiing" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Skiing</h3>
+                <p class="interest-card__desc">
+                    I've been skiing since I was 3. Grew up racing on the east coast, moved to Colorado for the mountains,
+                    and it's still my happy place. I also volunteer teaching snowboarding to students from the Colorado Center for the Blind.
+                </p>
             </div>
         </a>
-        {% endfor %}
+
+        <a href="{{ url_for('lemans') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='lemans_trunk.jpg') }}" alt="Le Mans Restoration" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Car Restoration</h3>
+                <p class="interest-card__desc">
+                    My 1972 Pontiac LeMans Sport Convertible was the prize for my first summer working. 
+                    It was in rough shape when I got it — 15 years later I shipped it to Colorado to finish what I started.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('guitar') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='guitar.jpg') }}" alt="Guitar" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Guitar</h3>
+                <p class="interest-card__desc">
+                    I got sick of showing off at Guitar Hero and decided to learn the real thing. 
+                    15 years of self-taught playing later, COVID and a new Teton dreadnought kicked it into high gear. 
+                    My daughter loves it.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('arcade') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='arcade_finish.jpg') }}" alt="Arcade Build" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Arcade Build</h3>
+                <p class="interest-card__desc">
+                    I built a full arcade cabinet from scratch. Design, woodwork, electronics, software — the whole thing. 
+                    If you're going to play retro games, do it right.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('NFL') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='football.jpg') }}" alt="NFL Analytics" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">NFL Analytics</h3>
+                <p class="interest-card__desc">
+                    I built a full stats platform with play-by-play data, snap counts, opportunity tracking, 
+                    and fantasy insights. All 32 teams, multi-season data, auto-updating. It's the project that never ends.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('fart') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='sew.jpg') }}" alt="Fährtbags" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Fährtbags</h3>
+                <p class="interest-card__desc">
+                    Handcrafted leather goods. I like making things with my hands and leather work 
+                    is one of those skills where the more you put into it, the more you get out.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('values') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='koda_samson.jpeg') }}" alt="Values" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Values</h3>
+                <p class="interest-card__desc">
+                    I put together some videos of life lessons I thought were important to share with my kids. 
+                    You never know what's going to happen — recording what matters is a way to preserve it just in case.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('job_parse') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='resume.png') }}" alt="Job Description Parser" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Job Description Parser</h3>
+                <p class="interest-card__desc">
+                    A tool I built to break down job descriptions and pull out the keywords that actually matter.
+                    Useful for tailoring a resume to a specific role.
+                </p>
+            </div>
+        </a>
+
     </div>
 </section>
 
