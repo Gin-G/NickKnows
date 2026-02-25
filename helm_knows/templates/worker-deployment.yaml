@@ -29,7 +29,7 @@ spec:
             memory: 128Mi
           limits:
             cpu: 1
-            memory: 4Gi
+            memory: 1Gi
         imagePullPolicy: {{ .Values.webapp.container.imagePullPolicy }}
         args:
             - celery
