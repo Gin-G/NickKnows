@@ -1,70 +1,46 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+{% extends 'base.html' %}
 
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
-    <title>Nick Knows how to build an Arcade</title>
-        <link rel="canonical" href="{{ url_for('lemans') }}"/>
-        <meta property="og:title" content="Nick Knows how to restore a car"/>
-        <meta property="og:url" content="{{ url_for('lemans') }}"/>
-        <meta property="og:site_name" content="nickknows"/>
-        <meta property="og:type" content="website"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    <script>
-        $(function(){
-            $('#header').load("{{ url_for('header') }}")
-        })
-        $(function(){
-            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
-        })
-    </script>
-    <body>
-        <div id="header"></div>
-        <div id="nick_nav"></div>
-        <h1>Car Restoration</h1>
-            <div class="mid-bold">
-                <p>
-            This 1972 Pontiac Lemans Sport Convertible is the first car I ever owned, and was the prize for my first summer working. 
-            It was in rough shape when I first got it, we couldn't get it started, the top was bent, the seats were ripped, and the floor was rotted. 
-            With my Dad helping we were able to get it running, and running well, before we started to tackle the other issues. I started by addressing the floor. 
-            We removed all the interior, and I patched all the holes in the floor by getting down to clean metal around all the holes, welding in sheet metal patches, 
-            and then putting fiberglass on top to seal it all together. We installed a new carpet on top of the now solid floor. While the seats were out we had them 
-            repaired by a professional and they came out mint. The same person also put a new top on, I decided to switch from the white top that originally was on 
-            the car to a black top and saved a little money by going with a plastic rear window instead of glass. I was able to get my hands on 5 Rally II wheels, 
-            to replace the wheels and hubcaps that were currently on it. I had to prep the wheels, and painted them all, before mounting them and putting them on the car. 
-            At this point I started driving it to school when the weather was nice, and it was always a blast with it's 3 speed transmission on the floor. I learned how to 
-            drive a standard shift on this vehicle and I still love putting it through the 3 gears and letting it rumble. I did a few more things here and there to address other 
-            issues, but the main thing now was addressing the body work and I was not a body guy. I did not have as much patience when I was younger and ultimately I left for 
-            college in Colorado before I got to finish everything I wanted. I hate leaving projects unfinished and I always had my Lemans in the back of my mind over the years. 
-            Fast forward 15 years and I've got a house and job where I can afford to get the car shipped out to continue to work on it. There were a few mechanical issues after 
-            sitting for a long time, I put in a new alternator, got a new battery, changed the spark plugs, and did some carburator work to get it running well again. I was still             able to start it right up after it was delivered and drove it around the block to our house. I got the house all setup to start doing body work, and chose to start with 
-            a trunk lid we had gotten from the junk yard that was in better shape than the original. Once I got it stripped down I realized there were a number of dents, likely from 
-            hail, and this was going to be more work than I expected. I put in the elbow grease and really worked hard to get it looking excellent. I am very happy with the finished 
-            lid and learned a ton in the process to utilize as I continue to all the other panels and get the car looking as nice as I always envisioned it. Stay tuned for updates.
-            </p>
-            <br>
-            <br>
-            <img src="{{url_for('static',  filename='lemans_co.jpg')}}" style="width: 75%;height: auto;"><br>
-            <img src="{{url_for('static',  filename='lemans_carrier.jpg')}}" style="width: 75%;height: auto;"><br>
-            <img src="{{url_for('static',  filename='lemans_oldtrunk.jpg')}}" style="width: 75%;height: auto;">
-            <img src="{{url_for('static',  filename='lemans_trunk.jpg')}}" style="width: 75%;height: auto;"><br>
-            <img src="{{url_for('static',  filename='lemans_garage.jpg')}}" style="width: 75%;height: auto;"><br>
-            </div>
-    </body>
-    </head>
-</html>
+{% block title %}Car Restoration | Nick Knows{% endblock %}
+{% block og_title %}Nick Knows how to restore a car{% endblock %}
+{% block canonical %}{{ url_for('lemans') }}{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+    <h1 class="page-header__title">Car Restoration</h1>
+    <p class="page-header__subtitle">1972 Pontiac LeMans Sport Convertible — 15 years in the making</p>
+</div>
+
+<div class="content-section fade-in">
+    <p>
+        This 1972 Pontiac LeMans Sport Convertible is the first car I ever owned, and was the prize for my
+        first summer working. It was in rough shape when I got it — couldn't get it started, the top was bent,
+        the seats were ripped, and the floor was rotted through. With my dad helping we got it running well
+        before tackling the other issues.
+    </p>
+    <p>
+        I started with the floor: removed the interior, patched all the holes by getting down to clean metal,
+        welding in sheet metal patches, and laying fiberglass on top to seal it. New carpet went in over the
+        solid floor. While the seats were out I had them professionally repaired — they came out mint. The same
+        person also put a new top on. I switched from white to black and saved a little by going with a plastic
+        rear window instead of glass. I got my hands on five Rally II wheels, prepped and painted them all,
+        then mounted them on the car. I started driving it to school when the weather was nice — always a blast
+        with that 3-speed on the floor. I learned to drive a standard on this car.
+    </p>
+    <p>
+        I never finished the bodywork before leaving for college in Colorado. I hate leaving projects
+        unfinished — the LeMans was always in the back of my mind. Fast-forward 15 years: I shipped it out
+        to continue what I started. A new alternator, battery, spark plugs, and some carb work got it running
+        beautifully again. I got the garage set up and started with a trunk lid from the junkyard. Getting it
+        stripped revealed a lot of hail damage — more work than expected — but I put in the elbow grease and
+        came out very happy with the result. Stay tuned for updates.
+    </p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-md); margin-top: var(--space-2xl);">
+        <img src="{{ url_for('static', filename='lemans_co.jpg') }}" alt="LeMans in Colorado" style="border-radius: var(--radius); border: 1px solid var(--border);">
+        <img src="{{ url_for('static', filename='lemans_carrier.jpg') }}" alt="LeMans on carrier" style="border-radius: var(--radius); border: 1px solid var(--border);">
+        <img src="{{ url_for('static', filename='lemans_oldtrunk.jpg') }}" alt="Old trunk lid" style="border-radius: var(--radius); border: 1px solid var(--border);">
+        <img src="{{ url_for('static', filename='lemans_trunk.jpg') }}" alt="Restored trunk lid" style="border-radius: var(--radius); border: 1px solid var(--border);">
+        <img src="{{ url_for('static', filename='lemans_garage.jpg') }}" alt="LeMans in the garage" style="border-radius: var(--radius); border: 1px solid var(--border);">
+    </div>
+</div>
+{% endblock %}

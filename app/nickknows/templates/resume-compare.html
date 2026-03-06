@@ -1,49 +1,31 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+{% extends 'base.html' %}
 
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
-    <title>Nick Knows how to parse a job description</title>
-        <link rel="canonical" href="{{ url_for('job_parse') }}"/>
-        <meta property="og:title" content="Nick Knows how to parse a job description"/>
-        <meta property="og:url" content="{{ url_for('job_parse') }}"/>
-        <meta property="og:site_name" content="nickknows"/>
-        <meta property="og:type" content="website"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    <script>
-        $(function(){
-            $('#header').load("{{ url_for('header') }}")
-        })
-        $(function(){
-            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
-        })
-    </script>
-    <body>
-        <div id="header"></div>
-        <div id="nick_nav"></div>
-        <h1>Job Description Resume Comparison</h1>
-            <form action="/job_parse/resume" method="post">
-                <input type="hidden" value="{{ job_count }}" name="job_count">
-                <textarea rows="5" cols="45" name="resume" placeholder="Paste Resume"></textarea><br>
-                <input type="submit" value="Compare">
-            </form>
-            <div class="mid-bold">
-            </div>
-    </body>
-    </head>
-</html>
+{% block title %}Resume Comparison | Nick Knows{% endblock %}
+{% block og_title %}Job Description Resume Comparison{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-field { display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-lg); }
+    .form-field label { font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.04em; text-transform: uppercase; }
+    .form-field textarea { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 15px; line-height: 1.6; padding: 14px 16px; resize: vertical; transition: border-color 0.2s; }
+    .form-field textarea:focus { outline: none; border-color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+    <h1 class="page-header__title">Resume Comparison</h1>
+    <p class="page-header__subtitle">Paste your resume to see which job description keywords are missing</p>
+</div>
+
+<div class="content-section fade-in">
+    <form action="/job_parse/resume" method="post">
+        <input type="hidden" value="{{ job_count }}" name="job_count">
+        <div class="form-field">
+            <label for="resume">Your Resume</label>
+            <textarea id="resume" name="resume" rows="12" placeholder="Paste your resume text here…"></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary">Find Missing Keywords</button>
+    </form>
+</div>
+{% endblock %}

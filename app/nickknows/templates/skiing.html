@@ -1,61 +1,36 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+{% extends 'base.html' %}
 
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
-    <title>Nick Knows Skiing</title>
-        <link rel="canonical" href="{{ url_for('skiing') }}"/>
-        <meta property="og:title" content="Nick Knows Skiing"/>
-        <meta property="og:url" content="{{ url_for('skiing') }}"/>
-        <meta property="og:site_name" content="nickknows"/>
-        <meta property="og:type" content="website"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    <script>
-        $(function(){
-            $('#header').load("{{ url_for('header') }}")
-        })
-        $(function(){
-            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
-        })
-    </script>
-    <body>
-        <div id="header"></div>
-        <div id="nick_nav"></div>
-        <h1>Skiing</h1>
-        <div class="mid-bold">
-            <p>I've been skiing since I was 3 years old. I grew up ski racing on the east coast, and my Senior Year of high school was
-                one of the 10 best racers in the division, even though racing was never my passion. I love skiing for the freedom it allows. 
-                It's just you and the mountain. Skiing played a large part of my decision to attend the University of Colorado in Boulder. 
-                It will always be my happy place and I love sharing my passion with anyone willing to get out with me. I have done some volunteer
-                work with the Ignite program at Eldora, although I decided to help with the snowboarding program when they was a shortage of 
-                snowboard instructors. I took up snowboarding when I was 12 and do consider myself an expert. I can snowboard everything I can ski
-                just not at the same level. While at Ignite I was a binding technician and helped get equipment setup for the students to ride, but 
-                on the slopes I mainly taught snowboarding to students from the Colorado Center for the Blind.  
-            </p>
-            <iframe width="420" height="315" src="https://www.youtube.com/embed/8wA_3_qWZhY" frameborder="0" allowfullscreen></iframe><br>
-            <iframe width="420" height="315" src="https://www.youtube.com/embed/xuXCgL_L64w" frameborder="0" allowfullscreen></iframe><br>
-            <iframe width="420" height="315" src="https://www.youtube.com/embed/71X0o_Xw44k" frameborder="0" allowfullscreen></iframe><br>
-            <iframe width="420" height="315" src="https://www.youtube.com/embed/iSlxIeS9jbU" frameborder="0" allowfullscreen></iframe><br>
-            <iframe width="420" height="315" src="https://www.youtube.com/embed/6h8NrxBmBpw" frameborder="0" allowfullscreen></iframe><br>
-            <iframe width="420" height="315" src="https://www.youtube.com/embed/VokBgr1xdIs" frameborder="0" allowfullscreen></iframe><br>
-        </div>
-    </body>
-    </head>
-</html>
+{% block title %}Skiing | Nick Knows{% endblock %}
+{% block og_title %}Nick Knows Skiing{% endblock %}
+{% block canonical %}{{ url_for('skiing') }}{% endblock %}
 
+{% block content %}
+<div class="page-header fade-in">
+    <h1 class="page-header__title">Skiing</h1>
+    <p class="page-header__subtitle">Racing, freeriding, and teaching — since age 3</p>
+</div>
 
+<div class="content-section fade-in">
+    <p>
+        I've been skiing since I was 3 years old. I grew up ski racing on the east coast and my senior year of
+        high school I was one of the 10 best racers in the division — even though racing was never really my
+        passion. I love skiing for the freedom it gives you. It's just you and the mountain.
+    </p>
+    <p>
+        Skiing played a huge part in my decision to attend the University of Colorado in Boulder, and it will
+        always be my happy place. I love sharing it with anyone willing to get out with me. I've done volunteer
+        work with the Ignite program at Eldora — mostly as a snowboard instructor when they had a shortage.
+        I took up snowboarding at 12 and consider myself an expert. On the slopes I mainly taught snowboarding
+        to students from the Colorado Center for the Blind.
+    </p>
+
+    <div class="video-grid" style="margin-top: var(--space-2xl);">
+        <iframe src="https://www.youtube.com/embed/8wA_3_qWZhY" frameborder="0" allowfullscreen></iframe>
+        <iframe src="https://www.youtube.com/embed/xuXCgL_L64w" frameborder="0" allowfullscreen></iframe>
+        <iframe src="https://www.youtube.com/embed/71X0o_Xw44k" frameborder="0" allowfullscreen></iframe>
+        <iframe src="https://www.youtube.com/embed/iSlxIeS9jbU" frameborder="0" allowfullscreen></iframe>
+        <iframe src="https://www.youtube.com/embed/6h8NrxBmBpw" frameborder="0" allowfullscreen></iframe>
+        <iframe src="https://www.youtube.com/embed/VokBgr1xdIs" frameborder="0" allowfullscreen></iframe>
+    </div>
+</div>
+{% endblock %}

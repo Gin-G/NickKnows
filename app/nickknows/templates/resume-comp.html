@@ -1,50 +1,36 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+{% extends 'base.html' %}
 
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
-    <title>Nick Knows how to parse a job description</title>
-        <link rel="canonical" href="{{ url_for('job_parse') }}"/>
-        <meta property="og:title" content="Nick Knows how to parse a job description"/>
-        <meta property="og:url" content="{{ url_for('job_parse') }}"/>
-        <meta property="og:site_name" content="nickknows"/>
-        <meta property="og:type" content="website"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    <script>
-        $(function(){
-            $('#header').load("{{ url_for('header') }}")
-        })
-        $(function(){
-            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
-        })
-    </script>
-    <body>
-        <div id="header"></div>
-        <div id="nick_nav"></div>
-        <h1>Job Description Resume Comparison</h1>
-            <div class="mid-bold">
-                <p>
-                    The following words are in the Job Description but not in your Resume. Update your resume accordingly to include these words. The number of times each word is used is included to help dictate importance.<br>
-                    {% for words in missing_words %}
-                        {{ words }} <br>
-                    {% endfor %}
-                </p>
-            </div>
-    </body>
-    </head>
-</html>
+{% block title %}Missing Keywords | Nick Knows{% endblock %}
+{% block og_title %}Job Description Resume Comparison Results{% endblock %}
+
+{% block extra_css %}
+<style>
+    .missing-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-sm); margin-top: var(--space-xl); }
+    .missing-item { padding: 10px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; color: var(--text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+    <h1 class="page-header__title">Missing Keywords</h1>
+    <p class="page-header__subtitle">These words appear in the job description but not in your resume — consider adding them</p>
+</div>
+
+<div class="content-section fade-in">
+    {% if missing_words %}
+    <div class="missing-list">
+        {% for words in missing_words %}
+        <div class="missing-item">{{ words }}</div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: var(--accent); font-size: 18px; margin-top: var(--space-xl);">
+        Your resume covers all keywords from the job description.
+    </p>
+    {% endif %}
+
+    <div style="margin-top: var(--space-2xl);">
+        <a href="{{ url_for('job_parse') }}" class="btn btn--ghost">Start Over</a>
+    </div>
+</div>
+{% endblock %}
