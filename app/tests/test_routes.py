@@ -11,16 +11,17 @@ import os
 # Ensure the app package is importable
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+# Patch where the names are actually used (imported into nfl.views), not where defined.
 TASK_PATCHES = [
-    'nickknows.celery_setup.tasks.update_full_season_data',
-    'nickknows.celery_setup.tasks.update_opportunity_data',
-    'nickknows.celery_setup.tasks.update_all_teams_snap_counts',
-    'nickknows.celery_setup.tasks.update_single_team_full',
-    'nickknows.celery_setup.tasks.calculate_all_stat_leaders',
-    'nickknows.celery_setup.tasks.calculate_opportunity_data',
-    'nickknows.celery_setup.tasks.update_all_team_fpa',
-    'nickknows.celery_setup.tasks.process_team_data',
-    'nickknows.celery_setup.tasks.update_snap_count_data',
+    'nickknows.nfl.views.update_full_season_data',
+    'nickknows.nfl.views.update_opportunity_data',
+    'nickknows.nfl.views.update_all_teams_snap_counts',
+    'nickknows.nfl.views.update_single_team_full',
+    'nickknows.nfl.views.calculate_all_stat_leaders',
+    'nickknows.nfl.views.calculate_opportunity_data',
+    'nickknows.nfl.views.update_all_team_fpa',
+    'nickknows.nfl.views.process_team_data',
+    'nickknows.nfl.views.update_snap_count_data',
 ]
 
 
