@@ -82,6 +82,19 @@ def get_season_display_name(year):
     """Format NFL season display name"""
     return f"{year} Season"
 
+@app.route('/NFL/set_year', methods=['POST'])
+def set_year():
+    """Handle year form POST from nfl-home.html"""
+    year = request.form.get('year', type=int)
+    if year:
+        available_years = get_available_years()
+        if year in available_years:
+            session['selected_nfl_year'] = year
+            flash(f'Season set to {year}')
+        else:
+            flash(f'Invalid year: {year}')
+    return redirect(request.referrer or url_for('NFL'))
+
 @app.route('/NFL/set_year/<int:year>')
 def set_nfl_year(year):
     """Set the NFL year in session and redirect back to referrer or NFL home"""
