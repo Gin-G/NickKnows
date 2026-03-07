@@ -1,446 +1,78 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% extends 'nfl-base.html' %}
+{% block title %}{{ fullname }} Snap Counts | Nick Knows NFL{% endblock %}
 
-    <script>
-        function toggleMenu() {
-            const navLinks = document.getElementById('navLinks');
-            navLinks.classList.toggle('active');
-        }
-    </script>
-        
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    
-    <script>
-        $(function(){
-            $('#nfl_navbar').load("{{ url_for('nfl_navbar') }}")
-        })
-        $(function(){
-            $('#header').load("{{ url_for('header') }}")
-        })
-    </script>
+{% block nfl_extra_css %}
+<style>
+    .snap-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .snap-table th { background: var(--bg); padding: 8px 6px; text-align: center; font-size: 11px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    .snap-table th:first-child { text-align: left; padding-left: 12px; min-width: 140px; }
+    .snap-table th:last-child { color: var(--accent); }
+    .snap-table td { padding: 6px; border-bottom: 1px solid rgba(255,255,255,0.04); text-align: center; vertical-align: middle; color: var(--text-muted); }
+    .snap-table td:first-child { text-align: left; padding-left: 12px; position: sticky; left: 0; background: var(--bg); border-right: 1px solid var(--border); z-index: 5; }
+    .snap-table td:last-child { color: var(--accent); font-weight: 600; }
+    .snap-table tbody tr:hover td { background: var(--surface-hover); }
+    .snap-table tbody tr:hover td:first-child { background: var(--surface); }
+    .player-name { font-weight: 600; color: var(--text); font-size: 13px; }
+    .player-position { font-size: 11px; color: var(--text-muted); }
+    .snap-count { font-weight: 600; color: var(--text); }
+    .snap-percentage { font-size: 11px; color: var(--text-muted); }
+    .no-snaps { color: var(--border); }
+    .table-container { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .position-section { margin-bottom: var(--space-xl); }
+    .position-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); padding: var(--space-sm) 0; border-top: 1px solid var(--border); margin-top: var(--space-xl); margin-bottom: var(--space-md); }
+    .status-message { text-align: center; padding: var(--space-3xl); color: var(--text-muted); }
+</style>
+{% endblock %}
 
-    <style>
-        .team-header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 2rem;
-            text-align: center;
-            margin-bottom: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
+{% block nfl_content %}
+<div class="page-header">
+    <h1 class="page-header__title">{{ fullname }}</h1>
+    <p class="page-header__subtitle">{{ selected_year }} Season Snap Counts</p>
+</div>
 
-        .team-header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .team-header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .controls-section {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-            margin-bottom: 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .back-link, .update-btn {
-            color: white;
-            text-decoration: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .back-link {
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
-        }
-
-        .update-btn {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        }
-
-        .back-link:hover, .update-btn:hover {
-            transform: translateY(-2px);
-            color: white;
-            text-decoration: none;
-        }
-
-        .stats-overview {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #007bff;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        .position-section {
-            background: white;
-            margin-bottom: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-            overflow: hidden;
-        }
-
-        .position-header {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 1rem 1.5rem;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .position-header h3 {
-            margin: 0;
-            color: #ffffff;
-            font-size: 1.4rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .position-header .count {
-            background: #007bff;
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: normal;
-        }
-
-        .snap-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-
-        .snap-table th {
-            background: #f8f9fa;
-            padding: 0.75rem 0.5rem;
-            text-align: center;
-            font-weight: 600;
-            color: #2c3e50;
-            border-bottom: 2px solid #dee2e6;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .snap-table th:first-child {
-            text-align: left;
-            padding-left: 1rem;
-            min-width: 140px;
-            background: #e9ecef;
-        }
-
-        .snap-table th:last-child {
-            background: #e3f2fd;
-            color: #1976d2;
-            font-weight: bold;
-            min-width: 80px;
-        }
-
-        .snap-table td {
-            padding: 0.5rem;
-            border-bottom: 1px solid #f0f0f0;
-            text-align: center;
-            vertical-align: top;
-        }
-
-        .snap-table td:first-child {
-            text-align: left;
-            padding-left: 1rem;
-            background: #fafafa;
-            position: sticky;
-            left: 0;
-            z-index: 5;
-            border-right: 1px solid #dee2e6;
-        }
-
-        .snap-table td:last-child {
-            background: #e3f2fd;
-            font-weight: bold;
-            color: #1976d2;
-            font-size: 1rem;
-        }
-
-        .snap-table tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        .snap-table tbody tr:hover td:first-child {
-            background: #e9ecef;
-        }
-
-        .snap-table tbody tr:hover td:last-child {
-            background: #bbdefb;
-        }
-
-        .player-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .player-name {
-            font-weight: bold;
-            color: #2c3e50;
-            font-size: 1rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .player-position {
-            font-size: 0.8rem;
-            color: #6c757d;
-            font-weight: 500;
-        }
-
-        .snap-cell {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 40px;
-            padding: 0.25rem;
-        }
-
-        .snap-count {
-            font-weight: bold;
-            color: #2c3e50;
-            font-size: 1rem;
-            line-height: 1;
-        }
-
-        .snap-percentage {
-            font-size: 0.75rem;
-            color: #6c757d;
-            line-height: 1;
-            margin-top: 0.1rem;
-        }
-
-        .no-snaps {
-            color: #dee2e6;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .loading-message, .no-data-message {
-            text-align: center;
-            padding: 3rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-        }
-
-        .loading-message i {
-            font-size: 3rem;
-            color: #007bff;
-            margin-bottom: 1rem;
-        }
-
-        .no-data-message i {
-            font-size: 3rem;
-            color: #dc3545;
-            margin-bottom: 1rem;
-        }
-
-        /* Position-specific colors */
-        .position-section:nth-child(odd) .position-header {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        }
-
-        .position-section:nth-child(even) .position-header {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-        }
-
-        /* Responsive design */
-        @media (max-width: 1200px) {
-            .snap-table {
-                font-size: 0.8rem;
-            }
-            
-            .snap-table th,
-            .snap-table td {
-                padding: 0.4rem 0.3rem;
-            }
-
-            .snap-table th:first-child,
-            .snap-table td:first-child {
-                min-width: 120px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .snap-table {
-                font-size: 0.75rem;
-            }
-            
-            .snap-table th,
-            .snap-table td {
-                padding: 0.3rem 0.2rem;
-            }
-            
-            .snap-table th:first-child,
-            .snap-table td:first-child {
-                min-width: 100px;
-                padding-left: 0.5rem;
-            }
-            
-            .controls-section {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .team-header h1 {
-                font-size: 2rem;
-            }
-
-            .snap-cell {
-                min-height: 30px;
-                padding: 0.1rem;
-            }
-
-            .snap-count {
-                font-size: 0.9rem;
-            }
-
-            .snap-percentage {
-                font-size: 0.7rem;
-            }
-
-            .player-name {
-                font-size: 0.9rem;
-            }
-
-            .player-position {
-                font-size: 0.7rem;
-            }
-        }
-
-        /* Table scrolling for mobile */
-        .table-container {
-            overflow-x: auto;
-            margin: 0 -1.5rem;
-            padding: 0 1.5rem;
-        }
-
-        @media (max-width: 768px) {
-            .table-container {
-                margin: 0 -1rem;
-                padding: 0 1rem;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div id="header"></div>
-    <div id="nfl_navbar"></div>
-
-    <div class="team-header">
-        <h1><i class="fas fa-chart-bar"></i> {{ fullname }}</h1>
-        <p>{{ selected_year }} Season Snap Counts by Position</p>
-    </div>
-
-    <div class="controls-section">
-        <a href="{{ url_for('snap_counts_home') }}" class="back-link">
-            <i class="fas fa-arrow-left"></i> Back to All Teams
+<div class="content-section">
+    <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-xl);">
+        <a href="{{ url_for('snap_counts_home') }}" class="btn btn--ghost">
+            <i class="fas fa-arrow-left" style="margin-right: 6px;"></i>All Teams
         </a>
-        <a href="{{ url_for('update_team_snap_counts', team=team) }}" class="update-btn">
-            <i class="fas fa-sync-alt"></i> Update {{ team }} Data
+        <a href="{{ url_for('update_team_snap_counts', team=team) }}" class="btn btn--ghost">
+            <i class="fas fa-sync-alt" style="margin-right: 6px;"></i>Update {{ team }}
         </a>
     </div>
 
     {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div style="margin-bottom: 2rem;">
-                {% for message in messages %}
-                    <div style="background-color: #d1ecf1; color: #0c5460; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
+    {% if messages %}
+    {% for message in messages %}
+    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-md); margin-bottom: var(--space-md); color: var(--text-muted);">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
     {% endwith %}
 
     {% if loading %}
-    <div class="loading-message">
-        <i class="fas fa-spinner fa-spin"></i>
-        <h3>Loading Snap Count Data</h3>
-        <p>Snap count data is being processed. Please refresh the page in a moment.</p>
+    <div class="status-message">
+        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: var(--space-md);"></i>
+        <p>Loading snap count data — refresh in a moment.</p>
     </div>
     {% elif not position_groups %}
-    <div class="no-data-message">
-        <i class="fas fa-exclamation-triangle"></i>
-        <h3>No Snap Count Data Available</h3>
-        <p>No snap count data found for {{ fullname }} in the {{ selected_year }} season.</p>
-        <p>Try updating the data using the button above.</p>
+    <div class="status-message">
+        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: var(--space-md);"></i>
+        <p>No snap count data for {{ fullname }} in {{ selected_year }}. Try updating above.</p>
     </div>
     {% else %}
-
-    <!-- Position Groups -->
     {% for group in position_groups %}
     <div class="position-section">
-        <div class="position-header">
-            <h3>
-                <i class="{{ group.icon }}"></i> 
-                {{ group.name }} 
-                <span class="count">{{ group.count }}</span>
-            </h3>
+        <div class="position-label">
+            <i class="{{ group.icon }}" style="margin-right: 6px;"></i>{{ group.name }}
+            <span style="font-weight: 400; opacity: 0.6; margin-left: 6px;">({{ group.count }})</span>
         </div>
         <div class="table-container">
             <table class="snap-table">
                 <thead>
                     <tr>
                         <th>Player</th>
-                        {% for week in weeks %}
-                        <th>Wk {{ week }}</th>
-                        {% endfor %}
+                        {% for week in weeks %}<th>Wk {{ week }}</th>{% endfor %}
                         <th>Total</th>
                     </tr>
                 </thead>
@@ -448,21 +80,17 @@
                     {% for player in group.players %}
                     <tr>
                         <td>
-                            <div class="player-info">
-                                <span class="player-name">{{ player.player }}</span>
-                                <span class="player-position">{{ player.position }}</span>
-                            </div>
+                            <div class="player-name">{{ player.player }}</div>
+                            <div class="player-position">{{ player.position }}</div>
                         </td>
                         {% for week in weeks %}
+                        {% set week_data = player.weekly_snaps.get(week, {'snaps': 0, 'pct': 0.0}) %}
                         <td>
-                            {% set week_data = player.weekly_snaps.get(week, {'snaps': 0, 'pct': 0.0}) %}
                             {% if week_data.snaps > 0 %}
-                            <div class="snap-cell">
-                                <span class="snap-count">{{ week_data.snaps }}</span>
-                                <span class="snap-percentage">{{ week_data.pct }}%</span>
-                            </div>
+                            <div class="snap-count">{{ week_data.snaps }}</div>
+                            <div class="snap-percentage">{{ week_data.pct }}%</div>
                             {% else %}
-                            <span class="no-snaps">-</span>
+                            <span class="no-snaps">—</span>
                             {% endif %}
                         </td>
                         {% endfor %}
@@ -474,8 +102,6 @@
         </div>
     </div>
     {% endfor %}
-
     {% endif %}
-
-</body>
-</html>
+</div>
+{% endblock %}

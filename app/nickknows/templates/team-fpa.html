@@ -1,73 +1,55 @@
-<!DOCTYPE html>
-<html>
-    <head>
-      
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% extends 'nfl-base.html' %}
+{% block title %}{{ fullname }} FPA | Nick Knows NFL{% endblock %}
 
-    <script>
-        function toggleMenu() {
-            const navLinks = document.getElementById('navLinks');
-            navLinks.classList.toggle('active');
-        }
-        </script>
-        
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+{% block nfl_content %}
+<div class="page-header">
+    <h1 class="page-header__title">{{ fullname }}</h1>
+    <p class="page-header__subtitle">Fantasy Points Against</p>
+</div>
+<div class="content-section">
+    <div style="display: flex; gap: var(--space-xl); flex-wrap: wrap; margin-bottom: var(--space-xl);">
+        <div style="text-align: center;">
+            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 4px;">vs QB</div>
+            <div style="font-size: 28px; font-weight: 700; color: var(--text);">{{ pass_agg|round(2, 'common') }}</div>
+            <div style="font-size: 12px; color: var(--text-muted);">pts/week</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 4px;">vs RB</div>
+            <div style="font-size: 28px; font-weight: 700; color: var(--text);">{{ rush_agg|round(2, 'common') }}</div>
+            <div style="font-size: 12px; color: var(--text-muted);">pts/week</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 4px;">vs WR</div>
+            <div style="font-size: 28px; font-weight: 700; color: var(--text);">{{ rec_agg|round(2, 'common') }}</div>
+            <div style="font-size: 12px; color: var(--text-muted);">pts/week</div>
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 4px;">vs TE</div>
+            <div style="font-size: 28px; font-weight: 700; color: var(--text);">{{ te_agg|round(2, 'common') }}</div>
+            <div style="font-size: 12px; color: var(--text-muted);">pts/week</div>
+        </div>
+    </div>
 
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    <script>
-        $(function(){
-            $('#nfl_navbar').load("{{ url_for('nfl_navbar') }}")
-        })
-    </script>
-    <script>
-        $(function(){
-            $('#header').load("{{ url_for('header') }}")
-        })
-    </script>
-    <body>
-        <div id="header"></div>
-        <div id="nfl_navbar"></div>
-        <h1>{{ fullname }}</h1>
-            <h3>Against QB <br> {{ pass_agg|round(2, 'common') }} pts/week</h3>
-            <h3>Against RB <br> {{ rush_agg|round(2, 'common') }} pts/week</h3>
-            <h3>Against WR <br> {{ rec_agg|round(2, 'common') }} pts/week</h3>
-            <h3>Against TE <br> {{ te_agg|round(2, 'common') }} pts/week</h3>
-            <div class='row'>
-                <div class='nfl-column'>
-                    <img src="{{ url_for('static', filename='images/{}/{}_QB_FPA.png'.format(team, team)) }}">
-                    <img src="{{ url_for('static', filename='images/{}/{}_RB_FPA.png'.format(team, team)) }}">
-                    <img src="{{ url_for('static', filename='images/{}/{}_WR_FPA.png'.format(team, team)) }}">
-                    <img src="{{ url_for('static', filename='images/{}/{}_TE_FPA.png'.format(team, team)) }}">
-            <h2>Results</h2>
-            <div class="table-wrapper">
-            {{ team_fpa | safe }}</div><br>
-            <h2>QB Stats</h2>
-            <div class="table-wrapper">
-                {{ pass_data | safe }}</div><br>
-            <h2>RB Stats</h2>
-            <div class="table-wrapper">
-                {{ rush_data | safe }}</div><br>
-            <h2>WR Stats</h2>
-            <div class="table-wrapper">
-                {{ rec_data | safe }}</div><br>
-            <h2>TE Stats</h2>
-            <div class="table-wrapper">
-                {{ te_data | safe }}</div><br>
-    </body>
-    </head>
-</html>
+    <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-2xl);">
+        <img src="{{ url_for('static', filename='images/{}/{}_QB_FPA.png'.format(team, team)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <img src="{{ url_for('static', filename='images/{}/{}_RB_FPA.png'.format(team, team)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <img src="{{ url_for('static', filename='images/{}/{}_WR_FPA.png'.format(team, team)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <img src="{{ url_for('static', filename='images/{}/{}_TE_FPA.png'.format(team, team)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+    </div>
+
+    <h2 style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-md);">Results</h2>
+    <div class="table-wrapper">{{ team_fpa | safe }}</div>
+
+    <h2 style="font-size: 16px; font-weight: 600; margin: var(--space-2xl) 0 var(--space-md);">QB Stats</h2>
+    <div class="table-wrapper">{{ pass_data | safe }}</div>
+
+    <h2 style="font-size: 16px; font-weight: 600; margin: var(--space-2xl) 0 var(--space-md);">RB Stats</h2>
+    <div class="table-wrapper">{{ rush_data | safe }}</div>
+
+    <h2 style="font-size: 16px; font-weight: 600; margin: var(--space-2xl) 0 var(--space-md);">WR Stats</h2>
+    <div class="table-wrapper">{{ rec_data | safe }}</div>
+
+    <h2 style="font-size: 16px; font-weight: 600; margin: var(--space-2xl) 0 var(--space-md);">TE Stats</h2>
+    <div class="table-wrapper">{{ te_data | safe }}</div>
+</div>
+{% endblock %}

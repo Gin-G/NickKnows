@@ -1,53 +1,17 @@
-<!DOCTYPE html>
-<html>
-    <head>
-       
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% extends 'nfl-base.html' %}
+{% block title %}Fantasy Points Against | Nick Knows NFL{% endblock %}
 
-    <script>
-        function toggleMenu() {
-            const navLinks = document.getElementById('navLinks');
-            navLinks.classList.toggle('active');
-        }
-        </script>
-        
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    <script>
-        $(function(){
-            $('#nfl_navbar').load("{{ url_for('nfl_navbar') }}")
-        })
-    </script>
-    <script>
-        $(function(){
-            $('#header').load("{{ url_for('header') }}")
-        })
-    </script>
-    <body>
-        <div id="header"></div>
-        <div id="nfl_navbar"></div>
-        <h1>Fantasy Points Against</h1>
-        <form action="{{ url_for('FPAupdate') }}">
-            <input type="submit" value="Update FPA Data" style="font-size: 20px;border-radius: 5px;">
-        </form>
-                <img src="{{ url_for('static', filename='images/FPA.png')  }}">
-                {{ fpa_data | safe  }}
-      </body>
-    </head>
-</html>
+{% block nfl_content %}
+<div class="page-header">
+    <h1 class="page-header__title">Fantasy Points Against</h1>
+</div>
+<div class="content-section">
+    <form action="{{ url_for('FPAupdate') }}" style="margin-bottom: var(--space-xl);">
+        <button type="submit" class="btn btn--ghost">Update FPA Data</button>
+    </form>
+    <img src="{{ url_for('static', filename='images/FPA.png') }}" style="max-width: 100%; border-radius: var(--radius); border: 1px solid var(--border);">
+    <div class="table-wrapper" style="margin-top: var(--space-xl);">
+        {{ fpa_data | safe }}
+    </div>
+</div>
+{% endblock %}

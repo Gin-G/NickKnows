@@ -3,7 +3,10 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/nfl.css') }}">
+{% block nfl_extra_css %}{% endblock %}
 {% endblock %}
+
+{% block extra_js %}{% block nfl_extra_js %}{% endblock %}{% endblock %}
 
 {% block content %}
 {% include 'components/nfl_navbar.html' %}
