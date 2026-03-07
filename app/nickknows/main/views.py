@@ -1,10 +1,18 @@
 from flask import redirect, url_for, render_template, request
 import json
+import os
 from nickknows import app
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    fishing_dir = os.path.join(app.static_folder, 'fishing')
+    valid_exts = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+    fishing_images = sorted([
+        f for f in os.listdir(fishing_dir)
+        if os.path.splitext(f)[1].lower() in valid_exts
+    ])
+    fishing_preview = fishing_images[0] if fishing_images else None
+    return render_template('home.html', fishing_preview=fishing_preview)
 
 @app.route('/templates/header.html')
 def header():
@@ -55,6 +63,17 @@ def values():
 @app.route('/brown-banana')
 def brown_banana():
     return render_template('brown-banana.html')
+
+@app.route('/fishing')
+def fishing():
+    fishing_dir = os.path.join(app.static_folder, 'fishing')
+    valid_exts = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+    images = sorted([
+        f for f in os.listdir(fishing_dir)
+        if os.path.splitext(f)[1].lower() in valid_exts
+    ])
+    youtube_url = None  # Set to YouTube embed URL when ready, e.g. 'https://www.youtube.com/embed/VIDEO_ID'
+    return render_template('fishing.html', images=images, youtube_url=youtube_url)
 
 @app.route('/job_parse', methods=['GET','POST'])
 def job_parse():

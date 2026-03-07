@@ -149,6 +149,20 @@
             </div>
         </a>
 
+        <a href="{{ url_for('fishing') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                {% if fishing_preview %}
+                <img src="{{ url_for('static', filename='fishing/' + fishing_preview) }}" alt="Fishing" loading="lazy">
+                {% endif %}
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Fishing</h3>
+                <p class="interest-card__desc">
+                    On the water whenever I can get there. Mountain lakes, rivers, the coast — fishing is how I slow down.
+                </p>
+            </div>
+        </a>
+
         <a href="{{ url_for('brown_banana') }}" class="interest-card fade-in">
             <div class="interest-card__image">
                 <img src="{{ url_for('static', filename='brown_banana.jpg') }}" alt="Brown Banana" loading="lazy">

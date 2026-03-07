@@ -88,6 +88,11 @@ def test_brown_banana(client):
     assert r.status_code == 200
 
 
+def test_fishing(client):
+    r = client.get('/fishing')
+    assert r.status_code == 200
+
+
 def test_job_parse_get(client):
     r = client.get('/job_parse')
     assert r.status_code == 200

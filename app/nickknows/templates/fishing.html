@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Fishing | Nick Knows{% endblock %}
+{% block og_title %}Fishing | Nick Knows{% endblock %}
+{% block canonical %}{{ url_for('fishing') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fishing-gallery {
+        columns: 3;
+        column-gap: var(--space-md);
+        margin-top: var(--space-2xl);
+    }
+
+    .fishing-gallery__item {
+        break-inside: avoid;
+        margin-bottom: var(--space-md);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+
+    .fishing-gallery__item img {
+        width: 100%;
+        display: block;
+        transition: transform 0.3s var(--ease);
+    }
+
+    .fishing-gallery__item:hover img {
+        transform: scale(1.02);
+    }
+
+    @media (max-width: 900px) {
+        .fishing-gallery { columns: 2; }
+    }
+
+    @media (max-width: 540px) {
+        .fishing-gallery { columns: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+    <h1 class="page-header__title">Fishing</h1>
+    <p class="page-header__subtitle">On the water whenever I can get there</p>
+</div>
+
+<div class="content-section fade-in">
+    <p>
+        Fishing has always been a way to slow down. Whether it's a mountain lake, a river, or the coast,
+        there's nothing like the combination of patience, skill, and a little luck.
+    </p>
+
+    {% if youtube_url %}
+    <div class="video-grid" style="margin-top: var(--space-2xl);">
+        <iframe src="{{ youtube_url }}" frameborder="0" allowfullscreen></iframe>
+    </div>
+    {% endif %}
+
+    {% if images %}
+    <div class="fishing-gallery" style="margin-top: var(--space-2xl);">
+        {% for image in images %}
+        <div class="fishing-gallery__item">
+            <img src="{{ url_for('static', filename='fishing/' + image) }}" alt="Fishing photo" loading="lazy">
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
