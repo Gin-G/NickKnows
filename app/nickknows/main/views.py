@@ -72,7 +72,7 @@ def fishing():
         f for f in os.listdir(fishing_dir)
         if os.path.splitext(f)[1].lower() in valid_exts
     ])
-    youtube_url = None  # Set to YouTube embed URL when ready, e.g. 'https://www.youtube.com/embed/VIDEO_ID'
+    youtube_url = 'https://www.youtube.com/embed/U1c-Fx13hSA?si=q0tltUx866xImAGK'
     return render_template('fishing.html', images=images, youtube_url=youtube_url)
 
 @app.route('/job_parse', methods=['GET','POST'])
