@@ -52,6 +52,10 @@ def skiing():
 def values():
     return render_template('values.html')
 
+@app.route('/brown-banana')
+def brown_banana():
+    return render_template('brown-banana.html')
+
 @app.route('/job_parse', methods=['GET','POST'])
 def job_parse():
     if request.method == 'GET':

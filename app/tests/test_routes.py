@@ -83,6 +83,11 @@ def test_values(client):
     assert r.status_code == 200
 
 
+def test_brown_banana(client):
+    r = client.get('/brown-banana')
+    assert r.status_code == 200
+
+
 def test_job_parse_get(client):
     r = client.get('/job_parse')
     assert r.status_code == 200
