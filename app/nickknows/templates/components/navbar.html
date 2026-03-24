@@ -6,12 +6,10 @@
         </a>
 
         <div class="nk-nav__links" id="navLinks">
-            <a href="{{ url_for('NFL') }}" class="nk-nav__link">NFL</a>
-            <a href="{{ url_for('skiing') }}" class="nk-nav__link">Skiing</a>
             
             <div class="nk-nav__dropdown">
                 <button class="nk-nav__link nk-nav__dropdown-btn">
-                    Projects <i class="fa fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i>
+                    Interests <i class="fa fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i>
                 </button>
                 <div class="nk-nav__dropdown-content">
                     <a href="{{ url_for('arcade') }}">Arcade Build</a>
@@ -20,12 +18,13 @@
                     <a href="{{ url_for('fart') }}">Fährtbags</a>
                     <a href="{{ url_for('fishing') }}">Fishing</a>
                     <a href="{{ url_for('guitar') }}">Guitar</a>
+                    <a href="{{ url_for('NFL') }}" class="nk-nav__link">NFL</a>
+                    <a href="{{ url_for('job_parse') }}" class="nk-nav__link">Resume Parser</a>
+                    <a href="{{ url_for('skiing') }}" class="nk-nav__link">Skiing</a>
                     <a href="{{ url_for('values') }}">Values</a>
                 </div>
             </div>
 
-            <a href="{{ url_for('job_parse') }}" class="nk-nav__link">Resume Parser</a>
-            <a href="https://www.skimoviesongs.com/" class="nk-nav__link" target="_blank" rel="noopener">Ski Movie Songs</a>
         </div>
 
         <div class="nk-nav__social">
