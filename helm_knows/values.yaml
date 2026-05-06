@@ -19,7 +19,7 @@ hydrowBroker:
   name: hydrow-broker-dev
   replicaCount: 1
   container:
-    image: docker.io/ncging/nick-knows-hydrow-broker:latest
+    image: docker.io/ncging/nick-knows-hydrow-broker:2026-05-06.22.01
     imagePullPolicy: Always
     port: 8080
   # Both Secrets are expected to be provisioned by external-secrets.
