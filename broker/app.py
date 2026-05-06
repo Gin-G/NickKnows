@@ -28,7 +28,9 @@ BASE_HEADERS = {
 }
 
 REDIS_HOST = os.environ.get("REDIS_ENV", "redis")
-REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
+# Don't read REDIS_PORT from env: Kubernetes auto-injects REDIS_PORT=tcp://<ip>:6379
+# for any Service named `redis` in the namespace, which collides.
+REDIS_PORT = 6379
 HMAC_SECRET = os.environ.get("HYDROW_BROKER_HMAC_SECRET", "")
 HYDROW_EMAIL = os.environ.get("HYDROW_EMAIL", "")
 HYDROW_PASSWORD = os.environ.get("HYDROW_PASSWORD", "")
