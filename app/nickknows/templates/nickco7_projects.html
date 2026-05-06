@@ -53,9 +53,18 @@
             </div>
         </a>
 
-<hr>
-        <a href="{{ url_for('job_parse') }}">Resume Parser</a>
-<hr>
+        <a href="{{ url_for('job_parse') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='resume.png') }}" alt="Job Description Parser" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Job Description Parser</h3>
+                <p class="interest-card__desc">
+                    A tool I built to break down job descriptions and pull out the keywords that actually matter.
+                    Useful for tailoring a resume to a specific role.
+                </p>
+            </div>
+        </a>
     </div>
 </div>
 {% endblock %}
