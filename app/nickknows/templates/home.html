@@ -100,7 +100,7 @@
         <a href="{{ url_for('hydrow_stats') }}" class="interest-card fade-in">
             <div class="interest-card__image">
                 {% if hydrow_profile and hydrow_profile.image_url %}
-                    <img src="{{ hydrow_profile.image_url }}" alt="Hydrow" loading="lazy">
+                    <img src="{{ url_for('static', filename='projects/hydrow.jpg') }}" alt="Hydrow" loading="lazy">
                 {% endif %}
             </div>
             <div class="interest-card__body">
