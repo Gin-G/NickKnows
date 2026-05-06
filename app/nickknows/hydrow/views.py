@@ -41,6 +41,12 @@ def _format_meters(value):
     return f"{n / 1000:,.1f} km" if n >= 1000 else f"{n:,.0f} m"
 
 
+def _format_meters_raw(value):
+    """Lifetime distance only — keep the big-meters look ("2,402,198 m")."""
+    n = _to_number(value)
+    return f"{int(n):,} m" if n is not None else None
+
+
 def _format_seconds(value):
     n = _to_number(value)
     if n is None:
@@ -92,38 +98,28 @@ def _period_cards(stats):
     return [c for c in cards if c]
 
 
-def _normalize_personal_records(data):
-    """movementRecords may be empty for many rowers. When entries exist, render
-    them generically — the per-record shape isn't documented and varies."""
-    records = data.get("movementRecords") if isinstance(data, dict) else None
-    if not isinstance(records, list):
-        return []
-    out = []
-    for r in records:
-        if not isinstance(r, dict):
-            continue
-        name = r.get("name") or r.get("title") or r.get("movement") or r.get("type") or "Record"
-        rows = []
-        for k, v in r.items():
-            if k in ("name", "title") or isinstance(v, (dict, list)):
-                continue
-            label = k.replace("_", " ").title()
-            n = _to_number(v)
-            rows.append((label, f"{n:,}" if isinstance(n, int) else (str(n) if n is not None else str(v))))
-        out.append({"name": str(name), "rows": rows})
-    return out
+def _profile_view(profile):
+    """Whitelist the public-safe fields. /rower/{id} returns email, weight,
+    birthDate, etc. — surface only what's meant for a public bio."""
+    if not isinstance(profile, dict):
+        return None
+    location = (profile.get("location") or "").strip() or None
+    return {
+        "screen_name": profile.get("screenName"),
+        "image_url": profile.get("profileImageUrl512"),
+        "location": location,
+    }
 
 
 def _build_view_model(raw):
     summary = raw.get("summary") or {}
     recent = raw.get("recent") or {}
-    pr = raw.get("personal_records") or {}
 
     workouts = summary.get("workoutSummaries") or []
     lifetime = _summary_for_range(workouts, "lifetime")
 
     lifetime_cards = [c for c in [
-        _card("Total Distance", _format_meters((lifetime.get("meters") or {}).get("value"))),
+        _card("Total Distance", _format_meters_raw((lifetime.get("meters") or {}).get("value"))),
         _card("Total Time", _format_seconds((lifetime.get("timeWorkedOut") or {}).get("value"))),
         _card("Total Calories", _format_int((lifetime.get("calories") or {}).get("value"))),
         _card("Active Days", _format_int((lifetime.get("daysActive") or {}).get("value"))),
@@ -146,8 +142,18 @@ def _build_view_model(raw):
         "streak_weeks": _to_number(streak),
         "active_days_count": len(active_days),
         "active_days_lookback": (recent.get("activeDaysSummary") or {}).get("lookbackWeeks"),
-        "personal_records": _normalize_personal_records(pr),
+        "profile": _profile_view(raw.get("profile")),
     }
+
+
+def get_cached_profile():
+    """Read the cached profile from Redis without triggering a Hydrow fetch.
+    Used by the home page tile so the home render never blocks on Hydrow."""
+    cached = _read_cache()
+    if not cached:
+        return None
+    vm = cached.get("view_model") or {}
+    return vm.get("profile")
 
 
 def _read_cache():

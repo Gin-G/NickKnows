@@ -12,7 +12,14 @@ def home():
         if os.path.splitext(f)[1].lower() in valid_exts
     ])
     fishing_preview = fishing_images[0] if fishing_images else None
-    return render_template('home.html', fishing_preview=fishing_preview)
+    try:
+        from nickknows.hydrow.views import get_cached_profile
+        hydrow_profile = get_cached_profile()
+    except Exception:
+        hydrow_profile = None
+    return render_template('home.html',
+                           fishing_preview=fishing_preview,
+                           hydrow_profile=hydrow_profile)
 
 @app.route('/templates/header.html')
 def header():

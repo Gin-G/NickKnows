@@ -118,10 +118,10 @@ def fetch_stats(today_iso):
         raise HydrowError("broker did not return a rower id")
 
     summary, _ = _get(f"/progress/{rower_id}/summary")
-    personal_records, _ = _get(f"/progress/{rower_id}/personal_records")
     recent, _ = _get(f"/rower/{rower_id}/v2/progress?today={today_iso}")
+    profile, _ = _get(f"/rower/{rower_id}")
     return {
         "summary": summary,
-        "personal_records": personal_records,
         "recent": recent,
+        "profile": profile,
     }

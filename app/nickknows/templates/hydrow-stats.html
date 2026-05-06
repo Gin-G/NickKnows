@@ -68,26 +68,35 @@
     .hydrow-streak__label {
         color: var(--text);
     }
-    .hydrow-record {
+    .hydrow-profile {
+        display: flex;
+        align-items: center;
+        gap: var(--space-lg);
+        margin-top: var(--space-lg);
+        padding: var(--space-lg);
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        padding: var(--space-lg);
-        margin-bottom: var(--space-md);
     }
-    .hydrow-record__name {
+    .hydrow-profile__avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--accent);
+        flex-shrink: 0;
+    }
+    .hydrow-profile__name {
         font-family: var(--font-display);
-        font-size: 22px;
-        margin-bottom: var(--space-sm);
+        font-size: 28px;
+        color: var(--text);
+        line-height: 1.1;
     }
-    .hydrow-record__rows {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        gap: var(--space-sm) var(--space-lg);
+    .hydrow-profile__location {
+        color: var(--text-muted);
+        margin-top: var(--space-xs);
         font-size: 14px;
     }
-    .hydrow-record__rows dt { color: var(--text-muted); }
-    .hydrow-record__rows dd { color: var(--text); }
     .hydrow-banner {
         margin-top: var(--space-lg);
         padding: var(--space-md) var(--space-lg);
@@ -115,6 +124,22 @@
     {% endif %}
 
     {% if stats %}
+        {% if stats.profile and (stats.profile.screen_name or stats.profile.image_url) %}
+            <div class="hydrow-profile">
+                {% if stats.profile.image_url %}
+                    <img class="hydrow-profile__avatar" src="{{ stats.profile.image_url }}" alt="{{ stats.profile.screen_name or 'Hydrow profile' }}" loading="lazy">
+                {% endif %}
+                <div>
+                    {% if stats.profile.screen_name %}
+                        <div class="hydrow-profile__name">{{ stats.profile.screen_name }}</div>
+                    {% endif %}
+                    {% if stats.profile.location %}
+                        <div class="hydrow-profile__location">{{ stats.profile.location }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
         <section class="hydrow-section">
             <h2>Lifetime Totals</h2>
             {% if stats.lifetime_cards %}
@@ -160,26 +185,6 @@
             {% endif %}
         </section>
 
-        <section class="hydrow-section">
-            <h2>Personal Records</h2>
-            {% if stats.personal_records %}
-                {% for record in stats.personal_records %}
-                    <div class="hydrow-record">
-                        <div class="hydrow-record__name">{{ record.name }}</div>
-                        {% if record.rows %}
-                            <dl class="hydrow-record__rows">
-                                {% for label, value in record.rows %}
-                                    <dt>{{ label }}</dt>
-                                    <dd>{{ value }}</dd>
-                                {% endfor %}
-                            </dl>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p>No personal records logged yet.</p>
-            {% endif %}
-        </section>
     {% endif %}
 </div>
 {% endblock %}

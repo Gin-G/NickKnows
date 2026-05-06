@@ -97,6 +97,21 @@
             </div>
         </a>
 
+        <a href="{{ url_for('hydrow_stats') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                {% if hydrow_profile and hydrow_profile.image_url %}
+                    <img src="{{ hydrow_profile.image_url }}" alt="Hydrow" loading="lazy">
+                {% endif %}
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Hydrow</h3>
+                <p class="interest-card__desc">
+                    Daily rowing on the Hydrow. The streak is real, the splits are public —
+                    lifetime totals, weekly progress, and the receipts to back it up.
+                </p>
+            </div>
+        </a>
+
         <a href="{{ url_for('NFL') }}" class="interest-card fade-in">
             <div class="interest-card__image">
                 <img src="{{ url_for('static', filename='football.jpg') }}" alt="NFL Analytics" loading="lazy">
