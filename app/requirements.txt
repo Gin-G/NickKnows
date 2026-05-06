@@ -6,6 +6,7 @@ nflreadpy==0.1.3
 numpy==1.24.3
 python-snappy
 redis
+requests
 tk
 matplotlib
 pandas==1.5.3 
