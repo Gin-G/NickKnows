@@ -21,103 +21,132 @@ _redis = redis.Redis(
 )
 
 
-def _humanize_seconds(total_seconds):
+def _to_number(value):
+    """Hydrow returns numbers as strings (e.g. "11523"). Coerce."""
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return value
     try:
-        total = int(total_seconds)
+        s = str(value)
+        return float(s) if "." in s else int(s)
     except (TypeError, ValueError):
         return None
-    hours, rem = divmod(total, 3600)
-    minutes, seconds = divmod(rem, 60)
-    if hours:
-        return f"{hours}h {minutes}m {seconds}s"
-    if minutes:
-        return f"{minutes}m {seconds}s"
-    return f"{seconds}s"
 
 
-def _humanize_meters(meters):
-    try:
-        m = float(meters)
-    except (TypeError, ValueError):
+def _format_meters(value):
+    n = _to_number(value)
+    if n is None:
         return None
-    if m >= 1000:
-        return f"{m / 1000:,.1f} km"
-    return f"{m:,.0f} m"
+    return f"{n / 1000:,.1f} km" if n >= 1000 else f"{n:,.0f} m"
 
 
-def _label(key):
-    parts = []
-    word = ""
-    for ch in str(key).replace("_", " "):
-        if ch.isupper() and word and not word[-1].isspace():
-            parts.append(word)
-            word = ch
-        else:
-            word += ch
-    if word:
-        parts.append(word)
-    return " ".join(parts).strip().title()
+def _format_seconds(value):
+    n = _to_number(value)
+    if n is None:
+        return None
+    n = int(n)
+    h, rem = divmod(n, 3600)
+    m, s = divmod(rem, 60)
+    if h:
+        return f"{h}h {m}m"
+    if m:
+        return f"{m}m {s}s"
+    return f"{s}s"
 
 
-def _format_value(key, value):
-    if value is None:
-        return "—"
-    lower = str(key).lower()
-    if "meter" in lower or lower.endswith("distance"):
-        formatted = _humanize_meters(value)
-        if formatted is not None:
-            return formatted
-    if "second" in lower or "duration" in lower or lower.endswith("time"):
-        formatted = _humanize_seconds(value)
-        if formatted is not None:
-            return formatted
-    if isinstance(value, (int, float)) and not isinstance(value, bool):
-        return f"{value:,}" if isinstance(value, int) else f"{value:,.2f}"
-    return str(value)
+def _format_int(value):
+    n = _to_number(value)
+    return f"{int(n):,}" if n is not None else None
 
 
-def _flatten_stats(data):
-    if not isinstance(data, dict):
-        return []
-    rows = []
-    for key, value in data.items():
-        if isinstance(value, (dict, list)):
-            continue
-        rows.append((_label(key), _format_value(key, value)))
-    return rows
+def _stats_by_type(stats_list):
+    """[{type, value, delta?}, ...] → {type: {value, delta}}."""
+    out = {}
+    for s in stats_list or []:
+        t = s.get("type")
+        if t:
+            out[t] = {"value": s.get("value"), "delta": s.get("delta")}
+    return out
+
+
+def _summary_for_range(workout_summaries, name):
+    for s in workout_summaries or []:
+        # /summary uses `range`, /v2/progress uses `timeFrame` for the same field.
+        if s.get("range") == name or s.get("timeFrame") == name:
+            return _stats_by_type(s.get("stats"))
+    return {}
+
+
+def _card(label, value):
+    return {"label": label, "value": value} if value is not None else None
+
+
+def _period_cards(stats):
+    cards = [
+        _card("Distance", _format_meters((stats.get("meters") or {}).get("value"))),
+        _card("Time", _format_seconds((stats.get("timeWorkedOut") or {}).get("value"))),
+        _card("Calories", _format_int((stats.get("calories") or {}).get("value"))),
+        _card("Active Days", _format_int((stats.get("daysActive") or {}).get("value"))),
+    ]
+    return [c for c in cards if c]
 
 
 def _normalize_personal_records(data):
-    records = []
-    if isinstance(data, list):
-        items = data
-    elif isinstance(data, dict):
-        for wrapper in ("records", "items", "data", "personalRecords"):
-            if isinstance(data.get(wrapper), list):
-                items = data[wrapper]
-                break
-        else:
-            items = [{"name": str(k), **(v if isinstance(v, dict) else {"value": v})}
-                     for k, v in data.items()]
-    else:
-        return records
-
-    for item in items:
-        if not isinstance(item, dict):
+    """movementRecords may be empty for many rowers. When entries exist, render
+    them generically — the per-record shape isn't documented and varies."""
+    records = data.get("movementRecords") if isinstance(data, dict) else None
+    if not isinstance(records, list):
+        return []
+    out = []
+    for r in records:
+        if not isinstance(r, dict):
             continue
-        name = item.get("name") or item.get("title") or item.get("distance") or item.get("type") or "Record"
-        rows = [(_label(k), _format_value(k, v))
-                for k, v in item.items()
-                if k not in ("name", "title") and not isinstance(v, (dict, list))]
-        records.append({"name": str(name), "rows": rows})
-    return records
+        name = r.get("name") or r.get("title") or r.get("movement") or r.get("type") or "Record"
+        rows = []
+        for k, v in r.items():
+            if k in ("name", "title") or isinstance(v, (dict, list)):
+                continue
+            label = k.replace("_", " ").title()
+            n = _to_number(v)
+            rows.append((label, f"{n:,}" if isinstance(n, int) else (str(n) if n is not None else str(v))))
+        out.append({"name": str(name), "rows": rows})
+    return out
 
 
 def _build_view_model(raw):
+    summary = raw.get("summary") or {}
+    recent = raw.get("recent") or {}
+    pr = raw.get("personal_records") or {}
+
+    workouts = summary.get("workoutSummaries") or []
+    lifetime = _summary_for_range(workouts, "lifetime")
+
+    lifetime_cards = [c for c in [
+        _card("Total Distance", _format_meters((lifetime.get("meters") or {}).get("value"))),
+        _card("Total Time", _format_seconds((lifetime.get("timeWorkedOut") or {}).get("value"))),
+        _card("Total Calories", _format_int((lifetime.get("calories") or {}).get("value"))),
+        _card("Active Days", _format_int((lifetime.get("daysActive") or {}).get("value"))),
+    ] if c]
+
+    last7 = _period_cards(_summary_for_range(workouts, "last7"))
+    last30 = _period_cards(_summary_for_range(workouts, "last30"))
+    recent_periods = []
+    if last7:
+        recent_periods.append({"label": "Last 7 Days", "stats": last7})
+    if last30:
+        recent_periods.append({"label": "Last 30 Days", "stats": last30})
+
+    streak = ((recent.get("weeklyStreak") or {}).get("number"))
+    active_days = (recent.get("activeDaysSummary") or {}).get("calendarDatesActive") or []
+
     return {
-        "lifetime": _flatten_stats(raw.get("summary")),
-        "personal_records": _normalize_personal_records(raw.get("personal_records")),
-        "recent": _flatten_stats(raw.get("recent")),
+        "lifetime_cards": lifetime_cards,
+        "recent_periods": recent_periods,
+        "streak_weeks": _to_number(streak),
+        "active_days_count": len(active_days),
+        "active_days_lookback": (recent.get("activeDaysSummary") or {}).get("lookbackWeeks"),
+        "personal_records": _normalize_personal_records(pr),
     }
 
 

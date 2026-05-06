@@ -39,6 +39,35 @@
         font-size: 32px;
         margin-bottom: var(--space-sm);
     }
+    .hydrow-period {
+        margin-top: var(--space-lg);
+    }
+    .hydrow-period__label {
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: var(--space-sm);
+    }
+    .hydrow-streak {
+        background: var(--accent-glow);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius);
+        padding: var(--space-lg);
+        margin-top: var(--space-lg);
+        display: flex;
+        align-items: baseline;
+        gap: var(--space-md);
+    }
+    .hydrow-streak__number {
+        font-family: var(--font-display);
+        font-size: 48px;
+        color: var(--accent);
+        line-height: 1;
+    }
+    .hydrow-streak__label {
+        color: var(--text);
+    }
     .hydrow-record {
         background: var(--surface);
         border: 1px solid var(--border);
@@ -55,7 +84,6 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: var(--space-sm) var(--space-lg);
-        color: var(--text-muted);
         font-size: 14px;
     }
     .hydrow-record__rows dt { color: var(--text-muted); }
@@ -89,17 +117,46 @@
     {% if stats %}
         <section class="hydrow-section">
             <h2>Lifetime Totals</h2>
-            {% if stats.lifetime %}
+            {% if stats.lifetime_cards %}
                 <div class="hydrow-grid">
-                    {% for label, value in stats.lifetime %}
+                    {% for card in stats.lifetime_cards %}
                         <div class="hydrow-stat">
-                            <div class="hydrow-stat__label">{{ label }}</div>
-                            <div class="hydrow-stat__value">{{ value }}</div>
+                            <div class="hydrow-stat__label">{{ card.label }}</div>
+                            <div class="hydrow-stat__value">{{ card.value }}</div>
                         </div>
                     {% endfor %}
                 </div>
             {% else %}
                 <p>No lifetime totals available yet.</p>
+            {% endif %}
+        </section>
+
+        <section class="hydrow-section">
+            <h2>Recent Progress</h2>
+
+            {% if stats.streak_weeks %}
+                <div class="hydrow-streak">
+                    <span class="hydrow-streak__number">{{ stats.streak_weeks }}</span>
+                    <span class="hydrow-streak__label">week streak</span>
+                </div>
+            {% endif %}
+
+            {% for period in stats.recent_periods %}
+                <div class="hydrow-period">
+                    <div class="hydrow-period__label">{{ period.label }}</div>
+                    <div class="hydrow-grid">
+                        {% for card in period.stats %}
+                            <div class="hydrow-stat">
+                                <div class="hydrow-stat__label">{{ card.label }}</div>
+                                <div class="hydrow-stat__value">{{ card.value }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+
+            {% if not stats.recent_periods and not stats.streak_weeks %}
+                <p>No recent activity to show.</p>
             {% endif %}
         </section>
 
@@ -121,22 +178,6 @@
                 {% endfor %}
             {% else %}
                 <p>No personal records logged yet.</p>
-            {% endif %}
-        </section>
-
-        <section class="hydrow-section">
-            <h2>Recent Progress</h2>
-            {% if stats.recent %}
-                <div class="hydrow-grid">
-                    {% for label, value in stats.recent %}
-                        <div class="hydrow-stat">
-                            <div class="hydrow-stat__label">{{ label }}</div>
-                            <div class="hydrow-stat__value">{{ value }}</div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p>No recent activity to show.</p>
             {% endif %}
         </section>
     {% endif %}
