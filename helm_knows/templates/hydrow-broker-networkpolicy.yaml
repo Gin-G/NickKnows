@@ -1,0 +1,53 @@
+{{- if .Values.hydrowBroker.enabled }}
+# Locks the broker down to:
+#   ingress: only from the web pod (and only on the broker port)
+#   egress:  DNS, Redis, and HTTPS (for the Hydrow API)
+# Note: NetworkPolicy can't restrict egress to a specific FQDN with vanilla
+# CNIs — that requires Calico/Cilium FQDN policies. Until then, egress is
+# scoped to TCP/443 broadly. The HMAC requirement on /token is the second
+# layer of defense if NetworkPolicy enforcement is missing or misconfigured.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.hydrowBroker.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.hydrowBroker.name }}
+    group: {{ .Values.webapp.group }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ .Values.hydrowBroker.name }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: {{ .Values.webapp.name }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.hydrowBroker.container.port }}
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Redis (in-cluster)
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis-dev
+      ports:
+        - protocol: TCP
+          port: 6379
+    # Hydrow API over HTTPS
+    - ports:
+        - protocol: TCP
+          port: 443
+{{- end }}

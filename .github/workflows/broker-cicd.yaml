@@ -1,0 +1,45 @@
+# Builds the Hydrow credential broker container, pushes to DockerHub,
+# and updates the broker image tag in the Helm values file.
+name: Hydrow Broker CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - broker/**
+      - Dockerfile.broker
+  workflow_dispatch:
+
+jobs:
+  build-image-update-helm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code repository
+        uses: actions/checkout@v4
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Get the current date for an image tag
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d.%H.%M')" >> $GITHUB_OUTPUT
+      - name: Build and push Hydrow broker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile.broker
+          push: true
+          tags: |
+            ncging/nick-knows-hydrow-broker:latest
+            ncging/nick-knows-hydrow-broker:${{ steps.date.outputs.date }}
+      - name: Update Helm chart with new broker image
+        run: |
+          sed -i -E "s|image: docker.io/ncging/nick-knows-hydrow-broker:[^[:space:]]+|image: docker.io/ncging/nick-knows-hydrow-broker:${{ steps.date.outputs.date }}|" helm_knows/values.yaml
+      - name: Push changes to GitHub
+        run: |
+          git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git config --global user.name "$GITHUB_ACTOR"
+          git commit -a -m "Hydrow broker image build and push successful, updated Helm chart to use new image"
+          git push

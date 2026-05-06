@@ -1,0 +1,19 @@
+{{- if .Values.hydrowBroker.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.hydrowBroker.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.hydrowBroker.name }}
+    group: {{ .Values.webapp.group }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.hydrowBroker.container.port }}
+      targetPort: {{ .Values.hydrowBroker.container.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Values.hydrowBroker.name }}
+{{- end }}

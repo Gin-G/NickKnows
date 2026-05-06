@@ -1,0 +1,14 @@
+FROM python:3.10-slim
+
+WORKDIR /broker
+
+COPY broker/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY broker/ .
+
+EXPOSE 8080
+
+# Two workers is plenty — the broker single-flights through Redis and only
+# does work on cache misses.
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8080", "--access-logfile", "-", "app:app"]

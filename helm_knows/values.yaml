@@ -4,7 +4,7 @@ webapp:
   fqdn: dev.nickknows.net
   path: /
   replicaCount: 1
-  container: 
+  container:
     image: docker.io/ncging/nick-knows:2026-05-06.21.49
     imagePullPolicy: Always
     port: 8000
@@ -14,3 +14,16 @@ worker:
   replicaCount: 1
 gpuWorker:
   replicaCount: 0
+hydrowBroker:
+  enabled: true
+  name: hydrow-broker-dev
+  replicaCount: 1
+  container:
+    image: docker.io/ncging/nick-knows-hydrow-broker:latest
+    imagePullPolicy: Always
+    port: 8080
+  # Both Secrets are expected to be provisioned by external-secrets.
+  # credentialsSecretName must contain keys: email, password
+  # hmacSecretName must contain key: hmac (any high-entropy string)
+  credentialsSecretName: hydrow-credentials
+  hmacSecretName: hydrow-broker-hmac

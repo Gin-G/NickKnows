@@ -24,6 +24,15 @@ spec:
         env:
         - name: FLASK_SECRET
           value: $MY_VALUE
+        {{- if .Values.hydrowBroker.enabled }}
+        - name: HYDROW_BROKER_URL
+          value: http://{{ .Values.hydrowBroker.name }}:{{ .Values.hydrowBroker.container.port }}
+        - name: HYDROW_BROKER_HMAC_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.hydrowBroker.hmacSecretName }}
+              key: hmac
+        {{- end }}
         image: {{ .Values.webapp.container.image }}
         imagePullPolicy: {{ .Values.webapp.container.imagePullPolicy }}
         resources:
