@@ -1,16 +1,24 @@
-import threading
+import json
+import os
 import time
 from datetime import date
 
+import redis
 from flask import render_template
 
 from nickknows import app
 from nickknows.hydrow import client
 
+CACHE_KEY = "hydrow:stats:cache"
 CACHE_TTL_SECONDS = 10 * 60
 
-_cache_lock = threading.Lock()
-_cache = {"fetched_at": 0.0, "payload": None}
+_redis = redis.Redis(
+    host=os.environ.get("REDIS_ENV", "redis"),
+    port=6379,
+    decode_responses=True,
+    socket_timeout=2,
+    socket_connect_timeout=2,
+)
 
 
 def _humanize_seconds(total_seconds):
@@ -38,7 +46,6 @@ def _humanize_meters(meters):
 
 
 def _label(key):
-    # Convert camelCase / snake_case API keys into a human label.
     parts = []
     word = ""
     for ch in str(key).replace("_", " "):
@@ -70,7 +77,6 @@ def _format_value(key, value):
 
 
 def _flatten_stats(data):
-    """Turn a dict of scalar API fields into [(label, formatted_value), ...]."""
     if not isinstance(data, dict):
         return []
     rows = []
@@ -82,12 +88,10 @@ def _flatten_stats(data):
 
 
 def _normalize_personal_records(data):
-    """Personal records may arrive as a list or a dict keyed by record name."""
     records = []
     if isinstance(data, list):
         items = data
     elif isinstance(data, dict):
-        # Some Hydrow responses wrap the records under a key like "records" or "items".
         for wrapper in ("records", "items", "data", "personalRecords"):
             if isinstance(data.get(wrapper), list):
                 items = data[wrapper]
@@ -117,29 +121,46 @@ def _build_view_model(raw):
     }
 
 
+def _read_cache():
+    try:
+        raw = _redis.get(CACHE_KEY)
+    except redis.RedisError as exc:
+        app.logger.warning("hydrow cache read failed: %s", exc)
+        return None
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except (TypeError, json.JSONDecodeError):
+        return None
+
+
+def _write_cache(view_model):
+    payload = json.dumps({"fetched_at": time.time(), "view_model": view_model})
+    try:
+        # No Redis TTL — we keep the last-good payload indefinitely so we can
+        # serve it stale on broker errors. Freshness is decided by fetched_at.
+        _redis.set(CACHE_KEY, payload)
+    except redis.RedisError as exc:
+        app.logger.warning("hydrow cache write failed: %s", exc)
+
+
 def _get_cached_stats():
     """Returns (view_model, error_message, stale_flag)."""
-    now = time.time()
-    with _cache_lock:
-        cached = _cache["payload"]
-        fresh = cached is not None and (now - _cache["fetched_at"]) < CACHE_TTL_SECONDS
-    if fresh:
-        return cached, None, False
+    cached = _read_cache()
+    if cached and (time.time() - cached.get("fetched_at", 0)) < CACHE_TTL_SECONDS:
+        return cached["view_model"], None, False
 
     today_iso = date.today().isoformat()
     try:
         raw = client.fetch_stats(today_iso)
         view_model = _build_view_model(raw)
-        with _cache_lock:
-            _cache["payload"] = view_model
-            _cache["fetched_at"] = time.time()
+        _write_cache(view_model)
         return view_model, None, False
     except Exception as exc:  # noqa: BLE001 — keep the page up regardless of failure mode
         app.logger.warning("hydrow stats fetch failed: %s", exc)
-        with _cache_lock:
-            stale = _cache["payload"]
-        if stale is not None:
-            return stale, "Showing cached stats — Hydrow API is unreachable.", True
+        if cached:
+            return cached["view_model"], "Showing cached stats — Hydrow API is unreachable.", True
         return None, "Hydrow stats are temporarily unavailable.", False
 
 

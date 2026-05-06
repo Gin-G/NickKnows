@@ -1,138 +1,121 @@
+"""
+Web-pod-side Hydrow client.
+
+This module never sees the Hydrow password and never refreshes tokens.
+It calls the in-cluster credential broker for short-lived access tokens
+and uses them to make read-only data calls against the Hydrow API.
+"""
+import hashlib
+import hmac
 import os
 import threading
 import time
-from datetime import datetime, timezone
 
 import requests
 
-API_BASE = "https://v2.api.prod.hydrow-external.net"
+BROKER_URL = os.environ.get("HYDROW_BROKER_URL", "http://hydrow-broker")
+BROKER_HMAC_SECRET = os.environ.get("HYDROW_BROKER_HMAC_SECRET", "")
+HYDROW_API_BASE = "https://v2.api.prod.hydrow-external.net"
 FEATURE_FLAGS = "new-music,preferences-filter,top-left,single-sets"
-BASE_HEADERS = {
-    "Content-Type": "application/json",
-    "x-hydrow-feature-flags": FEATURE_FLAGS,
-}
-REFRESH_LEEWAY_SECONDS = 5 * 60
 REQUEST_TIMEOUT = 10
+TOKEN_LEEWAY_SECONDS = 5 * 60
 
 _lock = threading.Lock()
-_session = {
-    "access_token": None,
-    "refresh_token": None,
-    "expires_at": 0.0,  # epoch seconds
-    "rower_id": None,
-}
+_token_cache = {"access_token": None, "expires_at": 0.0, "rower_id": None}
 
 
 class HydrowError(RuntimeError):
-    """Raised when the Hydrow API cannot be reached or returns an error."""
+    """Raised when the broker or the Hydrow API cannot satisfy a request."""
+
+
+def _sign(timestamp, body):
+    msg = f"{timestamp}\n{body}".encode("utf-8")
+    return hmac.new(BROKER_HMAC_SECRET.encode("utf-8"), msg, hashlib.sha256).hexdigest()
 
 
 def _parse_expires_at(value):
-    """Hydrow may return ISO 8601, epoch seconds, or epoch ms. Normalize to epoch seconds."""
-    if value is None:
-        return 0.0
     if isinstance(value, (int, float)):
-        # Heuristic: anything past year 5000 in seconds is almost certainly ms.
+        # Heuristic: large values are milliseconds.
         return float(value) / 1000.0 if value > 1e11 else float(value)
-    if isinstance(value, str):
-        try:
-            normalized = value.replace("Z", "+00:00")
-            dt = datetime.fromisoformat(normalized)
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            return dt.timestamp()
-        except ValueError:
-            return 0.0
     return 0.0
 
 
-def _store_session(payload):
-    rower = payload.get("rower") or {}
-    _session["access_token"] = payload.get("accessToken")
-    _session["refresh_token"] = payload.get("refreshToken") or _session.get("refresh_token")
-    _session["expires_at"] = _parse_expires_at(payload.get("expiresAt"))
-    if rower.get("id"):
-        _session["rower_id"] = rower["id"]
-
-
-def _login():
-    email = os.environ.get("HYDROW_EMAIL")
-    password = os.environ.get("HYDROW_PASSWORD")
-    if not email or not password:
-        raise HydrowError("HYDROW_EMAIL and HYDROW_PASSWORD must be set")
-    resp = requests.post(
-        f"{API_BASE}/rower/auth/login/unpw",
-        json={"username": email, "password": password},
-        headers=BASE_HEADERS,
-        timeout=REQUEST_TIMEOUT,
-    )
-    if resp.status_code >= 400:
-        raise HydrowError(f"login failed: {resp.status_code} {resp.text[:200]}")
-    _store_session(resp.json())
-
-
-def _refresh():
-    refresh_token = _session.get("refresh_token")
-    if not refresh_token:
-        return False
+def _fetch_token_from_broker():
+    if not BROKER_HMAC_SECRET:
+        raise HydrowError("HYDROW_BROKER_HMAC_SECRET is not set")
+    timestamp = str(int(time.time()))
+    body = ""
+    headers = {
+        "Content-Type": "application/json",
+        "X-Broker-Timestamp": timestamp,
+        "X-Broker-Signature": _sign(timestamp, body),
+    }
     try:
         resp = requests.post(
-            f"{API_BASE}/rower/auth/refresh",
-            json={"refreshToken": refresh_token},
-            headers=BASE_HEADERS,
+            f"{BROKER_URL}/token",
+            headers=headers,
+            data=body,
             timeout=REQUEST_TIMEOUT,
         )
-    except requests.RequestException:
-        return False
+    except requests.RequestException as exc:
+        raise HydrowError(f"broker unreachable: {exc}") from exc
     if resp.status_code >= 400:
-        return False
-    _store_session(resp.json())
-    return True
+        raise HydrowError(f"broker /token returned status={resp.status_code}")
+    data = resp.json()
+    if "accessToken" not in data or "rowerId" not in data:
+        raise HydrowError("broker response missing required fields")
+    return {
+        "access_token": data["accessToken"],
+        "expires_at": _parse_expires_at(data.get("expiresAt")),
+        "rower_id": data["rowerId"],
+    }
 
 
 def _ensure_token():
     """Caller must hold _lock."""
     now = time.time()
-    if not _session.get("access_token"):
-        _login()
+    if _token_cache["access_token"] and now < _token_cache["expires_at"] - TOKEN_LEEWAY_SECONDS:
         return
-    if now >= _session["expires_at"] - REFRESH_LEEWAY_SECONDS:
-        if not _refresh():
-            _login()
+    _token_cache.update(_fetch_token_from_broker())
 
 
 def _auth_headers():
-    return {**BASE_HEADERS, "Authorization": f"Bearer {_session['access_token']}"}
+    return {
+        "Content-Type": "application/json",
+        "x-hydrow-feature-flags": FEATURE_FLAGS,
+        "Authorization": f"Bearer {_token_cache['access_token']}",
+    }
 
 
 def _get(path):
-    """GET path with auth, retrying once on 401 by re-authenticating."""
+    """GET against the Hydrow API. Retries once on 401 by forcing a token refresh."""
     with _lock:
         _ensure_token()
-        rower_id = _session["rower_id"]
+        rower_id = _token_cache["rower_id"]
         headers = _auth_headers()
 
-    url = f"{API_BASE}{path}"
+    url = f"{HYDROW_API_BASE}{path}"
     resp = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
     if resp.status_code == 401:
         with _lock:
-            _login()
+            _token_cache["access_token"] = None
+            _ensure_token()
             headers = _auth_headers()
-            rower_id = _session["rower_id"]
+            rower_id = _token_cache["rower_id"]
         resp = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
     if resp.status_code >= 400:
-        raise HydrowError(f"GET {path} failed: {resp.status_code} {resp.text[:200]}")
+        # Hydrow error bodies can echo identifiers; log status only.
+        raise HydrowError(f"GET {path} failed: status={resp.status_code}")
     return resp.json(), rower_id
 
 
 def fetch_stats(today_iso):
-    """Fetch summary, personal records, and recent progress. Returns a dict."""
-    # Prime the session so we know the rower id before formatting paths.
+    """Fetch summary, personal records, and recent progress."""
     with _lock:
         _ensure_token()
-        rower_id = _session["rower_id"]
+        rower_id = _token_cache["rower_id"]
     if not rower_id:
-        raise HydrowError("login succeeded but no rower id was returned")
+        raise HydrowError("broker did not return a rower id")
 
     summary, _ = _get(f"/progress/{rower_id}/summary")
     personal_records, _ = _get(f"/progress/{rower_id}/personal_records")
