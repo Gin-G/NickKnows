@@ -1,185 +1,182 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+{% extends 'base.html' %}
 
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
-    <title>Home | Nick Knows</title>
-        <link rel="canonical" href="{{ url_for('home') }}"/>
-        <meta property="og:title" content="Home | Nick Knows"/>
-        <meta property="og:url" content="{{ url_for('home') }}"/>
-        <meta property="og:site_name" content="nickknows"/>
-        <meta property="og:type" content="website"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
- 
-    <script>
-        $(function(){
-            $('#header').load("{{ url_for('header') }}")
-        })
-        $(function(){
-            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
-        })
-        
-        // Manual drag scrolling functionality
-        $(document).ready(function() {
-            const scrollWrapper = document.querySelector('.scroll-wrapper');
-            const scrollContainer = document.querySelector('.scroll-container');
-            let isDown = false;
-            let startX;
-            let scrollLeft;
-            let animationPaused = false;
+{% block title %}Home | Nick Knows{% endblock %}
+{% block og_title %}Home | Nick Knows{% endblock %}
+{% block canonical %}{{ url_for('home') }}{% endblock %}
 
-            scrollWrapper.addEventListener('mousedown', (e) => {
-                isDown = true;
-                scrollWrapper.classList.add('active');
-                startX = e.pageX - scrollWrapper.offsetLeft;
-                scrollLeft = scrollWrapper.scrollLeft;
-                
-                // Pause the animation when dragging starts
-                scrollContainer.style.animationPlayState = 'paused';
-                animationPaused = true;
-            });
+{% block content %}
 
-            scrollWrapper.addEventListener('mouseleave', () => {
-                isDown = false;
-                scrollWrapper.classList.remove('active');
-            });
+<!-- Hero -->
+<section class="hero">
+    <div class="hero__ambient hero__ambient--1"></div>
+    <div class="hero__ambient hero__ambient--2"></div>
 
-            scrollWrapper.addEventListener('mouseup', () => {
-                isDown = false;
-                scrollWrapper.classList.remove('active');
-                
-                // Resume animation after a short delay when user stops dragging
-                setTimeout(() => {
-                    if (!scrollWrapper.matches(':hover')) {
-                        scrollContainer.style.animationPlayState = 'running';
-                        animationPaused = false;
-                    }
-                }, 1000);
-            });
+    <div class="hero__content fade-in">
+        <h1 style='font-family:"brush-script-std",sans-serif;font-weight:400;font-style:normal;font-size: 500%;'>
+            Nick <em>Knows</em>
+        </h1>
 
-            scrollWrapper.addEventListener('mousemove', (e) => {
-                if (!isDown) return;
-                e.preventDefault();
-                const x = e.pageX - scrollWrapper.offsetLeft;
-                const walk = (x - startX) * 2; // Scroll speed multiplier
-                scrollWrapper.scrollLeft = scrollLeft - walk;
-            });
+        <p class="hero__subtitle">
+            I'm Nick — I like to build things, solve problems, and get my hands dirty.
+            This is where I share what I've learned, what I'm working on, and what I care about.
+        </p>
 
-            // Handle hover pause/resume for auto-scroll
-            scrollWrapper.addEventListener('mouseenter', () => {
-                if (!animationPaused) {
-                    scrollContainer.style.animationPlayState = 'paused';
-                }
-            });
-
-            scrollWrapper.addEventListener('mouseleave', () => {
-                if (!animationPaused) {
-                    scrollContainer.style.animationPlayState = 'running';
-                }
-            });
-        });
-    </script>
-</head>
-<body>
-    <div id="header"></div>
-    <div id="nick_nav"></div>
-    
-    <br>
-    
-    <!-- Infinite scroll wrapper -->
-    <div class="scroll-wrapper">
-        <div class="scroll-container">
-            
-            <!-- First set of items -->
-            <a href="{{url_for('skiing')}}" class="scroll-item" data-section="Skiing">
-                <img src="{{url_for('static', filename='ski.jpg')}}" alt="Skiing section">
-            </a>
-            
-            <a href="{{url_for('arcade')}}" class="scroll-item" data-section="Arcade">
-                <img src="{{url_for('static', filename='arcade_finish.jpg')}}" alt="Arcade section">
-            </a>
-            
-            <a href="{{url_for('guitar')}}" class="scroll-item" data-section="Guitar">
-                <img src="{{url_for('static', filename='guitar.jpg')}}" alt="Guitar section">
-            </a>
-            
-            <a href="{{url_for('lemans')}}" class="scroll-item" data-section="Le Mans">
-                <img src="{{url_for('static', filename='lemans_trunk.jpg')}}" alt="Le Mans section">
-            </a>
-            
-            <a href="{{url_for('values')}}" class="scroll-item" data-section="Values">
-                <img src="{{url_for('static', filename='koda_samson.jpeg')}}" alt="Values section">
-            </a>
-            
-            <a href="{{url_for('fart')}}" class="scroll-item" data-section="Projects">
-                <img src="{{url_for('static', filename='sew.jpg')}}" alt="Projects section">
-            </a>
-            
-            <a href="{{url_for('NFL')}}" class="scroll-item" data-section="NFL">
-                <img src="{{url_for('static', filename='football.jpg')}}" alt="NFL section">
-            </a>
-            
-            <a href="{{url_for('job_parse')}}" class="scroll-item" data-section="Resume">
-                <img src="{{url_for('static', filename='resume.png')}}" alt="Resume section">
-            </a>
-            
-            <!-- Duplicate set for infinite effect -->
-            <a href="{{url_for('skiing')}}" class="scroll-item" data-section="Skiing">
-                <img src="{{url_for('static', filename='ski.jpg')}}" alt="Skiing section">
-            </a>
-            
-            <a href="{{url_for('arcade')}}" class="scroll-item" data-section="Arcade">
-                <img src="{{url_for('static', filename='arcade_finish.jpg')}}" alt="Arcade section">
-            </a>
-            
-            <a href="{{url_for('guitar')}}" class="scroll-item" data-section="Guitar">
-                <img src="{{url_for('static', filename='guitar.jpg')}}" alt="Guitar section">
-            </a>
-            
-            <a href="{{url_for('lemans')}}" class="scroll-item" data-section="Le Mans">
-                <img src="{{url_for('static', filename='lemans_trunk.jpg')}}" alt="Le Mans section">
-            </a>
-            
-            <a href="{{url_for('values')}}" class="scroll-item" data-section="Values">
-                <img src="{{url_for('static', filename='koda_samson.jpeg')}}" alt="Values section">
-            </a>
-            
-            <a href="{{url_for('fart')}}" class="scroll-item" data-section="Projects">
-                <img src="{{url_for('static', filename='sew.jpg')}}" alt="Projects section">
-            </a>
-            
-            <a href="{{url_for('NFL')}}" class="scroll-item" data-section="NFL">
-                <img src="{{url_for('static', filename='football.jpg')}}" alt="NFL section">
-            </a>
-            
-            <a href="{{url_for('job_parse')}}" class="scroll-item" data-section="Resume">
-                <img src="{{url_for('static', filename='resume.png')}}" alt="Resume section">
-            </a>
-            
+        <div class="hero__actions">
+            <a href="#interests" class="btn btn--primary">See What I'm Into</a>
         </div>
     </div>
-    
-    <!-- Footer -->
-    <footer style="text-align: center; padding: 40px 20px; margin-top: 60px; border-top: 1px solid #ddd;">
-        <p style="color: #666; font-size: 14px; margin: 0;">
-            Developed by <a href="{{url_for('nickco7_projects')}}" style="color: #007bff; text-decoration: none; font-weight: bold;">NickCo7</a>
-        </p>
-    </footer>
-    
-</body>
-</html>
+
+    <div class="hero__scroll-hint">
+        <span>Scroll</span>
+        <div class="hero__scroll-line"></div>
+    </div>
+</section>
+
+<!-- Interests -->
+<section class="section" id="interests">
+    <div class="section__header">
+        <div>
+            <span class="section__eyebrow">What I Know</span>
+            <h2 class="section__title">Interests & Projects</h2>
+        </div>
+    </div>
+
+    <div class="interest-grid">
+
+        <a href="{{ url_for('skiing') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='ski.jpg') }}" alt="Skiing" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Skiing</h3>
+                <p class="interest-card__desc">
+                    I've been skiing since I was 3. Grew up racing on the east coast, moved to Colorado for the mountains,
+                    and it's still my happy place.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('lemans') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='lemans_trunk.jpg') }}" alt="Le Mans Restoration" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Car Restoration</h3>
+                <p class="interest-card__desc">
+                    I have a 1972 Pontiac LeMans Sport Convertible that I bought after my first summer working at 14 years old. 
+                    I've very slowly been restoring it since then... When I have the time.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('guitar') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='guitar.jpg') }}" alt="Guitar" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Guitar</h3>
+                <p class="interest-card__desc">
+                    I got sick of showing off at Guitar Hero and decided to learn the real thing. 
+                    20+ years of self-taught playing.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('arcade') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='arcade_finish.jpg') }}" alt="Arcade Build" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Arcade Build</h3>
+                <p class="interest-card__desc">
+                    I built a full arcade cabinet from scratch just because I had a Rasberry Pi and an old TV. 
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('hydrow_stats') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                {% if hydrow_profile and hydrow_profile.image_url %}
+                    <img src="{{ url_for('static', filename='projects/hydrow.jpg') }}" alt="Rowing" loading="lazy">
+                {% endif %}
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Rowing</h3>
+                <p class="interest-card__desc">
+                    I started rowing on the Hydrow at the start of the Covid pandemic. I fell in love with the routine and workout. 
+                    I've been out on the water a few times, and want to keep getting better. See my lifetime totals, weekly progress, and the receipts to back it up.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('NFL') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='football.jpg') }}" alt="NFL Analytics" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">NFL Analytics</h3>
+                <p class="interest-card__desc">
+                    I built a full stats platform with play-by-play data, snap counts, opportunity tracking, 
+                    and fantasy insights.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('fart') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='sew.jpg') }}" alt="Sewing" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Sewing</h3>
+                <p class="interest-card__desc">
+                    I've been sewing since I was young and my Mom had me fix the holes I put in my jeans.
+                    I used those skills to make one-piece snow suits for touring. Our goal was to make something that was USA made.
+                    Scaling up outterwear manufacturing based in the US is expensive. This was a fun project, but ultimately not sustainable. 
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('values') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='koda_samson.jpeg') }}" alt="Values" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Values</h3>
+                <p class="interest-card__desc">
+                    I put together some videos of life lessons I thought were important to share with my kids. 
+                    You never know what's going to happen — recording what matters is a way to preserve it just in case.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('fishing') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                {% if fishing_preview %}
+                <img src="{{ url_for('static', filename='fishing/' + fishing_preview) }}" alt="Fishing" loading="lazy">
+                {% endif %}
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Fishing</h3>
+                <p class="interest-card__desc">
+                    I've been fishing my whole life and picked up fly fishing during the pandemic. It's a great excuse to get outside and spend time on the water.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('brown_banana') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='brown_banana.jpg') }}" alt="Brown Banana" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Brown Banana</h3>
+                <p class="interest-card__desc">
+                    I wrote a children's book. It started as something silly for my kids and turned into
+                    something I'm genuinely proud of. Available on Amazon.
+                </p>
+            </div>
+        </a>
+
+    </div>
+</section>
+
+{% endblock %}

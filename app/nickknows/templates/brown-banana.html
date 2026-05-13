@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Brown Banana | Nick Knows{% endblock %}
+{% block og_title %}Brown Banana — A Children's Book by Nick Cote{% endblock %}
+{% block canonical %}{{ url_for('brown_banana') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .book-showcase {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: var(--space-2xl);
+        align-items: start;
+        margin-top: var(--space-xl);
+    }
+
+    .book-cover {
+        width: 260px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+    }
+
+    .book-details {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-lg);
+    }
+
+    .book-details p {
+        color: var(--text-muted);
+        line-height: 1.8;
+    }
+
+    .book-meta {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    .book-meta strong {
+        color: var(--text);
+    }
+
+    @media (max-width: 640px) {
+        .book-showcase {
+            grid-template-columns: 1fr;
+        }
+        .book-cover {
+            width: 100%;
+            max-width: 260px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+    <h1 class="page-header__title">Brown Banana</h1>
+    <p class="page-header__subtitle">A children's book about a banana that nobody wants — until someone does.</p>
+</div>
+
+<div class="content-section fade-in">
+    <div class="book-showcase">
+        <img src="{{ url_for('static', filename='brown_banana.jpg') }}" alt="Brown Banana book cover" class="book-cover">
+
+        <div class="book-details">
+            <div class="book-meta">
+                <span><strong>Author:</strong> Nicholas Cote</span>
+                <span><strong>Available on:</strong> Amazon</span>
+            </div>
+
+            <p>
+                Every lunchbox has one. The banana that gets passed over day after day — a little soft, a little brown,
+                definitely not the first pick. Brown Banana is a story about being overlooked and finding where you belong.
+            </p>
+            <p>
+                I wrote this for my kids. It started as something silly and turned into something I actually care about.
+                If you've ever been the brown banana, this one's for you.
+            </p>
+
+            <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; margin-top: var(--space-md);">
+                <a href="https://www.amazon.com/Brown-Banana-Nicholas-Cote/dp/B0DFVC45DR"
+                   class="btn btn--primary"
+                   target="_blank" rel="noopener">
+                    Buy on Amazon
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

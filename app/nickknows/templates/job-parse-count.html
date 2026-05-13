@@ -1,53 +1,39 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+{% extends 'base.html' %}
 
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
-    <title>Nick Knows how to parse a job description</title>
-        <link rel="canonical" href="{{ url_for('job_parse') }}"/>
-        <meta property="og:title" content="Nick Knows how to parse a job description"/>
-        <meta property="og:url" content="{{ url_for('job_parse') }}"/>
-        <meta property="og:site_name" content="nickknows"/>
-        <meta property="og:type" content="website"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    <script>
-        $(function(){
-            $('#header').load("{{ url_for('header') }}")
-        })
-        $(function(){
-            $('#nick_nav').load("{{ url_for('nick_navbar') }}")
-        })
-    </script>
-    <body>
-        <div id="header"></div>
-        <div id="nick_nav"></div>
-        <h1>Job Description Word Count</h1>
-            <form action="/job_parse/post_resume" method="post">
-                <input type="hidden" value="{{ job_count }}" name="job_count">
-                <input type="submit" value="Resume Comparison">
-            </form>
-            <div class="mid-bold">
-            <p>
-                {% for key, value in job_count.items() %}
-                    {{ key }} : {{ value }}<br>
-                {% endfor %}
-            </p>
-            </div>
-    </body>
-    </head>
-</html>
+{% block title %}Word Count Results | Nick Knows{% endblock %}
+{% block og_title %}Job Description Word Count{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-field { display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-lg); }
+    .form-field label { font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.04em; text-transform: uppercase; }
+    .form-field textarea { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 15px; line-height: 1.6; padding: 14px 16px; resize: vertical; transition: border-color 0.2s; }
+    .form-field textarea:focus { outline: none; border-color: var(--accent); }
+    .word-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-sm); margin-top: var(--space-xl); }
+    .word-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; }
+    .word-item__count { font-weight: 600; color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+    <h1 class="page-header__title">Word Count Results</h1>
+    <p class="page-header__subtitle">Keywords ranked by frequency — use these to tailor your resume</p>
+</div>
+
+<div class="content-section fade-in">
+    <form action="/job_parse/post_resume" method="post" style="margin-bottom: var(--space-xl);">
+        <input type="hidden" value="{{ job_count }}" name="job_count">
+        <button type="submit" class="btn btn--primary">Compare Against Resume</button>
+    </form>
+
+    <div class="word-list">
+        {% for key, value in job_count.items() %}
+        <div class="word-item">
+            <span>{{ key }}</span>
+            <span class="word-item__count">{{ value }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

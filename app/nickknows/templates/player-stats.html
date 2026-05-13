@@ -1,54 +1,14 @@
-<!DOCTYPE html>
-<html>
-    <head>
- 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% extends 'nfl-base.html' %}
+{% block title %}{{ name }} Stats | Nick Knows NFL{% endblock %}
 
-    <script>
-    function toggleMenu() {
-        const navLinks = document.getElementById('navLinks');
-        navLinks.classList.toggle('active');
-    }
-    </script>
-    
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-        
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    <script>
-        $(function(){
-            $('#nfl_navbar').load("{{ url_for('nfl_navbar') }}")
-        })
-    </script>
-    <script>
-        $(function(){
-            $('#header').load("{{ url_for('header') }}")
-        })
-    </script>
-    <body>
-        <div id="header"></div>
-        <div id="nfl_navbar"></div>
-        {{ headshot | safe }} <br>
-        <h1>{{ position }} - {{ name }}</h1>
-        <div class="player-table">
-            <div class="table-wrapper">
-            {{ player_stats | safe }}<br>
-            </div>
-        </div>
-    </body>
-    </head>
-</html>
+{% block nfl_content %}
+<div class="page-header">
+    <h1 class="page-header__title">{{ position }} — {{ name }}</h1>
+</div>
+<div class="content-section">
+    {{ headshot | safe }}
+    <div class="table-wrapper" style="margin-top: var(--space-xl);">
+        {{ player_stats | safe }}
+    </div>
+</div>
+{% endblock %}

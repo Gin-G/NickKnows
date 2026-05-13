@@ -4,13 +4,32 @@ name: Nick Knows Flask CI/CD
 
 on: 
   push:
+    branches:
+      - main
     paths:
       - app/**
       - Dockerfile
+  workflow_dispatch:
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install -r app/requirements.txt pytest
+      - name: Run route tests
+        working-directory: app
+        run: pytest tests/test_routes.py -v
+
   build-image-update-helm:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Check out the code repository
         uses: actions/checkout@v4
@@ -33,7 +52,7 @@ jobs:
             ncging/nick-knows:${{ steps.date.outputs.date }}
       - name: Update Helm chart with new image
         run: |
-          sed -i "/nick-knows/ c\    image: docker.io/ncging/nick-knows:${{ steps.date.outputs.date }}" helm_knows/values.yaml
+          sed -i -E "s|image: docker.io/ncging/nick-knows:[^[:space:]]+|image: docker.io/ncging/nick-knows:${{ steps.date.outputs.date }}|" helm_knows/values.yaml
       - name: Push changes to GitHub
         run: |
           git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"

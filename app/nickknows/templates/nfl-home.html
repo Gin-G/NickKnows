@@ -1,114 +1,61 @@
-<!DOCTYPE html>
-<html>
-    <head>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{# 
+    Example: nfl-home.html refactored
+    Before: ~100 lines of duplicated boilerplate + content
+    After: Just the content, everything else inherited
+#}
+{% extends 'nfl-base.html' %}
 
-    <script>
-    function toggleMenu() {
-        const navLinks = document.getElementById('navLinks');
-        navLinks.classList.toggle('active');
-    }
-    
-    // Auto-submit form when year is changed
-    document.addEventListener('DOMContentLoaded', function() {
-        const yearSelect = document.getElementById('yearSelect');
-        if (yearSelect) {
-            yearSelect.addEventListener('change', function() {
-                document.getElementById('yearForm').submit();
-            });
-        }
-    });
-    </script>
-    
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YMZBTB7JST"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+{% block title %}NFL Analytics | Nick Knows{% endblock %}
+{% block og_title %}NFL Stat Leaders{% endblock %}
 
-        gtag('config', 'G-YMZBTB7JST');
-    </script>
-    
-    <!-- Google Adsense tag (gtag.js) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5450333101463376"
-    crossorigin="anonymous"></script>
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{url_for('static',  filename='style.css')}}" type="text/css">
-    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-    <script>
-        $(function(){
-            $('#nfl_navbar').load("{{ url_for('nfl_navbar') }}")
-        })
-    </script>
-    <script>
-        $(function(){
-            $('#header').load("{{ url_for('header') }}")
-        })
-    </script>
-    <body>
-        <div id="header"></div>
-        <div id="nfl_navbar"></div>
-        
-        <h1>NFL Stat Leaders</h1>
-        <h2>{{ selected_year }} Season</h2>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="flash-message" style="background-color: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px;">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        <div style="text-align: center; margin: 20px 0;">
-            <form action="{{ url_for('NFLupdate') }}">
-                <input type="hidden" name="year" value="{{ selected_year }}">
-                <input type="submit" value="Update {{ selected_year }} Data" style="font-size: 20px;border-radius: 5px; padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer;">
-            </form>
+{% block nfl_content %}
+<div class="page-header" style="padding-top: var(--space-lg);">
+    <h1 class="page-header__title">NFL Stat Leaders</h1>
+    <p class="page-header__subtitle">{{ selected_year }} Season</p>
+</div>
+
+<div style="display: flex; gap: var(--space-md); align-items: center; margin-bottom: var(--space-xl); flex-wrap: wrap;">
+    <form action="{{ url_for('NFLupdate') }}" style="display: inline;">
+        <input type="hidden" name="year" value="{{ selected_year }}">
+        <button type="submit" class="btn btn--ghost">Update {{ selected_year }} Data</button>
+    </form>
+
+    <form id="yearForm" action="{{ url_for('set_year') }}" method="POST" style="display: inline;">
+        <select name="year" id="yearSelect" onchange="this.form.submit()" 
+                style="padding: 10px 16px; border-radius: var(--radius-pill); background: var(--surface); 
+                       border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 14px; cursor: pointer;">
+            {% for year in years %}
+            <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+{% if pass_yards_data %}
+<div class="feature-grid" style="grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); margin-bottom: var(--space-2xl);">
+    {% set stat_tables = [
+        ('Passing Yards', pass_yards_data),
+        ('Passing TDs', pass_td_data),
+        ('Rushing Yards', rush_yards_data),
+        ('Rushing TDs', rush_td_data),
+        ('Receiving Yards', rec_yards_data),
+        ('Receiving TDs', rec_td_data),
+    ] %}
+
+    {% for label, data in stat_tables %}
+    <div class="fade-in">
+        <h3 style="font-size: 14px; font-weight: 600; margin-bottom: var(--space-md); color: var(--text-muted); 
+                   letter-spacing: 0.06em; text-transform: uppercase;">{{ label }}</h3>
+        <div class="table-wrapper">
+            {{ data | safe }}
         </div>
-        
-        <div class='nfl-row'>
-            <div class='nfl-column'>
-                <h2>Passing Yards</h2>
-                {{pass_yards_data | safe}}
-            </div>
-            <div class='nfl-column'>
-                <h2>Passing TD</h2>
-                {{pass_td_data | safe}}
-            </div>
-        </div>
-        <div class='nfl-row'>
-            <div class='nfl-column'>
-                <h2>Rushing Yards</h2>
-                {{rush_yards_data | safe}}
-            </div>
-            <div class='nfl-column'>
-                <h2>Rushing TD</h2>
-                {{rush_td_data | safe}}
-            </div>
-        </div>
-        <div class='nfl-row'>
-            <div class='nfl-column'>
-                <h2>Receiving Yards</h2>
-                {{rec_yards_data | safe}}
-            </div>
-            <div class='nfl-column'>
-                <h2>Receiving TD</h2>
-                {{rec_td_data | safe}}
-            </div>
-        </div>
-        <div class="big-bold" style="display: inline-block; text-align: center;">
-            <p>
-            Use this site to browse NFL data for the {{ selected_year }} season.
-            </p>
-        </div>
-        <br>
-        <br>
-    </body>
-    </head>
-</html>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="text-align: center; padding: var(--space-3xl) 0; color: var(--text-muted);">
+    <p style="font-size: 18px;">Data is loading...</p>
+    <p style="font-size: 14px; margin-top: var(--space-sm);">Refresh in a few minutes after the update completes.</p>
+</div>
+{% endif %}
+{% endblock %}

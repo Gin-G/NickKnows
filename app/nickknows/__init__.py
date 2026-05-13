@@ -15,3 +15,4 @@ celery.conf.update(app.config)
 from nickknows.main import views
 from nickknows.nfl import views
 from nickknows.fahrtbags import views
+from nickknows.hydrow import views

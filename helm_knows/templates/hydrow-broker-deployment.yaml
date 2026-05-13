@@ -1,0 +1,63 @@
+{{- if .Values.hydrowBroker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.hydrowBroker.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.hydrowBroker.name }}
+    group: {{ .Values.webapp.group }}
+spec:
+  replicas: {{ .Values.hydrowBroker.replicaCount }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: {{ .Values.hydrowBroker.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.hydrowBroker.name }}
+        group: {{ .Values.webapp.group }}
+    spec:
+      containers:
+      - name: {{ .Values.hydrowBroker.name }}
+        image: {{ .Values.hydrowBroker.container.image }}
+        imagePullPolicy: {{ .Values.hydrowBroker.container.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.hydrowBroker.container.port }}
+        env:
+        - name: REDIS_ENV
+          value: redis-dev
+        - name: HYDROW_BROKER_HMAC_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.hydrowBroker.hmacSecretName }}
+              key: hmac
+        - name: HYDROW_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.hydrowBroker.credentialsSecretName }}
+              key: email
+        - name: HYDROW_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.hydrowBroker.credentialsSecretName }}
+              key: password
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.hydrowBroker.container.port }}
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.hydrowBroker.container.port }}
+          periodSeconds: 30
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+{{- end }}

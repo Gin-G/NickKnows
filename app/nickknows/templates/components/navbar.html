@@ -1,0 +1,40 @@
+<nav class="nk-nav">
+    <div class="nk-nav__inner">
+        <a href="{{ url_for('home') }}" class="nk-nav__brand">
+            <img src="{{ url_for('static', filename='nk_logo.jpg') }}" alt="NickKnows" class="nk-nav__logo">
+            <span style='font-family:"brush-script-std",sans-serif;font-weight:400;font-style:normal;font-size: 150%;'>NickKnows</span>
+        </a>
+
+        <div class="nk-nav__links" id="navLinks">
+            
+            <div class="nk-nav__dropdown">
+                <button class="nk-nav__link nk-nav__dropdown-btn">
+                    Interests <i class="fa fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i>
+                </button>
+                <div class="nk-nav__dropdown-content">
+                    <a href="{{ url_for('arcade') }}">Arcade Build</a>
+                    <a href="{{ url_for('brown_banana') }}">Brown Banana</a>
+                    <a href="{{ url_for('lemans') }}">Car Restoration</a>
+                    <a href="{{ url_for('fart') }}">Fährtbags</a>
+                    <a href="{{ url_for('fishing') }}">Fishing</a>
+                    <a href="{{ url_for('guitar') }}">Guitar</a>
+                    <a href="{{ url_for('hydrow_stats') }}">Hydrow</a>
+                    <a href="{{ url_for('NFL') }}" class="nk-nav__link">NFL</a>
+                    <a href="{{ url_for('skiing') }}">Skiing</a>
+                    <a href="{{ url_for('values') }}">Values</a>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="nk-nav__social">
+            <a href="https://www.linkedin.com/in/nicholas-alan-cote/" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            <a href="https://www.youtube.com/channel/UCttd2npS2zsDR0_VlxVA-PA" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            <a href="https://www.instagram.com/nickco7/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        </div>
+
+        <button class="nk-nav__hamburger" onclick="document.getElementById('navLinks').classList.toggle('active')" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</nav>

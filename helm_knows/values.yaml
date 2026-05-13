@@ -1,11 +1,11 @@
 webapp:
-  name: nickknows
-  group: nickknows
-  fqdn: www.nickknows.net
+  name: nickknows-dev
+  group: nickknows-dev
+  fqdn: dev.nickknows.net
   path: /
   replicaCount: 1
-  container: 
-    image: docker.io/ncging/nick-knows:2026-02-13.18.13
+  container:
+    image: docker.io/ncging/nick-knows:2026-05-07.21.03
     imagePullPolicy: Always
     port: 8000
   storage:
@@ -14,3 +14,30 @@ worker:
   replicaCount: 1
 gpuWorker:
   replicaCount: 0
+hydrowBroker:
+  enabled: true
+  name: hydrow-broker-dev
+  replicaCount: 1
+  container:
+    image: docker.io/ncging/nick-knows-hydrow-broker:2026-05-06.22.19
+    imagePullPolicy: Always
+    port: 8080
+  # Both Secrets are expected to be provisioned by external-secrets.
+  # credentialsSecretName must contain keys: email, password
+  # hmacSecretName must contain key: hmac (any high-entropy string)
+  credentialsSecretName: hydrow-credentials
+  hmacSecretName: hydrow-broker-hmac
+  externalSecrets:
+    enabled: true
+    # Set createSecretStore: false if you already have a ClusterSecretStore
+    # or a shared SecretStore in this namespace and want to reference it.
+    createSecretStore: true
+    secretStoreName: openbao-backend
+    secretStoreKind: SecretStore
+    openbaoServer: http://openbao.openbao.svc.cluster.local:8200
+    openbaoMount: kv
+    # OpenBao secret path under the mount (KV v2). All three keys
+    # (email, password, hmac) are read from properties of this single
+    # secret — see ESO docs for the resolved path conventions.
+    openbaoPath: hydrow
+    refreshInterval: 1h
