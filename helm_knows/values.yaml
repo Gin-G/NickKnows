@@ -1,7 +1,7 @@
 webapp:
-  name: nickknows-dev
-  group: nickknows-dev
-  fqdn: dev.nickknows.net
+  name: nickknows
+  group: nickknows
+  fqdn: nickknows.net
   path: /
   replicaCount: 1
   container:
@@ -16,7 +16,7 @@ gpuWorker:
   replicaCount: 0
 hydrowBroker:
   enabled: true
-  name: hydrow-broker-dev
+  name: hydrow-broker
   replicaCount: 1
   container:
     image: docker.io/ncging/nick-knows-hydrow-broker:2026-05-13.20.59
