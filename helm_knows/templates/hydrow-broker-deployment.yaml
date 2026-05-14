@@ -19,6 +19,8 @@ spec:
         app: {{ .Values.hydrowBroker.name }}
         group: {{ .Values.webapp.group }}
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: gingworker
       containers:
       - name: {{ .Values.hydrowBroker.name }}
         image: {{ .Values.hydrowBroker.container.image }}
