@@ -28,7 +28,9 @@ hydrowBroker:
   credentialsSecretName: hydrow-credentials
   hmacSecretName: hydrow-broker-hmac
   externalSecrets:
-    enabled: true
+    # Prod release in the same namespace owns the ExternalSecret/SecretStore
+    # resources; dev reuses the k8s Secrets they create.
+    enabled: false
     # Set createSecretStore: false if you already have a ClusterSecretStore
     # or a shared SecretStore in this namespace and want to reference it.
     createSecretStore: true
