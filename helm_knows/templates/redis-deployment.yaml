@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis-dev
+  name: redis
   namespace: {{ .Release.Namespace }}
   labels:
-    app: redis-dev
+    app: redis
     group: {{ .Values.webapp.group }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: redis-dev
+      app: redis
   template:
     metadata:
       labels:
-        app: redis-dev
+        app: redis
     spec:
       containers:
-      - name: redis-dev
+      - name: redis
         image: redis:latest
         resources:
           limits:
