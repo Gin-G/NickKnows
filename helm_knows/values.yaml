@@ -2,6 +2,8 @@ webapp:
   name: nickknows
   group: nickknows
   fqdn: nickknows.net
+  fqdnAliases:
+    - www.nickknows.net
   path: /
   replicaCount: 1
   container:
