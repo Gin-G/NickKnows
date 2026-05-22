@@ -56,19 +56,6 @@
             </div>
         </a>
 
-        <a href="{{ url_for('lemans') }}" class="interest-card fade-in">
-            <div class="interest-card__image">
-                <img src="{{ url_for('static', filename='lemans_trunk.jpg') }}" alt="Le Mans Restoration" loading="lazy">
-            </div>
-            <div class="interest-card__body">
-                <h3 class="interest-card__title">Car Restoration</h3>
-                <p class="interest-card__desc">
-                    I have a 1972 Pontiac LeMans Sport Convertible that I bought after my first summer working at 14 years old. 
-                    I've very slowly been restoring it since then... When I have the time.
-                </p>
-            </div>
-        </a>
-
         <a href="{{ url_for('guitar') }}" class="interest-card fade-in">
             <div class="interest-card__image">
                 <img src="{{ url_for('static', filename='guitar.jpg') }}" alt="Guitar" loading="lazy">
@@ -82,14 +69,16 @@
             </div>
         </a>
 
-        <a href="{{ url_for('arcade') }}" class="interest-card fade-in">
+        <a href="{{ url_for('fishing') }}" class="interest-card fade-in">
             <div class="interest-card__image">
-                <img src="{{ url_for('static', filename='arcade_finish.jpg') }}" alt="Arcade Build" loading="lazy">
+                {% if fishing_preview %}
+                <img src="{{ url_for('static', filename='fishing/' + fishing_preview) }}" alt="Fishing" loading="lazy">
+                {% endif %}
             </div>
             <div class="interest-card__body">
-                <h3 class="interest-card__title">Arcade Build</h3>
+                <h3 class="interest-card__title">Fishing</h3>
                 <p class="interest-card__desc">
-                    I built a full arcade cabinet from scratch just because I had a Rasberry Pi and an old TV. 
+                    I've been fishing my whole life and picked up fly fishing during the pandemic. It's a great excuse to get outside and spend time on the water.
                 </p>
             </div>
         </a>
@@ -109,15 +98,40 @@
             </div>
         </a>
 
-        <a href="{{ url_for('NFL') }}" class="interest-card fade-in">
+        <a href="{{ url_for('brown_banana') }}" class="interest-card fade-in">
             <div class="interest-card__image">
-                <img src="{{ url_for('static', filename='football.jpg') }}" alt="NFL Analytics" loading="lazy">
+                <img src="{{ url_for('static', filename='brown_banana.jpg') }}" alt="Brown Banana" loading="lazy">
             </div>
             <div class="interest-card__body">
-                <h3 class="interest-card__title">NFL Analytics</h3>
+                <h3 class="interest-card__title">Brown Banana</h3>
                 <p class="interest-card__desc">
-                    I built a full stats platform with play-by-play data, snap counts, opportunity tracking, 
-                    and fantasy insights.
+                    I wrote a children's book. It started as something silly for my kids and turned into
+                    something I'm genuinely proud of. Available on Amazon.
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('arcade') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='arcade_finish.jpg') }}" alt="Arcade Build" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Arcade Build</h3>
+                <p class="interest-card__desc">
+                    I built a full arcade cabinet from scratch just because I had a Rasberry Pi and an old TV. 
+                </p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('lemans') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='lemans_trunk.jpg') }}" alt="Le Mans Restoration" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">Car Restoration</h3>
+                <p class="interest-card__desc">
+                    I have a 1972 Pontiac LeMans Sport Convertible that I bought after my first summer working at 14 years old. 
+                    I've very slowly been restoring it since then... When I have the time.
                 </p>
             </div>
         </a>
@@ -136,42 +150,28 @@
             </div>
         </a>
 
+        <a href="{{ url_for('NFL') }}" class="interest-card fade-in">
+            <div class="interest-card__image">
+                <img src="{{ url_for('static', filename='football.jpg') }}" alt="NFL Analytics" loading="lazy">
+            </div>
+            <div class="interest-card__body">
+                <h3 class="interest-card__title">NFL Analytics</h3>
+                <p class="interest-card__desc">
+                    I built a full stats platform with play-by-play data, snap counts, opportunity tracking, 
+                    and fantasy insights.
+                </p>
+            </div>
+        </a>
+
         <a href="{{ url_for('values') }}" class="interest-card fade-in">
             <div class="interest-card__image">
                 <img src="{{ url_for('static', filename='koda_samson.jpeg') }}" alt="Values" loading="lazy">
             </div>
             <div class="interest-card__body">
-                <h3 class="interest-card__title">Values</h3>
+                <h3 class="interest-card__title">My Values</h3>
                 <p class="interest-card__desc">
                     I put together some videos of life lessons I thought were important to share with my kids. 
                     You never know what's going to happen — recording what matters is a way to preserve it just in case.
-                </p>
-            </div>
-        </a>
-
-        <a href="{{ url_for('fishing') }}" class="interest-card fade-in">
-            <div class="interest-card__image">
-                {% if fishing_preview %}
-                <img src="{{ url_for('static', filename='fishing/' + fishing_preview) }}" alt="Fishing" loading="lazy">
-                {% endif %}
-            </div>
-            <div class="interest-card__body">
-                <h3 class="interest-card__title">Fishing</h3>
-                <p class="interest-card__desc">
-                    I've been fishing my whole life and picked up fly fishing during the pandemic. It's a great excuse to get outside and spend time on the water.
-                </p>
-            </div>
-        </a>
-
-        <a href="{{ url_for('brown_banana') }}" class="interest-card fade-in">
-            <div class="interest-card__image">
-                <img src="{{ url_for('static', filename='brown_banana.jpg') }}" alt="Brown Banana" loading="lazy">
-            </div>
-            <div class="interest-card__body">
-                <h3 class="interest-card__title">Brown Banana</h3>
-                <p class="interest-card__desc">
-                    I wrote a children's book. It started as something silly for my kids and turned into
-                    something I'm genuinely proud of. Available on Amazon.
                 </p>
             </div>
         </a>
