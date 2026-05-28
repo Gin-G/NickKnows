@@ -181,8 +181,16 @@ img {
     box-shadow: 0 16px 48px rgba(0,0,0,0.4);
 }
 
-.nk-nav__dropdown:hover .nk-nav__dropdown-content {
+.nk-nav__dropdown.is-open .nk-nav__dropdown-content {
     display: block;
+}
+
+.nk-nav__dropdown-chevron {
+    transition: transform 0.2s var(--ease);
+}
+
+.nk-nav__dropdown.is-open .nk-nav__dropdown-chevron {
+    transform: rotate(180deg);
 }
 
 .nk-nav__dropdown-content a {
@@ -226,13 +234,31 @@ img {
     padding: 4px;
 }
 
+.nk-nav__hamburger {
+    z-index: 101;
+    position: relative;
+}
+
 .nk-nav__hamburger span {
     display: block;
     width: 22px;
     height: 2px;
     background: var(--text);
     border-radius: 1px;
-    transition: all 0.2s;
+    transition: transform 0.25s var(--ease), opacity 0.2s var(--ease);
+    transform-origin: center;
+}
+
+.nk-nav__hamburger.is-active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.nk-nav__hamburger.is-active span:nth-child(2) {
+    opacity: 0;
+}
+
+.nk-nav__hamburger.is-active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 /* ═══════════════════════════════════════════
@@ -892,12 +918,17 @@ table.dataframe tr:hover td {
         border: none;
         box-shadow: none;
         padding: 0;
+        text-align: center;
         display: none;
     }
 
-    .nk-nav__dropdown:hover .nk-nav__dropdown-content,
-    .nk-nav__links.active .nk-nav__dropdown-content {
+    .nk-nav__dropdown.is-open .nk-nav__dropdown-content {
         display: block;
+    }
+
+    .nk-nav__dropdown-content a {
+        font-size: 16px;
+        padding: 8px 20px;
     }
 }
 
