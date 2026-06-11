@@ -26,10 +26,10 @@ spec:
         resources:
           requests:
             cpu: 100m
-            memory: 128Mi
+            memory: 512Mi
           limits:
             cpu: 1
-            memory: 1Gi
+            memory: 1536Mi
         imagePullPolicy: {{ .Values.webapp.container.imagePullPolicy }}
         args:
             - celery
@@ -39,7 +39,7 @@ spec:
             - --loglevel=info
             - --events
             - --task-events
-            - --concurrency=4
+            - --concurrency=1
             - -Ofair
             - --prefetch-multiplier=1
         volumeMounts:
