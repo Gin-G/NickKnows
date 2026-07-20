@@ -9,6 +9,8 @@ metadata:
 spec:
   replicas: {{ .Values.webapp.replicaCount }}
   revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: {{ .Values.webapp.name }}
