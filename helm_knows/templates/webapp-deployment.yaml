@@ -36,9 +36,12 @@ spec:
         image: {{ .Values.webapp.container.image }}
         imagePullPolicy: {{ .Values.webapp.container.imagePullPolicy }}
         resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
           limits:
-            memory: {{ .Values.webapp.container.memory }}
-            cpu: {{ .Values.webapp.container.cpu }}
+            cpu: '1'
+            memory: 1Gi
         ports:
         - containerPort: {{ .Values.webapp.container.port }}
         volumeMounts:
@@ -46,10 +49,6 @@ spec:
           mountPath: /NickKnows/app/nickknows/nfl/data
         - name: images-volume
           mountPath: /NickKnows/app/nickknows/static/images
-        resources:
-          limits:
-            cpu: '0'
-            memory: '0'
       volumes:
       - name: data-volume
         persistentVolumeClaim:
