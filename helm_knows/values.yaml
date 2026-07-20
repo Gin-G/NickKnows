@@ -24,7 +24,7 @@ fahrtbags:
   hosts:
     - fahrtbags.com
     - www.fahrtbags.com
-  redirectTo: https://www.nickknows.net/fahrtbags
+  redirectTo: https://nickknows.net/fahrtbags
 hydrowBroker:
   enabled: true
   name: hydrow-broker
