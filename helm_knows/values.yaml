@@ -4,6 +4,9 @@ webapp:
   fqdn: nickknows.net
   fqdnAliases:
     - www.nickknows.net
+  extraTlsHosts:
+    - fahrtbags.com
+    - www.fahrtbags.com
   path: /
   replicaCount: 1
   container:
@@ -16,6 +19,12 @@ worker:
   replicaCount: 1
 gpuWorker:
   replicaCount: 0
+fahrtbags:
+  enabled: true
+  hosts:
+    - fahrtbags.com
+    - www.fahrtbags.com
+  redirectTo: https://www.nickknows.net/fahrtbags
 hydrowBroker:
   enabled: true
   name: hydrow-broker
