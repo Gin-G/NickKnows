@@ -19,8 +19,15 @@ spec:
         app: {{ .Values.hydrowBroker.name }}
         group: {{ .Values.webapp.group }}
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: gingworker
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: feature.node.kubernetes.io/cpu-cpuid.AVX2
+                operator: In
+                values:
+                - "true"
       containers:
       - name: {{ .Values.hydrowBroker.name }}
         image: {{ .Values.hydrowBroker.container.image }}
