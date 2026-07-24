@@ -26,12 +26,7 @@ spec:
       - name: {{ .Values.webapp.name }}-flower
         image: {{ .Values.webapp.container.image }}
         resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 500m
-            memory: 256Mi
+{{ toYaml .Values.flower.resources | indent 10 }}
         args:
           - celery
           - -A

@@ -21,13 +21,7 @@ spec:
       - name: {{ .Values.webapp.name }}-gpu-worker
         image: {{ .Values.webapp.container.image }}
         resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: '1'
-            memory: 10Gi
-            nvidia.com/gpu: '1'
+{{ toYaml .Values.gpuWorker.resources | indent 10 }}
         imagePullPolicy: {{ .Values.webapp.container.imagePullPolicy }}
         args:
             - celery
