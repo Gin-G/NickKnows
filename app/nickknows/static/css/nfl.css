@@ -20,8 +20,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-md);
-    flex-wrap: wrap;
     min-height: 48px;
+    position: relative; /* anchors the mobile links panel */
 }
 
 .nfl-nav__brand {
@@ -142,10 +142,45 @@
 }
 .nfl-nav__divider { height: 1px; background: var(--border); margin: 4px 8px; }
 
+/* Season selector: native <select>, always visible in the bar */
+.nfl-nav__season-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    white-space: nowrap;
+}
+.nfl-nav__season-label {
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.nfl-nav__season {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    background-color: var(--surface-hover);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 7px 30px 7px 14px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a9a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 11px center;
+    transition: border-color 0.15s;
+}
+.nfl-nav__season:hover { border-color: var(--border-hover); }
+.nfl-nav__season:focus { outline: none; border-color: var(--accent); }
+.nfl-nav__season option { background: var(--surface); color: var(--text); }
+
 /* Hamburger (mobile only) */
 .nfl-nav__hamburger {
     display: none;
-    margin-left: auto;
     width: 40px;
     height: 40px;
     background: none;
@@ -175,17 +210,26 @@
 
     .nfl-nav__links {
         display: none;
-        flex-basis: 100%;
-        width: 100%;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
         flex-direction: column;
         align-items: stretch;
         flex-wrap: nowrap;
         gap: 0;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
         max-height: calc(100vh - 124px);
         overflow-y: auto;
-        padding: var(--space-xs) 0 var(--space-md);
+        padding: var(--space-xs) var(--space-md) var(--space-md);
+        z-index: 200;
     }
     .nfl-nav__links.is-open { display: flex; }
+
+    /* Keep the season select compact next to the hamburger on small screens */
+    .nfl-nav__season-label { display: none; }
 
     .nfl-nav__link,
     .nfl-nav__item > .nfl-nav__btn {

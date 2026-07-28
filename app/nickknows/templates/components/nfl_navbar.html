@@ -54,11 +54,6 @@
     <div class="nfl-nav__inner">
         <a href="{{ url_for('NFL') }}" class="nfl-nav__brand">NFL</a>
 
-        <button class="nfl-nav__hamburger" type="button" data-nav-toggle
-                aria-controls="nflNavLinks" aria-expanded="false" aria-label="Toggle NFL menu">
-            <span></span><span></span><span></span>
-        </button>
-
         <div class="nfl-nav__links" id="nflNavLinks">
             <a href="{{ url_for('NFL') }}" class="nfl-nav__link">Home</a>
             <a href="{{ url_for('schedule') }}" class="nfl-nav__link">Schedule</a>
@@ -102,23 +97,36 @@
                 </div>
             </div>
 
-            {# ── Season selector ── #}
-            <div class="nfl-nav__item" data-nav-item>
-                <button class="nfl-nav__btn" type="button" data-nav-btn aria-haspopup="true" aria-expanded="false">
-                    {{ selected_year }} Season <i class="fa fa-chevron-down nfl-nav__chevron"></i>
-                </button>
-                <div class="nfl-nav__panel nfl-nav__panel--top" data-nav-panel>
-                    {% for year in available_years|sort(reverse=True) %}
-                    <a href="{{ url_for('set_nfl_year', year=year) }}"
-                       class="{% if year == selected_year %}is-selected{% endif %}">{{ year }} Season</a>
-                    {% endfor %}
-                </div>
-            </div>
         </div>
+
+        {# ── Season selector: always visible, changes the season on the current page ── #}
+        <div class="nfl-nav__season-wrap">
+            <label class="nfl-nav__season-label" for="nflSeasonSelect">Season</label>
+            <select id="nflSeasonSelect" class="nfl-nav__season" aria-label="Select NFL season"
+                    onchange="nflChangeSeason(this)">
+                {% for year in available_years|sort(reverse=True) %}
+                <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }} Season</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button class="nfl-nav__hamburger" type="button" data-nav-toggle
+                aria-controls="nflNavLinks" aria-expanded="false" aria-label="Toggle NFL menu">
+            <span></span><span></span><span></span>
+        </button>
     </div>
 </nav>
 
 <script>
+// Reload the current page with the chosen season (?year=). get_selected_year()
+// reads this query param, persists it to the session, and every NFL page then
+// defaults to it — so the season changes in place, on whatever page you're on.
+function nflChangeSeason(select) {
+    var url = new URL(window.location.href);
+    url.searchParams.set('year', select.value);
+    window.location.href = url.toString();
+}
+
 (function () {
     const nav = document.querySelector('.nfl-nav');
     if (!nav) return;
