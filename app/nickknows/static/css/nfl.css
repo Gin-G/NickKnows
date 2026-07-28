@@ -1,6 +1,8 @@
 /* ═══════════════════════════════════════════
    NFL Secondary Navigation
-   Uses design-system CSS variables
+   Responsive: inline dropdown bar on desktop, hamburger + collapsible
+   accordion on mobile. Supports nested (2-level) dropdowns.
+   Uses design-system CSS variables.
    ═══════════════════════════════════════════ */
 
 .nfl-nav {
@@ -8,7 +10,7 @@
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 76px;
-    z-index: 99;
+    z-index: 90;
 }
 
 .nfl-nav__inner {
@@ -19,127 +21,197 @@
     align-items: center;
     gap: var(--space-md);
     flex-wrap: wrap;
+    min-height: 48px;
 }
 
 .nfl-nav__brand {
     color: var(--text);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.1em;
     padding: 12px 0;
     white-space: nowrap;
 }
+.nfl-nav__brand:hover { color: var(--accent); }
 
+/* Links container: row on desktop, collapsible column on mobile */
 .nfl-nav__links {
     display: flex;
     align-items: center;
-    gap: 0;
-    flex-wrap: wrap;
+    gap: 2px;
     flex: 1;
+    flex-wrap: wrap;
 }
 
-.nfl-nav__link {
+/* Leaf link + expandable-toggle button share the same base look */
+.nfl-nav__link,
+.nfl-nav__btn {
     color: var(--text-muted);
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    padding: 10px 10px;
-    transition: color 0.2s;
-    white-space: nowrap;
-}
-
-.nfl-nav__link:hover {
-    color: var(--text);
-}
-
-/* Dropdown */
-.nfl-nav__dropdown {
-    position: relative;
-}
-
-.nfl-nav__dropdown-btn {
-    color: var(--text-muted);
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    padding: 10px 12px;
     background: none;
     border: none;
     cursor: pointer;
     font-family: inherit;
-    padding: 10px 10px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: color 0.2s;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s, background 0.15s;
 }
+.nfl-nav__link:hover,
+.nfl-nav__btn:hover { color: var(--text); }
 
-.nfl-nav__dropdown-btn:hover {
-    color: var(--text);
+/* Expandable item wrapper (top-level dropdown or nested submenu) */
+.nfl-nav__item { position: relative; }
+.nfl-nav__item.is-open > .nfl-nav__btn { color: var(--text); }
+
+.nfl-nav__chevron {
+    font-size: 9px;
+    opacity: 0.7;
+    transition: transform 0.2s var(--ease);
 }
+.nfl-nav__item.is-open > .nfl-nav__btn .nfl-nav__chevron { transform: rotate(180deg); }
 
-.nfl-nav__dropdown-content {
-    display: none;
+/* Panel: hidden until its item is open */
+.nfl-nav__panel { display: none; }
+.nfl-nav__item.is-open > .nfl-nav__panel { display: block; }
+
+/* Top-level panel = floating dropdown on desktop */
+.nfl-nav__panel--top {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 4px);
     left: 0;
-    min-width: 200px;
-    max-height: 420px;
+    min-width: 230px;
+    max-height: min(72vh, 470px);
     overflow-y: auto;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: var(--space-xs) 0;
+    padding: var(--space-xs);
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
     z-index: 200;
 }
 
-.nfl-nav__dropdown-content.show {
+/* Leaf links inside any panel */
+.nfl-nav__panel a {
     display: block;
-}
-
-.nfl-nav__dropdown-content a {
-    display: block;
-    padding: 8px 16px;
+    padding: 8px 12px;
     font-size: 13px;
     color: var(--text-muted);
-    transition: all 0.15s;
+    border-radius: 8px;
+    transition: color 0.15s, background 0.15s;
 }
+.nfl-nav__panel a:hover { color: var(--text); background: var(--surface-hover); }
+.nfl-nav__panel a.is-selected { color: var(--accent); font-weight: 600; }
 
-.nfl-nav__dropdown-content a:hover {
+/* Nested submenu (level 2) */
+.nfl-nav__sub > .nfl-nav__btn {
+    width: 100%;
+    justify-content: space-between;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
     color: var(--text);
-    background: var(--surface-hover);
+    padding: 9px 12px;
+}
+.nfl-nav__sub > .nfl-nav__panel {
+    padding: 2px 0 6px 8px;
+    margin: 0 4px 4px;
+    border-left: 1px solid var(--border);
+    max-height: 280px;
+    overflow-y: auto;
 }
 
-.nfl-nav__dropdown-content a.selected-year {
-    color: var(--accent);
-}
-
-/* Division group headers */
+/* Section labels / division headers / dividers inside panels */
 .nfl-division-header {
-    padding: 6px 16px;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    padding: 7px 12px;
+    background: var(--surface);
     color: var(--text-muted);
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
+.nfl-nav__divider { height: 1px; background: var(--border); margin: 4px 8px; }
 
-.nfl-division-header:not(:first-child) {
-    border-top: 1px solid var(--border);
-    margin-top: 2px;
+/* Hamburger (mobile only) */
+.nfl-nav__hamburger {
+    display: none;
+    margin-left: auto;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
 }
+.nfl-nav__hamburger span {
+    position: absolute;
+    left: 9px;
+    right: 9px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: transform 0.25s var(--ease), opacity 0.2s;
+}
+.nfl-nav__hamburger span:nth-child(1) { top: 14px; }
+.nfl-nav__hamburger span:nth-child(2) { top: 20px; }
+.nfl-nav__hamburger span:nth-child(3) { top: 26px; }
+.nfl-nav__hamburger.is-active span:nth-child(1) { top: 20px; transform: rotate(45deg); }
+.nfl-nav__hamburger.is-active span:nth-child(2) { opacity: 0; }
+.nfl-nav__hamburger.is-active span:nth-child(3) { top: 20px; transform: rotate(-45deg); }
 
-/* Divider line */
-.nfl-nav__divider {
-    height: 1px;
-    background: var(--border);
-    margin: 4px 0;
+/* ── Mobile: collapse the bar into a hamburger-toggled accordion ── */
+@media (max-width: 900px) {
+    .nfl-nav__hamburger { display: block; }
+
+    .nfl-nav__links {
+        display: none;
+        flex-basis: 100%;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        flex-wrap: nowrap;
+        gap: 0;
+        max-height: calc(100vh - 124px);
+        overflow-y: auto;
+        padding: var(--space-xs) 0 var(--space-md);
+    }
+    .nfl-nav__links.is-open { display: flex; }
+
+    .nfl-nav__link,
+    .nfl-nav__item > .nfl-nav__btn {
+        width: 100%;
+        justify-content: space-between;
+        font-size: 15px;
+        padding: 13px 8px;
+        border-radius: 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* Panels expand inline within the drawer instead of floating */
+    .nfl-nav__panel--top {
+        position: static;
+        min-width: 0;
+        max-height: none;
+        border: none;
+        box-shadow: none;
+        background: transparent;
+        padding: 0 0 6px 8px;
+        margin-left: 4px;
+        border-left: 2px solid var(--border);
+    }
+    .nfl-nav__panel a { padding: 11px 12px; font-size: 15px; }
+    .nfl-nav__sub > .nfl-nav__btn { font-size: 15px; }
+    .nfl-nav__sub > .nfl-nav__panel { max-height: none; }
 }
 
 /* ═══════════════════════════════════════════
