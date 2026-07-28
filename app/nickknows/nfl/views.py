@@ -56,14 +56,25 @@ from datetime import datetime
 logger = get_task_logger(__name__)
 pd.options.mode.chained_assignment = None
 
+def _current_nfl_season():
+    """Current NFL season year.
+
+    The NFL league new year begins in the spring (~April 1), so from April
+    onward the current season is the calendar year; January–March is the
+    playoff / off-season tail of the prior year's season. (Note: the schedule
+    itself isn't released until ~May, so April–May of a new season year shows
+    the upcoming season with data still filling in.)
+    """
+    now = datetime.now()
+    return now.year if now.month >= 4 else now.year - 1
+
 def get_available_years():
-    """Get available NFL years - only include years where data is actually available"""
+    """Available NFL seasons: 2020 through the current season (newest first-eligible)."""
     start_year = 2020
-    end_year = 2025
-    return list(range(start_year, end_year + 1))
+    return list(range(start_year, _current_nfl_season() + 1))
 
 def get_selected_year():
-    """Get selected year from session, request args, or default to latest available"""
+    """Get selected year from session, request args, or default to the current season."""
     available_years = get_available_years()
     
     year_from_request = request.args.get('year', type=int)
@@ -75,7 +86,7 @@ def get_selected_year():
     if year_from_session and year_from_session in available_years:
         return year_from_session
     
-    default_year = max(available_years)
+    default_year = _current_nfl_season()
     session['selected_nfl_year'] = default_year
     return default_year
 
@@ -548,37 +559,133 @@ def _tableize(data):
         return ['Value'], [[item] for item in data]
     return None, None
 
+# Current 32 franchises by division — stable structure for the coaches board.
+NFL_DIVISIONS = {
+    'AFC': {
+        'East':  ['BUF', 'MIA', 'NE', 'NYJ'],
+        'North': ['BAL', 'CIN', 'CLE', 'PIT'],
+        'South': ['HOU', 'IND', 'JAX', 'TEN'],
+        'West':  ['DEN', 'KC', 'LAC', 'LV'],
+    },
+    'NFC': {
+        'East':  ['DAL', 'NYG', 'PHI', 'WAS'],
+        'North': ['CHI', 'DET', 'GB', 'MIN'],
+        'South': ['ATL', 'CAR', 'NO', 'TB'],
+        'West':  ['ARI', 'LA', 'SEA', 'SF'],
+    },
+}
+
+# Keep the nickname for the NY/LA pairs so they stay distinguishable.
+_TEAM_CITY_OVERRIDES = {
+    'NYG': 'NY Giants', 'NYJ': 'NY Jets',
+    'LAC': 'LA Chargers', 'LA': 'LA Rams', 'LAR': 'LA Rams',
+}
+
+
+def _team_city(abbr, team_name):
+    """Shorten a full team name to its city/region (drop the nickname)."""
+    if abbr in _TEAM_CITY_OVERRIDES:
+        return _TEAM_CITY_OVERRIDES[abbr]
+    if not team_name:
+        return abbr
+    parts = team_name.split(' ')
+    return ' '.join(parts[:-1]) if len(parts) > 1 else team_name
+
+
+def _summarize_coach(row):
+    """Flatten an NFL-API /coaches/ row into board-friendly fields."""
+    seasons = row.get('seasons') or []
+    total_wins = sum((s.get('wins') or 0) for s in seasons)
+    total_losses = sum((s.get('losses') or 0) for s in seasons)
+    latest = seasons[-1] if seasons else {}
+    latest_teams = latest.get('teams') or []
+    played = total_wins + total_losses
+    return {
+        'name': row.get('name'),
+        'is_active': bool(row.get('is_active')),
+        'team': latest_teams[0] if latest_teams else None,
+        'latest_season': latest.get('season'),
+        'latest_record': latest.get('record'),
+        'total_wins': total_wins,
+        'total_losses': total_losses,
+        'win_pct': round(total_wins / played * 100, 1) if played else None,
+    }
+
+
 @app.route('/NFL/Coaches')
 def coaches():
-    """Coaches list backed entirely by NFL-API GET /coaches/."""
+    """Coaches board backed by NFL-API GET /coaches/ (+ /teams/ for names/logos).
+
+    Renders active head coaches on a conference/division board and former head
+    coaches as searchable cards, mirroring the NFL-API dashboard layout.
+    """
     available_years = get_available_years()
     selected_year = get_selected_year()
 
-    coach_list = []
+    active_coaches, former_coaches = [], []
     error = None
+
+    # Team names / logos for the board (best-effort; board still renders without).
+    team_meta = {}
+    try:
+        teams_payload = nfl_api_client.get('/teams/')
+        for t in (teams_payload.get('data') or []):
+            abbr = t.get('team_abbr')
+            if abbr:
+                team_meta[abbr] = {
+                    'city': _team_city(abbr, t.get('team_name')),
+                    'logo': t.get('team_logo_espn'),
+                }
+    except nfl_api_client.NflApiError as e:
+        logger.warning(f"NFL-API teams fetch failed: {e}")
+
     try:
         payload = nfl_api_client.get('/coaches/')
         if nfl_api_client.is_no_data(payload) or not payload.get('data'):
             error = 'No coach data available yet.'
         else:
-            data = payload['data']
-            for row in data:
+            for row in payload['data']:
                 if isinstance(row, str):
-                    coach_list.append({'name': row, 'team': None})
-                    continue
-                name = _first_present(row, 'name', 'coach', 'coach_name', 'full_name')
-                if name:
-                    coach_list.append({
-                        'name': name,
-                        'team': _first_present(row, 'team', 'club', 'recent_team'),
+                    former_coaches.append({
+                        'name': row, 'is_active': False, 'team': None,
+                        'latest_season': None, 'latest_record': None,
+                        'total_wins': 0, 'total_losses': 0, 'win_pct': None,
                     })
-            coach_list.sort(key=lambda c: c['name'])
+                    continue
+                c = _summarize_coach(row)
+                if not c['name']:
+                    continue
+                (active_coaches if c['is_active'] else former_coaches).append(c)
+            active_coaches.sort(key=lambda c: c['name'])
+            former_coaches.sort(key=lambda c: c['name'])
     except nfl_api_client.NflApiError as e:
         logger.warning(f"NFL-API coaches fetch failed: {e}")
         error = 'Coach data is temporarily unavailable. Please try again shortly.'
 
+    # Map each current team to its most recent active coach.
+    coach_by_team = {}
+    for c in active_coaches:
+        if c['team']:
+            coach_by_team[c['team']] = c
+
+    # Build the conference → division → team-row board.
+    board = []
+    for conf, divisions in NFL_DIVISIONS.items():
+        div_list = []
+        for div_name, abbrs in divisions.items():
+            rows = [{
+                'abbr': abbr,
+                'city': team_meta.get(abbr, {}).get('city', abbr),
+                'logo': team_meta.get(abbr, {}).get('logo'),
+                'coach': coach_by_team.get(abbr),
+            } for abbr in abbrs]
+            div_list.append({'name': div_name, 'teams': rows})
+        board.append({'conference': conf, 'divisions': div_list})
+
     return render_template('coaches.html',
-                         coaches=coach_list,
+                         board=board,
+                         active_coaches=active_coaches,
+                         former_coaches=former_coaches,
                          error=error,
                          years=available_years,
                          available_years=available_years,

@@ -1,6 +1,45 @@
 {% extends 'nfl-base.html' %}
 {% block title %}NFL Coaches | Nick Knows NFL{% endblock %}
 
+{% block nfl_extra_css %}
+<style>
+.coach-board { display:flex; flex-direction:column; gap: var(--space-xl); margin-bottom: var(--space-xl); }
+.coach-conf__header { display:flex; align-items:center; gap: var(--space-md); margin-bottom: var(--space-md); }
+.coach-conf__badge { font-size:.72rem; font-weight:700; letter-spacing:.05em; padding:4px 12px; border-radius: var(--radius-pill); border:1px solid var(--border); }
+.coach-conf__badge--afc { color:#7db3ff; background: rgba(79,143,255,.12); border-color: rgba(79,143,255,.30); }
+.coach-conf__badge--nfc { color:#ff8a8a; background: rgba(213,10,10,.14); border-color: rgba(213,10,10,.32); }
+.coach-conf__rule { flex:1; height:1px; background: var(--border); }
+.coach-divgrid { display:grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-md); }
+@media (min-width: 900px){ .coach-divgrid { grid-template-columns: repeat(4, 1fr); } }
+.coach-divcard { background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-sm); overflow:hidden; }
+.coach-divcard__title { font-size:.72rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color: var(--text-muted); padding: var(--space-sm) var(--space-md); background: var(--surface-hover); border-bottom:1px solid var(--border); }
+.coach-teamrow { display:flex; align-items:center; justify-content:space-between; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); border-bottom:1px solid var(--border); }
+.coach-teamrow:last-child { border-bottom:0; }
+.coach-teamrow__team { display:flex; align-items:center; gap: var(--space-sm); min-width:0; }
+.coach-teamrow__logo { width:24px; height:24px; object-fit:contain; flex:none; }
+.coach-teamrow__meta { min-width:0; }
+.coach-teamrow__city { font-size:.7rem; color: var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.coach-teamrow__coach { font-size:.88rem; font-weight:600; color: var(--text); text-decoration:none; }
+.coach-teamrow__coach:hover { color: var(--accent); }
+.coach-teamrow__tbd { font-size:.88rem; color: var(--text-muted); font-style:italic; }
+.coach-teamrow__record { font-size:.72rem; color: var(--text-muted); flex:none; }
+.coach-former { border-top:1px solid var(--border); padding-top: var(--space-lg); }
+.coach-former__head { display:flex; align-items:center; gap: var(--space-md); flex-wrap:wrap; margin-bottom: var(--space-md); }
+.coach-former__title { font-size:.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color: var(--text-muted); }
+.coach-former__count { color: var(--text-muted); font-size:.8rem; }
+.coach-cardgrid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: var(--space-md); }
+.coach-card { display:block; background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-md); text-decoration:none; transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease); }
+.coach-card:hover { border-color: var(--border-hover); background: var(--surface-hover); }
+.coach-card__name { font-weight:600; color: var(--text); }
+.coach-card__sub { font-size:.72rem; color: var(--text-muted); margin-top:2px; }
+.coach-card__stats { display:flex; gap: var(--space-lg); margin-top: var(--space-sm); }
+.coach-card__stat-label { font-size:.62rem; text-transform:uppercase; letter-spacing:.04em; color: var(--text-muted); }
+.coach-card__stat-value { font-weight:700; color: var(--text); }
+#coach-search { background: var(--surface); border:1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding:6px 12px; font-size:.85rem; width:180px; }
+#coach-search::placeholder { color: var(--text-muted); }
+</style>
+{% endblock %}
+
 {% block nfl_content %}
 <div class="page-header">
     <h1 class="page-header__title">NFL Coaches</h1>
@@ -8,27 +47,93 @@
 <div class="content-section">
     {% if error %}
     <p class="text-muted">{{ error }}</p>
-    {% elif not coaches %}
-    <p class="text-muted">No coaches found.</p>
     {% else %}
-    <div class="table-wrapper">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Coach</th>
-                    <th>Team</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for coach in coaches %}
-                <tr>
-                    <td><a href="{{ url_for('coach_detail', name=coach.name) }}">{{ coach.name }}</a></td>
-                    <td>{{ coach.team or '—' }}</td>
-                </tr>
+
+    <div class="coach-board">
+        {% for conf in board %}
+        <div>
+            <div class="coach-conf__header">
+                <span class="coach-conf__badge coach-conf__badge--{{ conf.conference|lower }}">{{ conf.conference }}</span>
+                <span class="coach-conf__rule"></span>
+            </div>
+            <div class="coach-divgrid">
+                {% for div in conf.divisions %}
+                <div class="coach-divcard">
+                    <div class="coach-divcard__title">{{ conf.conference }} {{ div.name }}</div>
+                    {% for t in div.teams %}
+                    <div class="coach-teamrow">
+                        <div class="coach-teamrow__team">
+                            {% if t.logo %}<img class="coach-teamrow__logo" src="{{ t.logo }}" alt="{{ t.abbr }}" loading="lazy">{% endif %}
+                            <div class="coach-teamrow__meta">
+                                <div class="coach-teamrow__city">{{ t.city }}</div>
+                                {% if t.coach %}
+                                <a class="coach-teamrow__coach" href="{{ url_for('coach_detail', name=t.coach.name) }}">{{ t.coach.name }}</a>
+                                {% else %}
+                                <span class="coach-teamrow__tbd">TBD</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if t.coach and t.coach.latest_record %}
+                        <span class="coach-teamrow__record">{{ t.coach.latest_record }}</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
                 {% endfor %}
-            </tbody>
-        </table>
+            </div>
+        </div>
+        {% endfor %}
     </div>
+
+    <div class="coach-former">
+        <div class="coach-former__head">
+            <span class="coach-former__title">Former Head Coaches</span>
+            <input id="coach-search" type="text" placeholder="Search…" autocomplete="off">
+            <span class="coach-former__count"><span id="coach-count">{{ former_coaches|length }}</span> coaches</span>
+        </div>
+        <div class="coach-cardgrid" id="coach-cardgrid">
+            {% for c in former_coaches %}
+            <a class="coach-card" href="{{ url_for('coach_detail', name=c.name) }}" data-name="{{ c.name|lower }}">
+                <div class="coach-card__name">{{ c.name }}</div>
+                {% if c.latest_season %}
+                <div class="coach-card__sub">{{ c.team or '—' }} · {{ c.latest_season }}</div>
+                {% endif %}
+                <div class="coach-card__stats">
+                    <div>
+                        <div class="coach-card__stat-label">Overall</div>
+                        <div class="coach-card__stat-value">{{ c.total_wins }}–{{ c.total_losses }}</div>
+                    </div>
+                    <div>
+                        <div class="coach-card__stat-label">Win %</div>
+                        <div class="coach-card__stat-value">{% if c.win_pct is not none %}{{ c.win_pct }}%{% else %}—{% endif %}</div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
     {% endif %}
 </div>
+{% endblock %}
+
+{% block nfl_extra_js %}
+<script>
+(function () {
+    var input = document.getElementById('coach-search');
+    if (!input) return;
+    var cards = Array.prototype.slice.call(document.querySelectorAll('#coach-cardgrid .coach-card'));
+    var count = document.getElementById('coach-count');
+    input.addEventListener('input', function () {
+        var q = input.value.trim().toLowerCase();
+        var shown = 0;
+        cards.forEach(function (card) {
+            var match = card.getAttribute('data-name').indexOf(q) !== -1;
+            card.style.display = match ? '' : 'none';
+            if (match) shown++;
+        });
+        if (count) count.textContent = shown;
+    });
+})();
+</script>
 {% endblock %}
