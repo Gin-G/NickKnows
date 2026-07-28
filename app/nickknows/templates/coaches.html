@@ -43,6 +43,7 @@
 {% block nfl_content %}
 <div class="page-header">
     <h1 class="page-header__title">NFL Coaches</h1>
+    <p class="text-muted">{{ selected_year }} coaching staffs · use the year selector for other seasons</p>
 </div>
 <div class="content-section">
     {% if error %}
@@ -66,15 +67,15 @@
                             {% if t.logo %}<img class="coach-teamrow__logo" src="{{ t.logo }}" alt="{{ t.abbr }}" loading="lazy">{% endif %}
                             <div class="coach-teamrow__meta">
                                 <div class="coach-teamrow__city">{{ t.city }}</div>
-                                {% if t.coach %}
-                                <a class="coach-teamrow__coach" href="{{ url_for('coach_detail', name=t.coach.name) }}">{{ t.coach.name }}</a>
+                                {% if t.coach_name %}
+                                <a class="coach-teamrow__coach" href="{{ url_for('coach_detail', name=t.coach_name) }}">{{ t.coach_name }}</a>
                                 {% else %}
                                 <span class="coach-teamrow__tbd">TBD</span>
                                 {% endif %}
                             </div>
                         </div>
-                        {% if t.coach and t.coach.latest_record %}
-                        <span class="coach-teamrow__record">{{ t.coach.latest_record }}</span>
+                        {% if t.record %}
+                        <span class="coach-teamrow__record">{{ t.record }}</span>
                         {% endif %}
                     </div>
                     {% endfor %}
