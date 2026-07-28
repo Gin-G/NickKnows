@@ -1,0 +1,47 @@
+{% extends 'nfl-base.html' %}
+{% block title %}{{ name }} | Nick Knows NFL{% endblock %}
+
+{% block nfl_content %}
+<div class="page-header">
+    <h1 class="page-header__title">{{ name }}</h1>
+    <p class="page-header__subtitle">Coach Profile</p>
+</div>
+<div class="content-section">
+    <p style="margin-bottom: var(--space-xl);">
+        <a href="{{ url_for('coaches') }}">&larr; All Coaches</a>
+    </p>
+
+    {% if not sections %}
+    <p class="text-muted">No data available for this coach yet.</p>
+    {% else %}
+    {% for section in sections %}
+    <h2 style="margin-top: var(--space-xl);">{{ section.title }}</h2>
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    {% for col in section.columns %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in section.rows %}
+                <tr>
+                    {% for cell in row %}
+                    <td>
+                        {% if cell is none %}&mdash;
+                        {% elif cell is number and cell is not integer %}{{ '%.2f' | format(cell) }}
+                        {% else %}{{ cell }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

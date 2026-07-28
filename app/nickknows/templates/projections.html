@@ -1,0 +1,83 @@
+{% extends 'nfl-base.html' %}
+{% block title %}{{ selected_year }} Fantasy Projections | Nick Knows NFL{% endblock %}
+
+{% block nfl_content %}
+<div class="page-header">
+    <h1 class="page-header__title">Fantasy Projections</h1>
+    <p class="page-header__subtitle">{{ selected_year }} Season{% if selected_week %} &middot; Week {{ selected_week }}{% endif %}</p>
+</div>
+<div class="content-section">
+    <form id="projectionsForm" method="get" action="{{ url_for('projections') }}"
+          style="display: flex; gap: var(--space-md); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-xl);">
+        <select name="week" onchange="this.form.submit()"
+                style="padding: 8px 14px; border-radius: var(--radius-pill); background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 14px; cursor: pointer;">
+            <option value="">All Weeks</option>
+            {% for w in range(1, 19) %}
+            <option value="{{ w }}" {% if w == selected_week %}selected{% endif %}>Week {{ w }}</option>
+            {% endfor %}
+        </select>
+        <select name="position" onchange="this.form.submit()"
+                style="padding: 8px 14px; border-radius: var(--radius-pill); background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 14px; cursor: pointer;">
+            <option value="">All Positions</option>
+            {% for pos in positions %}
+            <option value="{{ pos }}" {% if pos == selected_position %}selected{% endif %}>{{ pos }}</option>
+            {% endfor %}
+        </select>
+        <select name="team" onchange="this.form.submit()"
+                style="padding: 8px 14px; border-radius: var(--radius-pill); background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 14px; cursor: pointer;">
+            <option value="">All Teams</option>
+            {% for t in teams %}
+            <option value="{{ t }}" {% if t == selected_team %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    {% if error %}
+    <p class="text-muted">{{ error }}</p>
+    {% elif not projections %}
+    <p class="text-muted">No projections match the selected filters.</p>
+    {% else %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Pos</th>
+                    <th>Team</th>
+                    <th>Week</th>
+                    <th>Projected</th>
+                    <th>Floor &ndash; Ceiling</th>
+                    <th>Range</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in projections %}
+                <tr>
+                    <td>{{ p.player_name }}</td>
+                    <td>{{ p.position }}</td>
+                    <td>{{ p.team }}</td>
+                    <td>{{ p.week if p.week is not none else '—' }}</td>
+                    <td><strong>{{ '%.1f' | format(p.projected_points or 0) }}</strong></td>
+                    <td>
+                        {% if p.floor is not none and p.ceiling is not none %}
+                        {{ '%.1f' | format(p.floor) }} &ndash; {{ '%.1f' | format(p.ceiling) }}
+                        {% if p.median is not none %}<span class="text-muted">(med {{ '%.1f' | format(p.median) }})</span>{% endif %}
+                        {% else %}
+                        &mdash;
+                        {% endif %}
+                    </td>
+                    <td style="min-width: 120px;">
+                        {% if max_ceiling and p.floor is not none and p.ceiling is not none and p.ceiling > p.floor %}
+                        <div style="position: relative; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
+                            <div style="position: absolute; left: {{ (p.floor / max_ceiling * 100) | round(1) }}%; width: {{ ((p.ceiling - p.floor) / max_ceiling * 100) | round(1) }}%; height: 100%; background: var(--accent, #4caf50); border-radius: 4px;"></div>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

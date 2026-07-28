@@ -5,6 +5,8 @@
         <div class="nfl-nav__links" id="nflNavLinks">
             <a href="{{ url_for('NFL') }}" class="nfl-nav__link">NFL Home</a>
             <a href="{{ url_for('schedule') }}" class="nfl-nav__link">Schedule</a>
+            <a href="{{ url_for('projections') }}" class="nfl-nav__link">Projections</a>
+            <a href="{{ url_for('coaches') }}" class="nfl-nav__link">Coaches</a>
 
             <div class="nfl-nav__dropdown">
                 <button class="nfl-nav__dropdown-btn" onclick="toggleNflDropdown(this)">
@@ -111,6 +113,47 @@
                     <a href="{{ url_for('roster', team='TB', fullname='Tampa Bay Buccaneers') }}">Tampa Bay Buccaneers</a>
                     <a href="{{ url_for('roster', team='TEN', fullname='Tennessee Titans') }}">Tennessee Titans</a>
                     <a href="{{ url_for('roster', team='WAS', fullname='Washington Commanders') }}">Washington Commanders</a>
+                </div>
+            </div>
+
+
+            <div class="nfl-nav__dropdown">
+                <button class="nfl-nav__dropdown-btn" onclick="toggleNflDropdown(this)">
+                    Depth Charts <i class="fa fa-caret-down"></i>
+                </button>
+                <div class="nfl-nav__dropdown-content">
+                    <a href="{{ url_for('depth_chart', team='ARI', fullname='Arizona Cardinals') }}">Arizona Cardinals</a>
+                    <a href="{{ url_for('depth_chart', team='ATL', fullname='Atlanta Falcons') }}">Atlanta Falcons</a>
+                    <a href="{{ url_for('depth_chart', team='BAL', fullname='Baltimore Ravens') }}">Baltimore Ravens</a>
+                    <a href="{{ url_for('depth_chart', team='BUF', fullname='Buffalo Bills') }}">Buffalo Bills</a>
+                    <a href="{{ url_for('depth_chart', team='CAR', fullname='Carolina Panthers') }}">Carolina Panthers</a>
+                    <a href="{{ url_for('depth_chart', team='CHI', fullname='Chicago Bears') }}">Chicago Bears</a>
+                    <a href="{{ url_for('depth_chart', team='CIN', fullname='Cincinnati Bengals') }}">Cincinnati Bengals</a>
+                    <a href="{{ url_for('depth_chart', team='CLE', fullname='Cleveland Browns') }}">Cleveland Browns</a>
+                    <a href="{{ url_for('depth_chart', team='DAL', fullname='Dallas Cowboys') }}">Dallas Cowboys</a>
+                    <a href="{{ url_for('depth_chart', team='DEN', fullname='Denver Broncos') }}">Denver Broncos</a>
+                    <a href="{{ url_for('depth_chart', team='DET', fullname='Detroit Lions') }}">Detroit Lions</a>
+                    <a href="{{ url_for('depth_chart', team='GB', fullname='Green Bay Packers') }}">Green Bay Packers</a>
+                    <a href="{{ url_for('depth_chart', team='HOU', fullname='Houston Texans') }}">Houston Texans</a>
+                    <a href="{{ url_for('depth_chart', team='IND', fullname='Indianapolis Colts') }}">Indianapolis Colts</a>
+                    <a href="{{ url_for('depth_chart', team='JAX', fullname='Jacksonville Jaguars') }}">Jacksonville Jaguars</a>
+                    <a href="{{ url_for('depth_chart', team='KC', fullname='Kansas City Chiefs') }}">Kansas City Chiefs</a>
+                    <a href="{{ url_for('depth_chart', team='LV', fullname='Las Vegas Raiders') }}">Las Vegas Raiders</a>
+                    <a href="{{ url_for('depth_chart', team='LAC', fullname='Los Angeles Chargers') }}">Los Angeles Chargers</a>
+                    <a href="{{ url_for('depth_chart', team='LA', fullname='Los Angeles Rams') }}">Los Angeles Rams</a>
+                    <a href="{{ url_for('depth_chart', team='MIA', fullname='Miami Dolphins') }}">Miami Dolphins</a>
+                    <a href="{{ url_for('depth_chart', team='MIN', fullname='Minnesota Vikings') }}">Minnesota Vikings</a>
+                    <a href="{{ url_for('depth_chart', team='NE', fullname='New England Patriots') }}">New England Patriots</a>
+                    <a href="{{ url_for('depth_chart', team='NO', fullname='New Orleans Saints') }}">New Orleans Saints</a>
+                    <a href="{{ url_for('depth_chart', team='NYG', fullname='New York Giants') }}">New York Giants</a>
+                    <a href="{{ url_for('depth_chart', team='NYJ', fullname='New York Jets') }}">New York Jets</a>
+                    <a href="{{ url_for('depth_chart', team='PHI', fullname='Philadelphia Eagles') }}">Philadelphia Eagles</a>
+                    <a href="{{ url_for('depth_chart', team='PIT', fullname='Pittsburgh Steelers') }}">Pittsburgh Steelers</a>
+                    <a href="{{ url_for('depth_chart', team='SF', fullname='San Francisco 49ers') }}">San Francisco 49ers</a>
+                    <a href="{{ url_for('depth_chart', team='SEA', fullname='Seattle Seahawks') }}">Seattle Seahawks</a>
+                    <a href="{{ url_for('depth_chart', team='TB', fullname='Tampa Bay Buccaneers') }}">Tampa Bay Buccaneers</a>
+                    <a href="{{ url_for('depth_chart', team='TEN', fullname='Tennessee Titans') }}">Tennessee Titans</a>
+                    <a href="{{ url_for('depth_chart', team='WAS', fullname='Washington Commanders') }}">Washington Commanders</a>
                 </div>
             </div>
 

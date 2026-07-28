@@ -33,6 +33,8 @@ spec:
         env:
         - name: FLASK_SECRET
           value: $MY_VALUE
+        - name: NFL_API_URL
+          value: {{ .Values.nflApi.url }}
         {{- if .Values.hydrowBroker.enabled }}
         - name: HYDROW_BROKER_URL
           value: http://{{ .Values.hydrowBroker.name }}:{{ .Values.hydrowBroker.container.port }}

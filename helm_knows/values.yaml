@@ -19,6 +19,11 @@ worker:
   replicaCount: 1
 gpuWorker:
   replicaCount: 0
+nflApi:
+  # In-cluster Service DNS for the NFL-API. Do NOT point this at the public
+  # hostname (nfl-api.nickknows.net) — it sits behind a Cloudflare
+  # bot-challenge that 403s server-to-server requests.
+  url: http://nfl-api.nfl-api.svc.cluster.local:8000
 fahrtbags:
   enabled: true
   hosts:

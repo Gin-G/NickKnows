@@ -40,6 +40,7 @@ from ..celery_setup.tasks import (
     format_nfl_season
 )
 from .plotting_functions import create_team_opportunity_plots, create_team_opportunity_plots_by_stat
+from . import nfl_api_client
 from celery import chain, chord
 import nflreadpy as nfl
 import pandas as pd
@@ -211,98 +212,404 @@ def FPAupdate():
     flash('All team data is updating in the background. Changes should be reflected on the pages shortly')
     return redirect(url_for('NFL', year=selected_year))
 
+# Columns the schedule table needs, display + hidden. NFL-API responses are
+# reindexed to this set so a payload missing a column (e.g. still backed by
+# nflreadpy fallback with a slightly different shape) doesn't KeyError on .hide().
+SCHEDULE_COLUMNS = [
+    'game_id', 'away_team', 'away_score', 'home_team', 'home_score', 'result',
+    'total', 'overtime', 'away_rest', 'home_rest', 'away_moneyline', 'home_moneyline',
+    'spread_line', 'away_spread_odds', 'home_spread_odds', 'total_line', 'under_odds',
+    'over_odds', 'div_game', 'away_qb_name', 'home_qb_name', 'stadium',
+    'roof', 'gameday', 'weekday', 'gametime', 'season', 'game_type', 'ftn', 'week',
+    'location', 'old_game_id', 'gsis', 'nfl_detail_id', 'surface', 'temp', 'wind',
+    'pfr', 'pff', 'espn', 'away_qb_id', 'home_qb_id', 'away_coach', 'home_coach',
+    'referee', 'stadium_id'
+]
+
+def _fetch_schedule_df(selected_year, week):
+    """Try the NFL-API for a week's schedule. Returns a DataFrame, or None on
+    failure / no_data (caller should fall back to the CSV path)."""
+    try:
+        payload = nfl_api_client.get('/schedules/', season=selected_year, week=week)
+    except nfl_api_client.NflApiError as e:
+        logger.warning(f"NFL-API schedule fetch failed, falling back to CSV: {e}")
+        return None
+
+    if nfl_api_client.is_no_data(payload) or not payload.get('data'):
+        return None
+
+    df = pd.DataFrame(payload['data'])
+    df = df.reindex(columns=SCHEDULE_COLUMNS)
+    df = df.loc[df['week'] == int(week)]
+    # Empty after filtering means the payload wasn't shaped how we expect
+    # (or the week isn't loaded yet) — treat like no_data and use the CSV.
+    if df.empty:
+        return None
+    return df
+
+def _style_week_schedule(week_schedule, selected_year):
+    """Apply the shared rename/hide/format/highlight styling used by both the
+    NFL-API and CSV schedule sources."""
+    week_schedule = week_schedule.copy()
+    # NOTE: matches pre-migration behavior exactly (including embedding the
+    # whole game_id Series repr in the href) so both data sources render
+    # identically to what was there before. Not fixing here — out of scope.
+    url = f'<a href="https://www.nickknows.net/NFL/PbP/{week_schedule["game_id"]}?year={selected_year}">' + \
+          week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + '</a>'
+    week_schedule['game_id'] = url
+
+    week_schedule.loc[week_schedule["overtime"] == 0, "overtime"] = "No"
+    week_schedule.loc[week_schedule["overtime"] == 1, "overtime"] = "Yes"
+    week_schedule.loc[week_schedule["div_game"] == 0, "div_game"] = "No"
+    week_schedule.loc[week_schedule["div_game"] == 1, "div_game"] = "Yes"
+    week_schedule.rename(columns = {'game_id':'Game','away_team':'Away Team','away_score':'Away Score','home_team':'Home Team','home_score':'Home Score','result':'Result','total':'Total','overtime':'Overtime','away_rest':'Away Rest','home_rest':'Home Rest','away_moneyline':'Away Moneyline','home_moneyline':'Home Moneyline','spread_line':'Spread','away_spread_odds':'Away Spread Odds','home_spread_odds':'Home Spread Odds','total_line':'Total Line','under_odds':'Under Odds','over_odds':'Over Odds','div_game':'Division Game','away_qb_name':'Away QB','home_qb_name':'Home QB','stadium':'Stadium'}, inplace=True)
+    week_schedule = week_schedule.style.hide(axis="index")
+    week_schedule = week_schedule.hide(['roof','gameday','weekday','gametime','season','game_type','ftn','week','location','old_game_id','gsis','nfl_detail_id','surface','temp','wind','pfr','pff','espn','away_qb_id','home_qb_id','away_coach','home_coach','referee','stadium_id'], axis="columns")
+    week_schedule = week_schedule.format(subset=['Away Score','Home Score','Result','Total','Away Moneyline','Home Moneyline','Away Spread Odds','Home Spread Odds','Under Odds','Over Odds'],precision=0).format(subset=['Spread','Total Line'],precision=1)
+    week_schedule.apply(lambda week_schedule: total_highlight(week_schedule, "Total", "Total Line"), axis=None)
+    return week_schedule
+
 @app.route('/NFL/schedule/')
 def schedule():
+    available_years = get_available_years()
+    selected_year = get_selected_year()
+    season_display = get_season_display_name(selected_year)
+    week = int(request.args.get('week', '1'))
+    available_weeks = range(1, 19) if selected_year >= 2021 else range(1, 18)
+
+    week_schedule = _fetch_schedule_df(selected_year, week)
+
+    if week_schedule is None:
+        try:
+            file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
+            schedule_csv = pd.read_csv(file_path, index_col=0)
+            week_schedule = schedule_csv.loc[schedule_csv['week'] == int(week)]
+        except FileNotFoundError:
+            flash(f'Schedule data for {selected_year} not found. Please update data.')
+            return redirect(url_for('NFL', year=selected_year))
+
+    styled = _style_week_schedule(week_schedule, selected_year)
+    return render_template('weekly.html',
+                         week_schedule = HTML(styled.to_html(render_links=True,escape=False,classes="table")),
+                         weeks = available_weeks,
+                         week = week,
+                         years=available_years,
+                         selected_year=selected_year,
+                         season_display=season_display)
+
+ROSTER_COLUMNS = [
+    'depth_chart_position', 'jersey_number', 'status', 'player_name', 'first_name',
+    'last_name', 'height', 'weight', 'football_name', 'rookie_year', 'draft_club',
+    'draft_number',
+    'season', 'team', 'position', 'birth_date', 'college',
+    'player_id', 'espn_id', 'sportradar_id', 'yahoo_id',
+    'rotowire_id', 'pff_id', 'pfr_id', 'fantasy_data_id',
+    'sleeper_id', 'years_exp', 'headshot_url', 'ngs_position',
+    'week', 'game_type', 'status_description_abbr', 'esb_id',
+    'gsis_it_id', 'smart_id', 'entry_year'
+]
+
+def _fetch_roster_df(selected_year, team):
+    """Try the NFL-API for a team's roster. Returns a DataFrame, or None on
+    failure / no_data (caller should fall back to the CSV path)."""
     try:
-        available_years = get_available_years()
-        selected_year = get_selected_year()
-        season_display = get_season_display_name(selected_year)
-        week = int(request.args.get('week', '1'))
-        available_weeks = range(1, 19) if selected_year >= 2021 else range(1, 18)
-        file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_schedule.csv'
-        schedule = pd.read_csv(file_path, index_col=0)
-        week_schedule = schedule.loc[schedule['week'] == int(week)]
-        
-        # Update URL to include year parameter
-        url = f'<a href="https://www.nickknows.net/NFL/PbP/{week_schedule["game_id"]}?year={selected_year}">' + \
-              week_schedule['away_team'] + ' vs. ' + week_schedule['home_team'] + '</a>'
-        week_schedule['game_id'] = url
-        
-        week_schedule.loc[week_schedule["overtime"] == 0, "overtime"] = "No"
-        week_schedule.loc[week_schedule["overtime"] == 1, "overtime"] = "Yes"
-        week_schedule.loc[week_schedule["div_game"] == 0, "div_game"] = "No"
-        week_schedule.loc[week_schedule["div_game"] == 1, "div_game"] = "Yes"
-        week_schedule.rename(columns = {'game_id':'Game','away_team':'Away Team','away_score':'Away Score','home_team':'Home Team','home_score':'Home Score','result':'Result','total':'Total','overtime':'Overtime','away_rest':'Away Rest','home_rest':'Home Rest','away_moneyline':'Away Moneyline','home_moneyline':'Home Moneyline','spread_line':'Spread','away_spread_odds':'Away Spread Odds','home_spread_odds':'Home Spread Odds','total_line':'Total Line','under_odds':'Under Odds','over_odds':'Over Odds','div_game':'Division Game','away_qb_name':'Away QB','home_qb_name':'Home QB','stadium':'Stadium'}, inplace=True)
-        week_schedule = week_schedule.style.hide(axis="index")
-        week_schedule = week_schedule.hide(['roof','gameday','weekday','gametime','season','game_type','ftn','week','location','old_game_id','gsis','nfl_detail_id','surface','temp','wind','pfr','pff','espn','away_qb_id','home_qb_id','away_coach','home_coach','referee','stadium_id'], axis="columns")
-        week_schedule = week_schedule.format(subset=['Away Score','Home Score','Result','Total','Away Moneyline','Home Moneyline','Away Spread Odds','Home Spread Odds','Under Odds','Over Odds'],precision=0).format(subset=['Spread','Total Line'],precision=1)
-        week_schedule.apply(lambda week_schedule: total_highlight(week_schedule, "Total", "Total Line"), axis=None)
-        return render_template('weekly.html', 
-                             week_schedule = HTML(week_schedule.to_html(render_links=True,escape=False,classes="table")), 
-                             weeks = available_weeks, 
-                             week = week, 
-                             years=available_years, 
-                             selected_year=selected_year,
-                             season_display=season_display)
-    except FileNotFoundError as e:
-        flash(f'Schedule data for {selected_year} not found. Please update data.')
-        return redirect(url_for('NFL', year=selected_year))
+        payload = nfl_api_client.get('/players/rosters', season=selected_year, team=team)
+    except nfl_api_client.NflApiError as e:
+        logger.warning(f"NFL-API roster fetch failed, falling back to CSV: {e}")
+        return None
+
+    if nfl_api_client.is_no_data(payload) or not payload.get('data'):
+        return None
+
+    df = pd.DataFrame(payload['data'])
+    df = df.reindex(columns=ROSTER_COLUMNS)
+    df = df.loc[df['team'] == team]
+    # Empty after filtering means the payload wasn't shaped how we expect —
+    # treat like no_data and use the CSV.
+    if df.empty:
+        return None
+    return df
+
+def _style_team_roster(team_roster, selected_year):
+    """Apply the shared dedup/rename/hide/format styling used by both the
+    NFL-API and CSV roster sources."""
+    team_roster = team_roster.drop_duplicates(
+        subset=['player_name', 'jersey_number'],
+        keep='first'
+    )
+
+    # NOTE: matches pre-migration behavior exactly (including embedding the
+    # whole player_name Series repr in the href) so both data sources render
+    # identically to what was there before. Not fixing here — out of scope.
+    url = f'<a href="https://www.nickknows.net/NFL/Player/{team_roster["player_name"]}?year={selected_year}">' + \
+          team_roster['player_name'] + '</a>'
+    team_roster['player_name'] = url
+
+    team_roster.rename(columns={
+        'depth_chart_position':'Position',
+        'jersey_number':'Number',
+        'status':'Status',
+        'player_name':'Full Name',
+        'first_name':'First Name',
+        'last_name':'Last Name',
+        'height':'Height',
+        'weight':'Weight',
+        'football_name':'Preferred Name',
+        'rookie_year':'Rookie Year',
+        'draft_club':'Drafted By',
+        'draft_number':'Draft Number'
+    }, inplace=True)
+
+    team_roster.sort_values(by=['Number'], inplace=True)
+    team_roster = team_roster.style.hide(axis="index")
+    team_roster = team_roster.hide([
+        'season', 'team', 'position', 'birth_date', 'college',
+        'player_id', 'espn_id', 'sportradar_id', 'yahoo_id',
+        'rotowire_id', 'pff_id', 'pfr_id', 'fantasy_data_id',
+        'sleeper_id', 'years_exp', 'headshot_url', 'ngs_position',
+        'week', 'game_type', 'status_description_abbr', 'esb_id',
+        'gsis_it_id', 'smart_id', 'entry_year'
+    ], axis="columns")
+
+    return team_roster.format(precision=0, na_rep="Undrafted")
 
 @app.route('/NFL/Roster/<team>/<fullname>')
 def roster(team,fullname):
+    selected_year = get_selected_year()
+    available_years = get_available_years()
+
+    team_roster = _fetch_roster_df(selected_year, team)
+
+    if team_roster is None:
+        try:
+            file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+            roster_data = pd.read_csv(file_path, index_col=0)
+            team_roster = roster_data.loc[roster_data['team'] == team]
+        except FileNotFoundError:
+            flash(f'Roster data for {fullname} ({selected_year}) not found. Please update data.')
+            return redirect(url_for('NFL', year=selected_year))
+
+    styled = _style_team_roster(team_roster, selected_year)
+    return render_template('rosters.html',
+                         team_roster = styled.to_html(classes="table", escape=False),
+                         team = fullname,
+                         years=available_years,
+                         selected_year=selected_year)
+
+def _first_present(row, *keys, default=None):
+    """Return the first non-empty value among keys in a projection row dict."""
+    for key in keys:
+        value = row.get(key)
+        if value not in (None, ''):
+            return value
+    return default
+
+@app.route('/NFL/Projections')
+def projections():
+    """Fantasy projections page backed entirely by NFL-API GET /projections/.
+
+    No CSV fallback exists — projections are a NEW capability with no
+    Celery/CSV predecessor, so when the API is unavailable we show an
+    empty state rather than falling back."""
+    available_years = get_available_years()
+    selected_year = get_selected_year()
+
+    week = request.args.get('week', type=int)
+    position = request.args.get('position') or None
+    team = request.args.get('team') or None
+
+    rows = []
+    error = None
     try:
-        selected_year = get_selected_year()
-        available_years = get_available_years()
-        file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
-        roster_data = pd.read_csv(file_path, index_col=0)
-        team_roster = roster_data.loc[roster_data['team'] == team]
-
-        # Drop duplicates based on player identifying information
-        team_roster = team_roster.drop_duplicates(
-            subset=['player_name', 'jersey_number'], 
-            keep='first'
+        payload = nfl_api_client.get(
+            '/projections/',
+            season=selected_year,
+            week=week,
+            position=position,
+            team=team,
         )
+        if nfl_api_client.is_no_data(payload):
+            error = f'No projections available yet for {selected_year}.'
+        else:
+            data = payload.get('data') or []
+            for row in data:
+                mean = _first_present(row, 'projected_points', 'mean', 'projection', default=0)
+                rows.append({
+                    'player_name': _first_present(row, 'player_name', 'player_display_name', 'name', default='Unknown'),
+                    'player_id': _first_present(row, 'player_id', 'gsis_id', default=''),
+                    'position': _first_present(row, 'position', 'pos', default=''),
+                    'team': _first_present(row, 'team', 'recent_team', 'club', default=''),
+                    'week': _first_present(row, 'week', default=week),
+                    'projected_points': mean,
+                    'floor': _first_present(row, 'floor', default=None),
+                    'median': _first_present(row, 'median', default=None),
+                    'ceiling': _first_present(row, 'ceiling', default=None),
+                })
+            # Highest projected points first
+            rows.sort(key=lambda r: (r['projected_points'] is None, -(r['projected_points'] or 0)))
+    except nfl_api_client.NflApiError as e:
+        logger.warning(f"NFL-API projections fetch failed: {e}")
+        error = 'Projections are temporarily unavailable. Please try again shortly.'
 
-        # Update player links to include year
-        url = f'<a href="https://www.nickknows.net/NFL/Player/{team_roster["player_name"]}?year={selected_year}">' + \
-              team_roster['player_name'] + '</a>'
-        team_roster['player_name'] = url
-        
-        team_roster.rename(columns={
-            'depth_chart_position':'Position',
-            'jersey_number':'Number',
-            'status':'Status',
-            'player_name':'Full Name',
-            'first_name':'First Name',
-            'last_name':'Last Name',
-            'height':'Height',
-            'weight':'Weight',
-            'football_name':'Preferred Name',
-            'rookie_year':'Rookie Year',
-            'draft_club':'Drafted By',
-            'draft_number':'Draft Number'
-        }, inplace=True)
+    ceilings = [r['ceiling'] for r in rows if r['ceiling'] is not None]
+    max_ceiling = max(ceilings) if ceilings else None
 
-        team_roster.sort_values(by=['Number'], inplace=True)
-        team_roster = team_roster.style.hide(axis="index")
-        team_roster = team_roster.hide([
-            'season', 'team', 'position', 'birth_date', 'college',
-            'player_id', 'espn_id', 'sportradar_id', 'yahoo_id',
-            'rotowire_id', 'pff_id', 'pfr_id', 'fantasy_data_id',
-            'sleeper_id', 'years_exp', 'headshot_url', 'ngs_position',
-            'week', 'game_type', 'status_description_abbr', 'esb_id',
-            'gsis_it_id', 'smart_id', 'entry_year'
-        ], axis="columns")
+    return render_template('projections.html',
+                         projections=rows,
+                         max_ceiling=max_ceiling,
+                         error=error,
+                         positions=['QB', 'RB', 'WR', 'TE', 'K', 'DEF'],
+                         teams=get_all_teams(),
+                         selected_position=position,
+                         selected_team=team,
+                         selected_week=week,
+                         years=available_years,
+                         available_years=available_years,
+                         selected_year=selected_year)
 
-        team_roster = team_roster.format(precision=0, na_rep="Undrafted")
-        return render_template('rosters.html', 
-                             team_roster = team_roster.to_html(classes="table", escape=False), 
-                             team = fullname,
-                             years=available_years,
-                             selected_year=selected_year)
-    except FileNotFoundError as e:
-        flash(f'Roster data for {fullname} ({selected_year}) not found. Please update data.')
-        return redirect(url_for('NFL', year=selected_year))
+@app.route('/NFL/DepthChart/<team>/<fullname>')
+def depth_chart(team, fullname):
+    """Team depth chart backed entirely by NFL-API GET /teams/{abbr}/depth-chart.
+
+    Net-new consumer — no Celery/CSV predecessor, so API failure shows an
+    empty state rather than falling back."""
+    available_years = get_available_years()
+    selected_year = get_selected_year()
+    week = request.args.get('week', type=int)
+
+    units = {}
+    error = None
+    try:
+        payload = nfl_api_client.get(f'/teams/{team}/depth-chart',
+                                     season=selected_year, week=week)
+        if nfl_api_client.is_no_data(payload) or not payload.get('data'):
+            error = f'No depth chart available yet for {fullname} in {selected_year}.'
+        else:
+            entries = []
+            for row in payload['data']:
+                rank = _first_present(row, 'depth_team', 'depth', 'rank', 'depth_position', default=None)
+                try:
+                    rank = int(rank) if rank is not None else None
+                except (TypeError, ValueError):
+                    rank = None
+                entries.append({
+                    'unit': _first_present(row, 'formation', 'unit', 'side', default='Other'),
+                    'position': _first_present(row, 'depth_chart_position', 'position', 'pos_abb', default='?'),
+                    'player_name': _first_present(row, 'player_name', 'full_name', 'football_name', default='Unknown'),
+                    'jersey_number': _first_present(row, 'jersey_number', 'number', default=None),
+                    'rank': rank,
+                    'week': _first_present(row, 'week', default=week),
+                })
+
+            # Latest week only when the API returned multiple weeks unfiltered
+            weeks_present = {e['week'] for e in entries if e['week'] is not None}
+            if week is None and len(weeks_present) > 1:
+                latest = max(weeks_present)
+                entries = [e for e in entries if e['week'] == latest]
+
+            # unit -> position -> players ordered by depth rank
+            for entry in entries:
+                positions = units.setdefault(entry['unit'], {})
+                positions.setdefault(entry['position'], []).append(entry)
+            for positions in units.values():
+                for players in positions.values():
+                    players.sort(key=lambda p: (p['rank'] is None, p['rank']))
+    except nfl_api_client.NflApiError as e:
+        logger.warning(f"NFL-API depth chart fetch failed for {team}: {e}")
+        error = 'Depth chart is temporarily unavailable. Please try again shortly.'
+
+    return render_template('depth-chart.html',
+                         team=team,
+                         fullname=fullname,
+                         units=units,
+                         error=error,
+                         selected_week=week,
+                         years=available_years,
+                         available_years=available_years,
+                         selected_year=selected_year)
+
+def _tableize(data):
+    """Normalize an API data payload into (columns, rows) for generic table
+    rendering. Handles list-of-dicts, a single dict (key/value rows), and
+    lists of scalars. Returns (None, None) when there's nothing tabular."""
+    if isinstance(data, dict):
+        rows = [[k.replace('_', ' ').title(), v] for k, v in data.items()]
+        return ['Field', 'Value'], rows
+    if isinstance(data, list) and data:
+        if all(isinstance(item, dict) for item in data):
+            columns = []
+            for item in data:
+                for key in item:
+                    if key not in columns:
+                        columns.append(key)
+            rows = [[item.get(col) for col in columns] for item in data]
+            display = [c.replace('_', ' ').title() for c in columns]
+            return display, rows
+        return ['Value'], [[item] for item in data]
+    return None, None
+
+@app.route('/NFL/Coaches')
+def coaches():
+    """Coaches list backed entirely by NFL-API GET /coaches/."""
+    available_years = get_available_years()
+    selected_year = get_selected_year()
+
+    coach_list = []
+    error = None
+    try:
+        payload = nfl_api_client.get('/coaches/')
+        if nfl_api_client.is_no_data(payload) or not payload.get('data'):
+            error = 'No coach data available yet.'
+        else:
+            data = payload['data']
+            for row in data:
+                if isinstance(row, str):
+                    coach_list.append({'name': row, 'team': None})
+                    continue
+                name = _first_present(row, 'name', 'coach', 'coach_name', 'full_name')
+                if name:
+                    coach_list.append({
+                        'name': name,
+                        'team': _first_present(row, 'team', 'club', 'recent_team'),
+                    })
+            coach_list.sort(key=lambda c: c['name'])
+    except nfl_api_client.NflApiError as e:
+        logger.warning(f"NFL-API coaches fetch failed: {e}")
+        error = 'Coach data is temporarily unavailable. Please try again shortly.'
+
+    return render_template('coaches.html',
+                         coaches=coach_list,
+                         error=error,
+                         years=available_years,
+                         available_years=available_years,
+                         selected_year=selected_year)
+
+@app.route('/NFL/Coaches/<name>')
+def coach_detail(name):
+    """Coach detail combining the NFL-API's analysis/grades/tendencies/
+    breakdown endpoints. Sections that fail or have no data are skipped."""
+    available_years = get_available_years()
+    selected_year = get_selected_year()
+
+    sections = []
+    for section in ['analysis', 'grades', 'tendencies', 'breakdown']:
+        try:
+            payload = nfl_api_client.get(f'/coaches/{name}/{section}')
+        except nfl_api_client.NflApiError as e:
+            logger.warning(f"NFL-API coach {section} fetch failed for {name}: {e}")
+            continue
+        if nfl_api_client.is_no_data(payload):
+            continue
+        columns, rows = _tableize(payload.get('data'))
+        if columns:
+            sections.append({'title': section.title(), 'columns': columns, 'rows': rows})
+
+    return render_template('coach-detail.html',
+                         name=name,
+                         sections=sections,
+                         years=available_years,
+                         available_years=available_years,
+                         selected_year=selected_year)
 
 @app.route('/NFL/PbP/<game>')
 def game_pbp(game):
@@ -503,6 +810,49 @@ def team_fpa(team, fullname):
         flash(f'Error loading team FPA data for {fullname} ({selected_year}): {str(e)}')
         return redirect(url_for('NFL', year=selected_year))
     
+def _fetch_team_info_from_api(team, fullname):
+    """Try the NFL-API for team branding/division info. Returns a team_info
+    dict, or None on failure / no_data (caller should fall back to nfl_data_py)."""
+    team_mapping = {'LV': 'OAK', 'LAC': 'SD', 'LA': 'LAR'}
+    lookup_abbr = team_mapping.get(team, team)
+
+    try:
+        payload = nfl_api_client.get(f'/teams/{lookup_abbr}')
+    except nfl_api_client.NflApiError as e:
+        logger.warning(f"NFL-API team info fetch failed, falling back to nfl_data_py: {e}")
+        return None
+
+    if nfl_api_client.is_no_data(payload):
+        return None
+
+    data = payload.get('data')
+    if isinstance(data, list):
+        data = data[0] if data else None
+    if not data:
+        return None
+
+    def field(*keys):
+        for key in keys:
+            value = data.get(key)
+            if value not in (None, ''):
+                return value
+        return None
+
+    conference = field('team_conf', 'conference', 'conf')
+    division_name = field('team_division', 'division_name')
+    division = f"{conference} {division_name}" if conference and division_name else (field('division') or 'NFL')
+    logo = field('team_logo_squared', 'logo', 'team_logo') or field('team_logo_espn', 'logo_espn')
+
+    return {
+        'abbr': team,
+        'name': fullname,
+        'division': division,
+        'primary_color': field('team_color', 'primary_color', 'color') or '#333333',
+        'secondary_color': field('team_color2', 'secondary_color', 'color2'),
+        'logo': logo or f'https://via.placeholder.com/120x120?text={team}',
+        'logo_espn': field('team_logo_espn', 'logo_espn')
+    }
+
 @app.route('/NFL/Team/<team>')
 def team_page(team):
     """Comprehensive team page with schedule, results, FPA, and roster"""
@@ -510,34 +860,47 @@ def team_page(team):
         available_years = get_available_years()
         selected_year = get_selected_year()
         fullname = get_team_fullname(team)
-        
-        # Get team branding data
-        try:
-            import nfl_data_py as nfl_legacy
-            team_desc = nfl_legacy.import_team_desc()
-            
-            # Map current team abbreviations to those in team_desc
-            team_mapping = {
-                'LV': 'OAK',
-                'LAC': 'SD',
-                'LA': 'LAR'
-            }
-            
-            lookup_abbr = team_mapping.get(team, team)
-            team_row = team_desc[team_desc['team_abbr'] == lookup_abbr]
-            
-            if not team_row.empty:
-                team_info = {
-                    'abbr': team,
-                    'name': fullname,
-                    'division': f"{team_row.iloc[0]['team_conf']} {team_row.iloc[0]['team_division']}",
-                    'primary_color': team_row.iloc[0]['team_color'] if pd.notna(team_row.iloc[0]['team_color']) else '#333333',
-                    'secondary_color': team_row.iloc[0]['team_color2'] if pd.notna(team_row.iloc[0]['team_color2']) else None,
-                    'logo': team_row.iloc[0]['team_logo_squared'] if pd.notna(team_row.iloc[0]['team_logo_squared']) else team_row.iloc[0]['team_logo_espn'],
-                    'logo_espn': team_row.iloc[0]['team_logo_espn'] if pd.notna(team_row.iloc[0]['team_logo_espn']) else None
+
+        # Get team branding data (NFL-API first, nfl_data_py as fallback)
+        team_info = _fetch_team_info_from_api(team, fullname)
+        if team_info is None:
+            try:
+                import nfl_data_py as nfl_legacy
+                team_desc = nfl_legacy.import_team_desc()
+
+                # Map current team abbreviations to those in team_desc
+                team_mapping = {
+                    'LV': 'OAK',
+                    'LAC': 'SD',
+                    'LA': 'LAR'
                 }
-            else:
-                # Fallback
+
+                lookup_abbr = team_mapping.get(team, team)
+                team_row = team_desc[team_desc['team_abbr'] == lookup_abbr]
+
+                if not team_row.empty:
+                    team_info = {
+                        'abbr': team,
+                        'name': fullname,
+                        'division': f"{team_row.iloc[0]['team_conf']} {team_row.iloc[0]['team_division']}",
+                        'primary_color': team_row.iloc[0]['team_color'] if pd.notna(team_row.iloc[0]['team_color']) else '#333333',
+                        'secondary_color': team_row.iloc[0]['team_color2'] if pd.notna(team_row.iloc[0]['team_color2']) else None,
+                        'logo': team_row.iloc[0]['team_logo_squared'] if pd.notna(team_row.iloc[0]['team_logo_squared']) else team_row.iloc[0]['team_logo_espn'],
+                        'logo_espn': team_row.iloc[0]['team_logo_espn'] if pd.notna(team_row.iloc[0]['team_logo_espn']) else None
+                    }
+                else:
+                    # Fallback
+                    team_info = {
+                        'abbr': team,
+                        'name': fullname,
+                        'division': 'NFL',
+                        'primary_color': '#333333',
+                        'secondary_color': None,
+                        'logo': f'https://via.placeholder.com/120x120?text={team}',
+                        'logo_espn': None
+                    }
+            except Exception as e:
+                logger.warning(f"Could not load team description: {str(e)}")
                 team_info = {
                     'abbr': team,
                     'name': fullname,
@@ -547,18 +910,7 @@ def team_page(team):
                     'logo': f'https://via.placeholder.com/120x120?text={team}',
                     'logo_espn': None
                 }
-        except Exception as e:
-            logger.warning(f"Could not load team description: {str(e)}")
-            team_info = {
-                'abbr': team,
-                'name': fullname,
-                'division': 'NFL',
-                'primary_color': '#333333',
-                'secondary_color': None,
-                'logo': f'https://via.placeholder.com/120x120?text={team}',
-                'logo_espn': None
-            }
-        
+
         # Load team data files
         team_dir = os.getcwd() + f'/nickknows/nfl/data/{team}/'
         

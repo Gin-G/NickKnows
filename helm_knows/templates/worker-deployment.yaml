@@ -30,6 +30,9 @@ spec:
       containers:
       - name: {{ .Values.webapp.name }}-worker
         image: {{ .Values.webapp.container.image }}
+        env:
+        - name: NFL_API_URL
+          value: {{ .Values.nflApi.url }}
         resources:
           requests:
             cpu: 100m
