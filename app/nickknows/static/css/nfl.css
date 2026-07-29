@@ -5,6 +5,12 @@
    Uses design-system CSS variables.
    ═══════════════════════════════════════════ */
 
+/* NFL pages use a wider content shell than the rest of the site so long
+   names / wide tables aren't cramped. The global nav is widened to match on
+   NFL pages only (body.nfl-page) so the two bars stay aligned. */
+body.nfl-page { --nfl-wide: 1680px; }
+body.nfl-page .nk-nav__inner { max-width: var(--nfl-wide); }
+
 .nfl-nav {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -14,13 +20,13 @@
 }
 
 .nfl-nav__inner {
-    max-width: var(--content-width);
+    max-width: var(--nfl-wide, 1680px);
     margin: 0 auto;
-    padding: 0 var(--space-xl);
+    padding: 0 var(--space-lg);
     display: flex;
     align-items: center;
     gap: var(--space-md);
-    min-height: 48px;
+    min-height: 46px;
     position: relative; /* anchors the mobile links panel */
 }
 
@@ -263,7 +269,19 @@
    ═══════════════════════════════════════════ */
 
 .nfl-content {
-    max-width: var(--content-width);
+    max-width: var(--nfl-wide, 1680px);
     margin: 0 auto;
-    padding: var(--space-xl);
+    padding: var(--space-md) var(--space-lg);
+}
+
+/* On NFL pages the page-header / content-section carry the site's hero-scale
+   spacing (140px top, up to 120px sides). Neutralise it: the horizontal inset
+   comes from .nfl-content, and content sits higher and spans the full width. */
+.nfl-content .page-header {
+    padding: var(--space-xl) 0 var(--space-md);
+}
+.nfl-content .content-section {
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
 }

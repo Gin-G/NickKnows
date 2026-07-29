@@ -1,6 +1,8 @@
 {# Extend this from any NFL page instead of duplicating boilerplate #}
 {% extends 'base.html' %}
 
+{% block body_class %}nfl-page{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/nfl.css') }}">
 {% block nfl_extra_css %}{% endblock %}
