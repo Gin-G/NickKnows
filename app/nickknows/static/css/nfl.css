@@ -11,6 +11,13 @@
 body.nfl-page { --nfl-wide: 1680px; }
 body.nfl-page .nk-nav__inner { max-width: var(--nfl-wide); }
 
+/* The global nav is position:fixed (76px tall) and out of flow, so the NFL
+   secondary nav — first thing in <main> — would otherwise sit behind it (its
+   season selector uncovered/unclickable, content tucked underneath). Reserve
+   the nav's height at the top of the NFL content area so the sticky NFL nav
+   sits just below it and nothing is cut off. */
+body.nfl-page #main-content { padding-top: 76px; }
+
 .nfl-nav {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -278,7 +285,7 @@ body.nfl-page .nk-nav__inner { max-width: var(--nfl-wide); }
    spacing (140px top, up to 120px sides). Neutralise it: the horizontal inset
    comes from .nfl-content, and content sits higher and spans the full width. */
 .nfl-content .page-header {
-    padding: var(--space-xl) 0 var(--space-md);
+    padding: var(--space-md) 0 var(--space-md);
 }
 .nfl-content .content-section {
     max-width: none;
