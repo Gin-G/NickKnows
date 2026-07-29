@@ -102,10 +102,15 @@
         {# ── Season selector: always visible, changes the season on the current page ── #}
         <div class="nfl-nav__season-wrap">
             <label class="nfl-nav__season-label" for="nflSeasonSelect">Season</label>
+            {# Older NFL views pass the season list as `years`; newer ones as
+               `available_years`. Accept either so the selector populates on
+               every page. #}
+            {% set nav_season_years = (available_years if available_years is defined and available_years
+                                       else (years if years is defined and years else [])) %}
             <select id="nflSeasonSelect" class="nfl-nav__season" aria-label="Select NFL season"
                     onchange="nflChangeSeason(this)">
-                {% for year in available_years|sort(reverse=True) %}
-                <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }} Season</option>
+                {% for year in nav_season_years|sort(reverse=True) %}
+                <option value="{{ year }}" {% if year|string == selected_year|string %}selected{% endif %}>{{ year }} Season</option>
                 {% endfor %}
             </select>
         </div>
