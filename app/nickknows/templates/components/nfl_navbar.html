@@ -1,24 +1,12 @@
 {#
-  NFL secondary navigation.
-  - Desktop: compact inline bar; top-level items open floating dropdowns,
-    the team-scoped sections are nested one level under "Team Stats".
-  - Mobile: hamburger toggles a collapsible accordion (same nesting inline).
+  NFL secondary navigation (Option C: entity-first).
+  - Home / Schedule are direct links.
+  - Teams ▾ opens each team's hub page (per-team stats live there as tiles).
+  - League ▾ collects the cross-team/league-wide views.
+  - Desktop: compact inline bar with floating dropdowns.
+  - Mobile: hamburger toggles a collapsible accordion.
   Interaction handled by the data-attribute controller at the bottom.
 #}
-
-{% set nfl_teams = [
-  ('ARI','Arizona Cardinals'), ('ATL','Atlanta Falcons'), ('BAL','Baltimore Ravens'),
-  ('BUF','Buffalo Bills'), ('CAR','Carolina Panthers'), ('CHI','Chicago Bears'),
-  ('CIN','Cincinnati Bengals'), ('CLE','Cleveland Browns'), ('DAL','Dallas Cowboys'),
-  ('DEN','Denver Broncos'), ('DET','Detroit Lions'), ('GB','Green Bay Packers'),
-  ('HOU','Houston Texans'), ('IND','Indianapolis Colts'), ('JAX','Jacksonville Jaguars'),
-  ('KC','Kansas City Chiefs'), ('LV','Las Vegas Raiders'), ('LAC','Los Angeles Chargers'),
-  ('LA','Los Angeles Rams'), ('MIA','Miami Dolphins'), ('MIN','Minnesota Vikings'),
-  ('NE','New England Patriots'), ('NO','New Orleans Saints'), ('NYG','New York Giants'),
-  ('NYJ','New York Jets'), ('PHI','Philadelphia Eagles'), ('PIT','Pittsburgh Steelers'),
-  ('SF','San Francisco 49ers'), ('SEA','Seattle Seahawks'), ('TB','Tampa Bay Buccaneers'),
-  ('TEN','Tennessee Titans'), ('WAS','Washington Commanders')
-] %}
 
 {% set nfl_divisions = [
   ('AFC East',  [('BUF','Buffalo Bills'),('MIA','Miami Dolphins'),('NE','New England Patriots'),('NYJ','New York Jets')]),
@@ -31,25 +19,6 @@
   ('NFC West',  [('ARI','Arizona Cardinals'),('LA','Los Angeles Rams'),('SEA','Seattle Seahawks'),('SF','San Francisco 49ers')])
 ] %}
 
-{% macro team_submenu(label, endpoint, teams, extras=[], use_fullname=True) %}
-<div class="nfl-nav__item nfl-nav__sub" data-nav-item>
-    <button class="nfl-nav__btn" type="button" data-nav-btn aria-haspopup="true" aria-expanded="false">
-        {{ label }} <i class="fa fa-chevron-down nfl-nav__chevron"></i>
-    </button>
-    <div class="nfl-nav__panel" data-nav-panel>
-        {% for text, href in extras %}<a href="{{ href }}">{{ text }}</a>{% endfor %}
-        {% if extras %}<div class="nfl-nav__divider"></div>{% endif %}
-        {% for abbr, name in teams %}
-            {% if use_fullname %}
-            <a href="{{ url_for(endpoint, team=abbr, fullname=name) }}">{{ name }}</a>
-            {% else %}
-            <a href="{{ url_for(endpoint, team=abbr) }}">{{ name }}</a>
-            {% endif %}
-        {% endfor %}
-    </div>
-</div>
-{% endmacro %}
-
 <nav class="nfl-nav">
     <div class="nfl-nav__inner">
         <a href="{{ url_for('NFL') }}" class="nfl-nav__brand">NFL</a>
@@ -57,21 +26,10 @@
         <div class="nfl-nav__links" id="nflNavLinks">
             <a href="{{ url_for('NFL') }}" class="nfl-nav__link">Home</a>
             <a href="{{ url_for('schedule') }}" class="nfl-nav__link">Schedule</a>
-            <a href="{{ url_for('projections') }}" class="nfl-nav__link">Projections</a>
-            <a href="{{ url_for('coaches') }}" class="nfl-nav__link">Coaches</a>
 
-            {# ── Grades ── #}
-            <div class="nfl-nav__item" data-nav-item>
-                <button class="nfl-nav__btn" type="button" data-nav-btn aria-haspopup="true" aria-expanded="false">
-                    Grades <i class="fa fa-chevron-down nfl-nav__chevron"></i>
-                </button>
-                <div class="nfl-nav__panel nfl-nav__panel--top" data-nav-panel>
-                    <a href="{{ url_for('team_grades') }}">Team Grades</a>
-                    <a href="{{ url_for('player_grades') }}">Player Grades</a>
-                </div>
-            </div>
-
-            {# ── Teams (by division) ── #}
+            {# ── Teams (by division) → each opens that team's hub page, where
+                 its roster / depth chart / snaps / opportunities / schedule /
+                 results / FPA now live as tiles. ── #}
             <div class="nfl-nav__item" data-nav-item>
                 <button class="nfl-nav__btn" type="button" data-nav-btn aria-haspopup="true" aria-expanded="false">
                     Teams <i class="fa fa-chevron-down nfl-nav__chevron"></i>
@@ -86,25 +44,19 @@
                 </div>
             </div>
 
-            {# ── Team Stats (nested per-section team pickers) ── #}
+            {# ── League-wide views ── #}
             <div class="nfl-nav__item" data-nav-item>
                 <button class="nfl-nav__btn" type="button" data-nav-btn aria-haspopup="true" aria-expanded="false">
-                    Team Stats <i class="fa fa-chevron-down nfl-nav__chevron"></i>
+                    League <i class="fa fa-chevron-down nfl-nav__chevron"></i>
                 </button>
                 <div class="nfl-nav__panel nfl-nav__panel--top" data-nav-panel>
-                    {{ team_submenu('Rosters', 'roster', nfl_teams) }}
-                    {{ team_submenu('Depth Charts', 'depth_chart', nfl_teams) }}
-                    {{ team_submenu('Snap Counts', 'team_snap_counts', nfl_teams,
-                        [('Snap Counts Home', url_for('snap_counts_home'))]) }}
-                    {{ team_submenu('Opportunities', 'team_opportunities', nfl_teams,
-                        [('Opportunity Home', url_for('opportunities_home')),
-                         ('Update Data', url_for('update_opportunities'))], use_fullname=False) }}
-                    {{ team_submenu('Team Schedule', 'team_schedule', nfl_teams) }}
-                    {{ team_submenu('Team Results', 'team_results', nfl_teams,
-                        [('Update All Teams', url_for('FPAupdate'))]) }}
-                    {{ team_submenu('Team FPA', 'team_fpa', nfl_teams,
-                        [('Update All Teams', url_for('FPAupdate')),
-                         ('All Teams', url_for('fpa', year=selected_year))]) }}
+                    <a href="{{ url_for('coaches') }}">Coaches</a>
+                    <a href="{{ url_for('team_grades') }}">Team Grades</a>
+                    <a href="{{ url_for('player_grades') }}">Player Grades</a>
+                    <a href="{{ url_for('projections') }}">Projections</a>
+                    <a href="{{ url_for('fpa', year=selected_year) }}">Fantasy Points Allowed</a>
+                    <a href="{{ url_for('snap_counts_home') }}">Snap Counts</a>
+                    <a href="{{ url_for('opportunities_home') }}">Opportunities</a>
                 </div>
             </div>
 

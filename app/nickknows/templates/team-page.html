@@ -70,6 +70,10 @@
         <i class="fas fa-users"></i>
         <h3>Roster</h3><p>Team players</p>
     </a>
+    <a href="{{ url_for('depth_chart', team=team, fullname=team_info.name) }}" class="quick-link-card">
+        <i class="fas fa-sitemap"></i>
+        <h3>Depth Chart</h3><p>Position depth</p>
+    </a>
     <a href="{{ url_for('team_results', team=team, fullname=team_info.name) }}" class="quick-link-card">
         <i class="fas fa-chart-line"></i>
         <h3>Results</h3><p>Game results</p>

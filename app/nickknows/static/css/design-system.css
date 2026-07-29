@@ -911,7 +911,15 @@ table.dataframe tr:hover td {
         display: none;
     }
 
-    .nk-nav__dropdown-content {
+    /* On mobile the hamburger reveals the links directly — the single
+       "Interests" grouping is redundant, so hide the trigger and always
+       show its contents instead of requiring a second tap. */
+    .nk-nav__dropdown-btn {
+        display: none;
+    }
+
+    .nk-nav__dropdown-content,
+    .nk-nav__dropdown.is-open .nk-nav__dropdown-content {
         position: static;
         transform: none;
         background: transparent;
@@ -919,15 +927,14 @@ table.dataframe tr:hover td {
         box-shadow: none;
         padding: 0;
         text-align: center;
-        display: none;
-    }
-
-    .nk-nav__dropdown.is-open .nk-nav__dropdown-content {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-md);
     }
 
     .nk-nav__dropdown-content a {
-        font-size: 16px;
+        font-size: 18px;
         padding: 8px 20px;
     }
 }
