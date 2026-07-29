@@ -617,13 +617,13 @@ img {
    ═══════════════════════════════════════════ */
 .flash-container {
     position: fixed;
-    top: 80px;
+    bottom: 24px;
     right: 24px;
     z-index: 200;
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
-    max-width: 400px;
+    max-width: min(400px, calc(100vw - 48px));
 }
 
 .flash-message {
@@ -641,8 +641,8 @@ img {
 }
 
 @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
 .flash-close {
