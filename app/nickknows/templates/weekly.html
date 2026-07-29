@@ -9,12 +9,6 @@
 <div class="content-section">
     <form id="scheduleForm" method="get" action="{{ url_for('schedule') }}"
           style="display: flex; gap: var(--space-md); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-xl);">
-        <select name="year" id="year" onchange="this.form.submit()"
-                style="padding: 8px 14px; border-radius: var(--radius-pill); background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 14px; cursor: pointer;">
-            {% for year in years %}
-            <option value="{{ year }}" {% if year|string == selected_year|string %}selected{% endif %}>{{ year }}</option>
-            {% endfor %}
-        </select>
         <select name="week" id="week" onchange="this.form.submit()"
                 style="padding: 8px 14px; border-radius: var(--radius-pill); background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 14px; cursor: pointer;">
             {% for w in weeks %}

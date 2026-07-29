@@ -19,16 +19,6 @@
         <input type="hidden" name="year" value="{{ selected_year }}">
         <button type="submit" class="btn btn--ghost">Update {{ selected_year }} Data</button>
     </form>
-
-    <form id="yearForm" action="{{ url_for('set_year') }}" method="POST" style="display: inline;">
-        <select name="year" id="yearSelect" onchange="this.form.submit()" 
-                style="padding: 10px 16px; border-radius: var(--radius-pill); background: var(--surface); 
-                       border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 14px; cursor: pointer;">
-            {% for year in years %}
-            <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
-            {% endfor %}
-        </select>
-    </form>
 </div>
 
 {% if pass_yards_data %}
