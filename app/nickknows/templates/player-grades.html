@@ -1,0 +1,78 @@
+{% extends 'nfl-base.html' %}
+{% block title %}NFL Player Grades | Nick Knows NFL{% endblock %}
+{% block og_title %}NFL Player Grades{% endblock %}
+
+{% macro grade_badge(value) -%}
+{%- if value is none -%}
+<span class="grade-badge grade-badge--na">—</span>
+{%- else -%}
+<span class="grade-badge" style="--g-hue: {{ ((value|float) * 1.2)|round(0, 'floor')|int }};">{{ '%.1f'|format(value|float) }}</span>
+{%- endif -%}
+{%- endmacro %}
+
+{% block nfl_content %}
+<div class="page-header">
+    <h1 class="page-header__title">Player Grades</h1>
+    <p class="page-header__subtitle">{{ selected_year }} Season · graded 0–100 vs their position · opportunity-weighted</p>
+</div>
+
+<div class="content-section">
+    <form method="get" action="{{ url_for('player_grades') }}"
+          style="display: flex; gap: var(--space-md); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-lg);">
+        <div class="pg-filter">
+            <label for="pg-position">Position</label>
+            <select name="position" id="pg-position" onchange="this.form.submit()">
+                {% for p in positions %}
+                <option value="{{ p }}" {% if p == selected_position %}selected{% endif %}>{{ p }}</option>
+                {% endfor %}
+                <option value="ALL" {% if selected_position == 'ALL' %}selected{% endif %}>All</option>
+            </select>
+        </div>
+    </form>
+
+    {% if error %}
+    <p class="text-muted">{{ error }}</p>
+    {% elif not grades %}
+    <p class="text-muted">No player grades found.</p>
+    {% else %}
+    <div class="table-wrapper">
+        <table class="table sortable" id="playerGradesTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th data-sort="text">Player</th>
+                    <th data-sort="text">Pos</th>
+                    <th data-sort="num">Games</th>
+                    <th data-sort="num">Grade</th>
+                    <th data-sort="num">Opportunity</th>
+                    <th data-sort="num">Efficiency</th>
+                    <th data-sort="num">FPPG</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in grades %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td data-val="{{ g.player_name }}">{{ g.player_name }}</td>
+                    <td data-val="{{ g.position }}">{{ g.position }}</td>
+                    <td data-val="{{ g.games or 0 }}">{{ g.games if g.games is not none else '—' }}</td>
+                    <td data-val="{{ g.grade or 0 }}">{{ grade_badge(g.grade) }}</td>
+                    <td data-val="{{ g.opportunity_grade or 0 }}">{{ grade_badge(g.opportunity_grade) }}</td>
+                    <td data-val="{{ g.efficiency_grade or 0 }}">{{ grade_badge(g.efficiency_grade) }}</td>
+                    <td data-val="{{ g.fppg or 0 }}">{{ '%.1f'|format(g.fppg|float) if g.fppg is not none else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted" style="margin-top: var(--space-md); font-size: 12px;">
+        Grade blends opportunity (role/volume) and efficiency, weighted toward opportunity.
+        Click any column header to sort. Sourced from the NFL-API central data hub.
+    </p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block nfl_extra_js %}
+<script src="{{ url_for('static', filename='js/sortable-table.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'nfl-base.html' %}
+{% block title %}NFL Team Grades | Nick Knows NFL{% endblock %}
+{% block og_title %}NFL Team Grades{% endblock %}
+
+{% macro grade_badge(value) -%}
+{%- if value is none -%}
+<span class="grade-badge grade-badge--na">—</span>
+{%- else -%}
+<span class="grade-badge" style="--g-hue: {{ ((value|float) * 1.2)|round(0, 'floor')|int }};">{{ '%.1f'|format(value|float) }}</span>
+{%- endif -%}
+{%- endmacro %}
+
+{% block nfl_content %}
+<div class="page-header">
+    <h1 class="page-header__title">Team Grades</h1>
+    <p class="page-header__subtitle">{{ selected_year }} Season · 0–100, 50 = league average · higher defense grade = stingier</p>
+</div>
+
+<div class="content-section">
+    {% if error %}
+    <p class="text-muted">{{ error }}</p>
+    {% elif not grades %}
+    <p class="text-muted">No team grades found.</p>
+    {% else %}
+    <div class="table-wrapper">
+        <table class="table sortable" id="teamGradesTable">
+            <thead>
+                <tr>
+                    <th data-sort="text">Team</th>
+                    <th data-sort="num">Games</th>
+                    <th data-sort="num">Offense</th>
+                    <th data-sort="num">Defense</th>
+                    <th data-sort="num">Off Rating</th>
+                    <th data-sort="num">Def Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in grades %}
+                <tr>
+                    <td data-val="{{ g.team }}">
+                        <span class="tg-team">
+                            {% if g.logo %}<img src="{{ g.logo }}" alt="{{ g.team }}" class="tg-team__logo" loading="lazy">{% endif %}
+                            <span>{{ g.team_name }}</span>
+                        </span>
+                    </td>
+                    <td data-val="{{ g.games or 0 }}">{{ g.games if g.games is not none else '—' }}</td>
+                    <td data-val="{{ g.offense_grade or 0 }}">{{ grade_badge(g.offense_grade) }}</td>
+                    <td data-val="{{ g.defense_grade or 0 }}">{{ grade_badge(g.defense_grade) }}</td>
+                    <td data-val="{{ g.offense_rating or 0 }}">{{ '%+.2f'|format(g.offense_rating|float) if g.offense_rating is not none else '—' }}</td>
+                    <td data-val="{{ g.defense_rating or 0 }}">{{ '%+.2f'|format(g.defense_rating|float) if g.defense_rating is not none else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted" style="margin-top: var(--space-md); font-size: 12px;">
+        Click any column header to sort. Grades come from the NFL-API central data hub.
+    </p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block nfl_extra_js %}
+<script src="{{ url_for('static', filename='js/sortable-table.js') }}"></script>
+{% endblock %}

@@ -281,6 +281,44 @@ body.nfl-page #main-content { padding-top: 76px; }
     padding: var(--space-md) var(--space-lg);
 }
 
+/* ═══════════════════════════════════════════
+   Grades (Team & Player) — 0-100 colour scale
+   hue 0=red (poor) → 60=yellow (avg 50) → 120=green (elite)
+   ═══════════════════════════════════════════ */
+.grade-badge {
+    display: inline-block;
+    min-width: 48px;
+    text-align: center;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 13px;
+    color: #fff;
+    background: hsl(var(--g-hue, 60), 62%, 38%);
+}
+.grade-badge--na { background: var(--surface-hover); color: var(--text-muted); }
+
+.tg-team { display: inline-flex; align-items: center; gap: 8px; }
+.tg-team__logo { width: 22px; height: 22px; object-fit: contain; flex: none; }
+
+.pg-filter { display: flex; align-items: center; gap: 8px; }
+.pg-filter label {
+    color: var(--text-muted); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;
+}
+.pg-filter select {
+    font-family: inherit; font-size: 13px; color: var(--text);
+    background: var(--surface-hover); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 7px 12px; cursor: pointer;
+}
+.pg-filter select:focus { outline: none; border-color: var(--accent); }
+
+/* Sortable table headers */
+th.sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
+th.sortable-th::after { content: '↕'; opacity: 0.35; margin-left: 6px; font-size: 10px; }
+th.sortable-th.sort-asc::after { content: '↑'; opacity: 0.9; }
+th.sortable-th.sort-desc::after { content: '↓'; opacity: 0.9; }
+
 /* On NFL pages the page-header / content-section carry the site's hero-scale
    spacing (140px top, up to 120px sides). Neutralise it: the horizontal inset
    comes from .nfl-content, and content sits higher and spans the full width. */

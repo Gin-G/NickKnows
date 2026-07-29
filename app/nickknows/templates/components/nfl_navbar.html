@@ -60,6 +60,17 @@
             <a href="{{ url_for('projections') }}" class="nfl-nav__link">Projections</a>
             <a href="{{ url_for('coaches') }}" class="nfl-nav__link">Coaches</a>
 
+            {# ── Grades ── #}
+            <div class="nfl-nav__item" data-nav-item>
+                <button class="nfl-nav__btn" type="button" data-nav-btn aria-haspopup="true" aria-expanded="false">
+                    Grades <i class="fa fa-chevron-down nfl-nav__chevron"></i>
+                </button>
+                <div class="nfl-nav__panel nfl-nav__panel--top" data-nav-panel>
+                    <a href="{{ url_for('team_grades') }}">Team Grades</a>
+                    <a href="{{ url_for('player_grades') }}">Player Grades</a>
+                </div>
+            </div>
+
             {# ── Teams (by division) ── #}
             <div class="nfl-nav__item" data-nav-item>
                 <button class="nfl-nav__btn" type="button" data-nav-btn aria-haspopup="true" aria-expanded="false">

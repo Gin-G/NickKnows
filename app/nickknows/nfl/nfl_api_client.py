@@ -7,6 +7,8 @@ server-to-server requests. Override NFL_API_URL for local dev against
 the public host.
 """
 import os
+import threading
+import time
 
 import requests
 
@@ -14,6 +16,11 @@ DEFAULT_BASE_URL = "http://nfl-api.nfl-api.svc.cluster.local:8000"
 BASE_URL = os.environ.get("NFL_API_URL", DEFAULT_BASE_URL).rstrip("/")
 
 DEFAULT_TIMEOUT = 10
+# Slow-changing endpoints (grades/ratings/teams) update at most daily.
+DEFAULT_CACHE_TTL = int(os.environ.get("NFL_API_CACHE_TTL", "3600"))
+
+_cache = {}
+_cache_lock = threading.Lock()
 
 
 class NflApiError(Exception):
@@ -44,6 +51,25 @@ def get(path, timeout=DEFAULT_TIMEOUT, **params):
         )
 
     return response.json()
+
+
+def get_cached(path, ttl=DEFAULT_CACHE_TTL, timeout=DEFAULT_TIMEOUT, **params):
+    """Like get(), but memoise the parsed JSON for `ttl` seconds.
+
+    For slow-changing endpoints (grades, ratings, team metadata). Only
+    successful responses are cached — a failed fetch raises and is retried on
+    the next call. Keyed by path + the non-None query params.
+    """
+    key = (path, tuple(sorted((k, v) for k, v in params.items() if v is not None)))
+    now = time.time()
+    with _cache_lock:
+        hit = _cache.get(key)
+        if hit and hit[0] > now:
+            return hit[1]
+    payload = get(path, timeout=timeout, **params)  # fetch outside the lock
+    with _cache_lock:
+        _cache[key] = (now + ttl, payload)
+    return payload
 
 
 def is_no_data(payload):

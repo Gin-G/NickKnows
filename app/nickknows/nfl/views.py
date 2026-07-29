@@ -478,6 +478,115 @@ def projections():
                          available_years=available_years,
                          selected_year=selected_year)
 
+
+def _team_meta_map():
+    """abbr -> {'name','city','logo'} from NFL-API /teams/ (cached ~1 day)."""
+    meta = {}
+    try:
+        payload = nfl_api_client.get_cached('/teams/', ttl=86400)
+        for t in (payload.get('data') or []):
+            abbr = t.get('team_abbr')
+            if abbr:
+                meta[abbr] = {
+                    'name': t.get('team_name') or abbr,
+                    'city': _team_city(abbr, t.get('team_name')),
+                    'logo': t.get('team_logo_espn'),
+                }
+    except nfl_api_client.NflApiError as e:
+        logger.warning(f"NFL-API teams meta fetch failed: {e}")
+    return meta
+
+
+@app.route('/NFL/TeamGrades')
+def team_grades():
+    """Team offense/defense grades (0-100, 50=avg) from NFL-API GET /ratings/{season}.
+
+    Central-hub sourced — no local computation. Cached; graceful empty state
+    when the API is unreachable or the season has no games yet."""
+    available_years = get_available_years()
+    selected_year = get_selected_year()
+    through_week = request.args.get('through_week', type=int)
+
+    meta = _team_meta_map()
+    grades = []
+    error = None
+    try:
+        payload = nfl_api_client.get_cached(
+            f'/ratings/{selected_year}', through_week=through_week)
+        if nfl_api_client.is_no_data(payload):
+            error = f'No team grades available yet for {selected_year}.'
+        else:
+            for r in (payload.get('data') or []):
+                abbr = r.get('team')
+                m = meta.get(abbr, {})
+                grades.append({
+                    'team': abbr,
+                    'team_name': m.get('name', abbr),
+                    'logo': m.get('logo'),
+                    'games': r.get('games'),
+                    'offense_grade': r.get('offense_grade'),
+                    'defense_grade': r.get('defense_grade'),
+                    'offense_rating': r.get('offense_rating'),
+                    'defense_rating': r.get('defense_rating'),
+                })
+    except nfl_api_client.NflApiError as e:
+        logger.warning(f"NFL-API ratings fetch failed: {e}")
+        if '404' in str(e):
+            error = f'No team grades available yet for {selected_year}.'
+        else:
+            error = 'Team grades are temporarily unavailable. Please try again shortly.'
+
+    return render_template('team-grades.html',
+                         grades=grades,
+                         error=error,
+                         through_week=through_week,
+                         years=available_years,
+                         available_years=available_years,
+                         selected_year=selected_year)
+
+
+@app.route('/NFL/PlayerGrades')
+def player_grades():
+    """Opportunity-weighted player grades (vs position, 0-100) from NFL-API
+    GET /player-grades/{season}. Filter by position; season via the navbar."""
+    available_years = get_available_years()
+    selected_year = get_selected_year()
+
+    positions = ['QB', 'RB', 'WR', 'TE']
+    selected_position = (request.args.get('position') or 'QB').upper()
+    api_position = None if selected_position == 'ALL' else selected_position
+    through_week = request.args.get('through_week', type=int)
+    limit = request.args.get('limit', default=50, type=int)
+
+    grades = []
+    error = None
+    try:
+        payload = nfl_api_client.get_cached(
+            f'/player-grades/{selected_year}',
+            position=api_position, through_week=through_week, limit=limit)
+        if nfl_api_client.is_no_data(payload):
+            error = f'No player grades available yet for {selected_year}.'
+        else:
+            grades = payload.get('data') or []
+    except nfl_api_client.NflApiError as e:
+        logger.warning(f"NFL-API player-grades fetch failed: {e}")
+        if '404' in str(e):
+            error = f'No player grades available yet for {selected_year}.'
+        else:
+            error = 'Player grades are temporarily unavailable. Please try again shortly.'
+
+    return render_template('player-grades.html',
+                         grades=grades,
+                         error=error,
+                         positions=positions,
+                         selected_position=selected_position,
+                         limit=limit,
+                         through_week=through_week,
+                         years=available_years,
+                         available_years=available_years,
+                         selected_year=selected_year)
+
+
 @app.route('/NFL/DepthChart/<team>/<fullname>')
 def depth_chart(team, fullname):
     """Team depth chart backed entirely by NFL-API GET /teams/{abbr}/depth-chart.
