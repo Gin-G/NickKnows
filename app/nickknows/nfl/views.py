@@ -415,49 +415,162 @@ def _first_present(row, *keys, default=None):
             return value
     return default
 
+
+# Position-specific component stat columns. The projection model emits tiny
+# cross-position noise (e.g. passing yards for a WR), so we only surface the
+# stats that are meaningful for each position. Each entry is (row key, header
+# label, format code) where the format code drives decimal precision in
+# _fmt_cell below.
+_PROJECTION_COMPONENT_STATS = {
+    'QB': [
+        ('passing_yards', 'Pass Yds', 'yds'),
+        ('passing_tds', 'Pass TD', 'td'),
+        ('interceptions', 'INT', 'int'),
+        ('rushing_yards', 'Rush Yds', 'yds'),
+        ('rushing_tds', 'Rush TD', 'td'),
+    ],
+    'RB': [
+        ('rushing_yards', 'Rush Yds', 'yds'),
+        ('rushing_tds', 'Rush TD', 'td'),
+        ('receptions', 'Rec', 'rec'),
+        ('receiving_yards', 'Rec Yds', 'yds'),
+        ('receiving_tds', 'Rec TD', 'td'),
+    ],
+    'WR': [
+        ('receptions', 'Rec', 'rec'),
+        ('receiving_yards', 'Rec Yds', 'yds'),
+        ('receiving_tds', 'Rec TD', 'td'),
+    ],
+}
+_PROJECTION_COMPONENT_STATS['TE'] = _PROJECTION_COMPONENT_STATS['WR']
+
+
+def _to_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _fmt_cell(value, fmt):
+    """Format one projection value for display, preserving the raw number for
+    client-side sorting. TDs/INTs keep 2 decimals (they are expected counts or
+    per-game probabilities, not whole events), receptions 1 decimal, yards are
+    whole numbers, and points/PPG 1 decimal."""
+    num = _to_float(value)
+    if num is None:
+        return {'sort': '', 'display': '—'}
+    if fmt == 'yds' or fmt == 'games':
+        display = f'{num:.0f}'
+    elif fmt in ('td', 'int'):
+        display = f'{num:.2f}'
+    elif fmt == 'rec':
+        display = f'{num:.1f}'
+    else:  # 'pts'
+        display = f'{num:.1f}'
+    return {'sort': num, 'display': display}
+
+
+def _build_projection_columns(view_mode, position):
+    """Column spec (key, label, fmt) for the given view/position."""
+    if view_mode == 'season':
+        cols = [
+            ('total_points', 'Total Pts', 'pts'),
+            ('ppg', 'PPG', 'pts'),
+            ('games', 'G', 'games'),
+        ]
+    else:
+        cols = [
+            ('projected_points', 'Proj', 'pts'),
+            ('median', 'Median', 'pts'),
+        ]
+    if position in _PROJECTION_COMPONENT_STATS:
+        cols.extend(_PROJECTION_COMPONENT_STATS[position])
+    return cols
+
+
+def _fetch_season_projections(season, position):
+    """Season totals from NFL-API. When no position is chosen (ALL) we pull each
+    position and merge, then sort by total points. Returns (raw_rows, has_data)."""
+    positions = [position] if position else ['QB', 'RB', 'WR', 'TE']
+    rows = []
+    has_data = False
+    for pos in positions:
+        payload = nfl_api_client.get_cached(
+            f'/projections/season/{season}', position=pos, limit=200
+        )
+        if nfl_api_client.is_no_data(payload):
+            continue
+        data = payload.get('data') or []
+        if data:
+            has_data = True
+        rows.extend(data)
+    rows.sort(key=lambda r: (_to_float(r.get('total_points')) is None,
+                             -(_to_float(r.get('total_points')) or 0)))
+    return rows, has_data
+
+
+def _fetch_weekly_projections(season, week, position):
+    """Per-week projections from NFL-API. Returns (raw_rows, has_data)."""
+    payload = nfl_api_client.get_cached(
+        '/projections/', season=season, week=week, position=position
+    )
+    if nfl_api_client.is_no_data(payload):
+        return [], False
+    rows = payload.get('data') or []
+    rows.sort(key=lambda r: (_to_float(r.get('projected_points')) is None,
+                             -(_to_float(r.get('projected_points')) or 0)))
+    return rows, bool(rows)
+
+
+def _project_row(raw, columns, view_mode):
+    """Shape one API row into the template's display model."""
+    if view_mode == 'season':
+        floor, ceiling = raw.get('floor_total'), raw.get('ceiling_total')
+    else:
+        floor, ceiling = raw.get('floor'), raw.get('ceiling')
+    return {
+        'player_name': _first_present(raw, 'player_name', 'player_display_name', default='Unknown'),
+        'position': raw.get('position') or '',
+        'team': raw.get('team') or '',
+        'cells': [_fmt_cell(raw.get(key), fmt) for key, _label, fmt in columns],
+        'floor': _to_float(floor),
+        'ceiling': _to_float(ceiling),
+    }
+
+
 @app.route('/NFL/Projections')
 def projections():
-    """Fantasy projections page backed entirely by NFL-API GET /projections/.
+    """Fantasy projections page, a thin view over NFL-API.
 
-    No CSV fallback exists — projections are a NEW capability with no
-    Celery/CSV predecessor, so when the API is unavailable we show an
-    empty state rather than falling back."""
+    "All Weeks" (the default) shows SEASON TOTALS from
+    /projections/season/{season}; picking a week from the dropdown shows
+    per-week projections from /projections/. No CSV fallback exists —
+    projections are a NEW capability with no Celery/CSV predecessor, so when
+    the API is unavailable we show an empty state rather than falling back."""
     available_years = get_available_years()
     selected_year = get_selected_year()
 
     week = request.args.get('week', type=int)
-    position = request.args.get('position') or None
-    team = request.args.get('team') or None
+    position = (request.args.get('position') or '').upper()
+    if position not in ('QB', 'RB', 'WR', 'TE'):
+        position = None  # anything else (incl. "ALL"/blank) means all positions
+
+    view_mode = 'weekly' if week else 'season'
+    columns = _build_projection_columns(view_mode, position)
 
     rows = []
     error = None
     try:
-        payload = nfl_api_client.get(
-            '/projections/',
-            season=selected_year,
-            week=week,
-            position=position,
-            team=team,
-        )
-        if nfl_api_client.is_no_data(payload):
-            error = f'No projections available yet for {selected_year}.'
+        if view_mode == 'season':
+            raw_rows, has_data = _fetch_season_projections(selected_year, position)
         else:
-            data = payload.get('data') or []
-            for row in data:
-                mean = _first_present(row, 'projected_points', 'mean', 'projection', default=0)
-                rows.append({
-                    'player_name': _first_present(row, 'player_name', 'player_display_name', 'name', default='Unknown'),
-                    'player_id': _first_present(row, 'player_id', 'gsis_id', default=''),
-                    'position': _first_present(row, 'position', 'pos', default=''),
-                    'team': _first_present(row, 'team', 'recent_team', 'club', default=''),
-                    'week': _first_present(row, 'week', default=week),
-                    'projected_points': mean,
-                    'floor': _first_present(row, 'floor', default=None),
-                    'median': _first_present(row, 'median', default=None),
-                    'ceiling': _first_present(row, 'ceiling', default=None),
-                })
-            # Highest projected points first
-            rows.sort(key=lambda r: (r['projected_points'] is None, -(r['projected_points'] or 0)))
+            raw_rows, has_data = _fetch_weekly_projections(selected_year, week, position)
+        if not has_data:
+            error = (f'No projections available yet for {selected_year}'
+                     + (f' week {week}' if week else '') + '.')
+        else:
+            rows = [_project_row(r, columns, view_mode) for r in raw_rows]
     except nfl_api_client.NflApiError as e:
         logger.warning(f"NFL-API projections fetch failed: {e}")
         error = 'Projections are temporarily unavailable. Please try again shortly.'
@@ -467,12 +580,13 @@ def projections():
 
     return render_template('projections.html',
                          projections=rows,
+                         columns=columns,
+                         view_mode=view_mode,
+                         show_pos=position is None,
                          max_ceiling=max_ceiling,
                          error=error,
-                         positions=['QB', 'RB', 'WR', 'TE', 'K', 'DEF'],
-                         teams=get_all_teams(),
+                         positions=['QB', 'RB', 'WR', 'TE'],
                          selected_position=position,
-                         selected_team=team,
                          selected_week=week,
                          years=available_years,
                          available_years=available_years,
