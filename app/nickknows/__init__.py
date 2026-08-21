@@ -18,6 +18,19 @@ app.config["NFL_API_URL"] = os.environ.get(
 celery = Celery(app.name, broker=app.config["CELERY_BROKER_URL"])
 celery.conf.update(app.config)
 
+
+# Error pages render through base.html so they carry the site chrome and the
+# Google tag; Flask's built-in error pages are bare HTML with neither.
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return render_template('500.html'), 500
+
+
 from nickknows.main import views
 from nickknows.nfl import views
 from nickknows.fahrtbags import views

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Something Went Wrong | Nick Knows{% endblock %}
+{% block og_title %}Something Went Wrong | Nick Knows{% endblock %}
+{% block meta_description %}An unexpected error occurred on Nick Knows.{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="page-header">
+        <span class="section__eyebrow">Error 500</span>
+        <h1 class="page-header__title">Something went wrong on our end</h1>
+        <p class="page-header__subtitle">
+            That's a problem with the site, not with you. Try again in a moment.
+        </p>
+    </div>
+
+    <div class="hero__actions">
+        <a href="{{ url_for('home') }}" class="btn btn--primary">Back Home</a>
+    </div>
+</section>
+{% endblock %}

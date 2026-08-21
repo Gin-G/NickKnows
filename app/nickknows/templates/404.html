@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found | Nick Knows{% endblock %}
+{% block og_title %}Page Not Found | Nick Knows{% endblock %}
+{% block meta_description %}That page doesn't exist on Nick Knows.{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="page-header">
+        <span class="section__eyebrow">Error 404</span>
+        <h1 class="page-header__title">This page took a wrong turn</h1>
+        <p class="page-header__subtitle">
+            The page you're after doesn't exist, moved, or never did. Let's get you back on track.
+        </p>
+    </div>
+
+    <div class="hero__actions">
+        <a href="{{ url_for('home') }}" class="btn btn--primary">Back Home</a>
+        <a href="{{ url_for('NFL') }}" class="btn btn--ghost">NFL Stats</a>
+    </div>
+</section>
+{% endblock %}
