@@ -4,17 +4,26 @@
 
 /* ── Tokens ── */
 :root {
-    /* Colors */
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface-hover: #1a1a25;
-    --border: rgba(255, 255, 255, 0.06);
-    --border-hover: rgba(255, 255, 255, 0.12);
-    --text: #e8e6e3;
-    --text-muted: #8a8a9a;
-    --accent: #4f8fff;
-    --accent-glow: rgba(79, 143, 255, 0.15);
-    --accent-hover: #6da3ff;
+    /* Colors — the ging brand (ging-tokens.css). Follows the OS color scheme:
+       light = skin page with hair-filled nav and buttons, eye-blue links;
+       dark  = hair-colored type on warm near-black, eye-blue buttons.
+       Translucent tints are mixed from these vars so they work in both modes. */
+    --bg: var(--g-bg);
+    --surface: var(--g-surface);
+    --surface-hover: var(--g-surface-alt);
+    --border: var(--g-border);
+    --border-hover: var(--g-brand);
+    --text: var(--g-text);
+    --text-muted: var(--g-text-muted);
+    --highlight: var(--g-highlight);
+    --accent: var(--g-accent);
+    --accent-glow: color-mix(in srgb, var(--accent) 12%, transparent);
+    --accent-hover: var(--g-accent-hover);
+    --on-accent: var(--g-on-accent);
+    --accent-2: var(--g-brand);
+    --primary: var(--g-primary);
+    --on-primary: var(--g-on-primary);
+    --shade-rgb: 52 30 12;          /* --hair-900, for shadows */
     --danger: #D50A0A;
 
     /* Typography */
@@ -80,7 +89,7 @@ img {
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--text) 20%, transparent); border-radius: 3px; }
 
 /* ═══════════════════════════════════════════
    Navigation
@@ -91,11 +100,17 @@ img {
     z-index: 100;
     padding: 20px 32px;
     transition: all 0.4s var(--ease);
+    /* The nav is a brand bar: hair in light mode, quiet surface in dark.
+       Re-pointing the text vars here recolors everything inside it. */
+    background: var(--g-bar);
+    --text: var(--g-on-bar);
+    --text-muted: var(--g-on-bar);
+    --highlight: var(--g-on-bar);
 }
 
 .nk-nav--shrunk {
     padding: 12px 32px;
-    background: rgba(10, 10, 15, 0.92);
+    background: color-mix(in srgb, var(--g-bar) 94%, transparent);
     backdrop-filter: blur(20px) saturate(1.4);
     border-bottom: 1px solid var(--border);
 }
@@ -128,6 +143,7 @@ img {
 }
 
 .nk-nav__wordmark {
+    color: var(--highlight);
     font-family: var(--font-display);
     font-size: 24px;
     letter-spacing: -0.02em;
@@ -178,7 +194,7 @@ img {
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 12px 0 var(--space-sm);
-    box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    box-shadow: 0 16px 48px rgb(var(--shade-rgb) / 0.18);
 }
 
 .nk-nav__dropdown.is-open .nk-nav__dropdown-content {
@@ -290,7 +306,7 @@ img {
 .hero__ambient--2 {
     bottom: -10%; left: -5%;
     width: 500px; height: 500px;
-    background: radial-gradient(circle, rgba(143, 95, 255, 0.08) 0%, transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent-2) 10%, transparent) 0%, transparent 70%);
 }
 
 .hero__content {
@@ -305,8 +321,8 @@ img {
     gap: var(--space-sm);
     padding: 6px 14px;
     border-radius: var(--radius-pill);
-    background: rgba(79, 143, 255, 0.08);
-    border: 1px solid rgba(79, 143, 255, 0.15);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent);
     margin-bottom: 28px;
     font-size: 12px;
     color: var(--accent);
@@ -328,6 +344,7 @@ img {
 }
 
 .hero__title {
+    color: var(--highlight);
     font-family: var(--font-display);
     font-size: clamp(48px, 7vw, 88px);
     font-weight: 400;
@@ -338,7 +355,7 @@ img {
 
 .hero__title em {
     font-style: italic;
-    background: linear-gradient(135deg, var(--accent), #8f5fff);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -404,25 +421,25 @@ img {
 }
 
 .btn--primary {
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 4px 24px rgba(79, 143, 255, 0.3);
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 0 4px 24px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 .btn--primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(79, 143, 255, 0.4);
+    box-shadow: 0 8px 32px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
 .btn--ghost {
-    background: rgba(255, 255, 255, 0.03);
+    background: color-mix(in srgb, var(--text) 4%, transparent);
     color: var(--text);
     border: 1px solid var(--border);
     font-weight: 500;
 }
 
 .btn--ghost:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--text) 8%, transparent);
     border-color: var(--border-hover);
 }
 
@@ -439,6 +456,7 @@ img {
 }
 
 .stats-ribbon__value {
+    color: var(--highlight);
     display: block;
     font-family: var(--font-display);
     font-size: 32px;
@@ -484,6 +502,7 @@ img {
 }
 
 .section__title {
+    color: var(--highlight);
     font-family: var(--font-display);
     font-size: clamp(32px, 4vw, 48px);
     margin-top: var(--space-sm);
@@ -565,7 +584,7 @@ img {
 
 .interest-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.08);
+    box-shadow: 0 20px 60px rgb(var(--shade-rgb) / 0.14), 0 0 0 1px color-mix(in srgb, var(--text) 10%, transparent);
 }
 
 .interest-card__image {
@@ -605,7 +624,7 @@ img {
 .tag {
     padding: 4px 10px;
     border-radius: var(--radius-pill);
-    background: rgba(255,255,255,0.04);
+    background: color-mix(in srgb, var(--text) 5%, transparent);
     border: 1px solid var(--border);
     font-size: 11px;
     color: var(--text-muted);
@@ -636,7 +655,7 @@ img {
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     font-size: 14px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 32px rgb(var(--shade-rgb) / 0.14);
     animation: slideIn 0.3s var(--ease);
 }
 
@@ -710,6 +729,7 @@ table.dataframe tr:hover td {
 }
 
 .page-header__title {
+    color: var(--highlight);
     font-family: var(--font-display);
     font-size: clamp(36px, 5vw, 56px);
     letter-spacing: -0.02em;
@@ -801,6 +821,7 @@ table.dataframe tr:hover td {
 }
 
 .nk-footer__wordmark {
+    color: var(--highlight);
     font-family: var(--font-display);
     font-size: 20px;
 }
