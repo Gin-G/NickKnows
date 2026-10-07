@@ -18,7 +18,7 @@ spec:
       {{- range $tlsHosts }}
       - {{ . }}
       {{- end }}
-      secretName: nickknows-prod-tls
+      secretName: {{ .Values.webapp.tlsSecretName | default "nickknows-prod-tls" }}
   rules:
   {{- range $hosts }}
   - host: {{ . }}
