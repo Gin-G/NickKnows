@@ -42,7 +42,7 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: redis-dev
+              app: {{ include "nickknows.redisName" . }}
       ports:
         - protocol: TCP
           port: 6379

@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis
+  name: {{ include "nickknows.redisName" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app: redis
+    app: {{ include "nickknows.redisName" . }}
     group: {{ .Values.webapp.group }}
 spec:
   ports:
@@ -12,4 +12,4 @@ spec:
       port: 6379
       protocol: TCP
   selector:
-    app: redis
+    app: {{ include "nickknows.redisName" . }}

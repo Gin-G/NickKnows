@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis
+  name: {{ include "nickknows.redisName" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app: redis
+    app: {{ include "nickknows.redisName" . }}
     group: {{ .Values.webapp.group }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: redis
+      app: {{ include "nickknows.redisName" . }}
   template:
     metadata:
       labels:
-        app: redis
+        app: {{ include "nickknows.redisName" . }}
     spec:
       containers:
       - name: redis

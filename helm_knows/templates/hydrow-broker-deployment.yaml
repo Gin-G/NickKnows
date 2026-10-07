@@ -36,7 +36,7 @@ spec:
         - containerPort: {{ .Values.hydrowBroker.container.port }}
         env:
         - name: REDIS_ENV
-          value: redis-dev
+          value: {{ include "nickknows.redisName" . }}
         - name: HYDROW_BROKER_HMAC_SECRET
           valueFrom:
             secretKeyRef:

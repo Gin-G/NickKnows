@@ -1,12 +1,10 @@
+# DEV values (dev branch). The nickknows-dev Argo app deploys this chart into
+# the same `nickknows` namespace as prod, so every name and host below must
+# differ from main's values.yaml. Don't merge this file back to main.
 webapp:
-  name: nickknows
-  group: nickknows
-  fqdn: nickknows.net
-  fqdnAliases:
-    - www.nickknows.net
-  extraTlsHosts:
-    - fahrtbags.com
-    - www.fahrtbags.com
+  name: nickknows-dev
+  group: nickknows-dev
+  fqdn: dev.nickknows.net
   path: /
   replicaCount: 1
   container:
@@ -24,15 +22,19 @@ nflApi:
   # hostname (nfl-api.nickknows.net) — it sits behind a Cloudflare
   # bot-challenge that 403s server-to-server requests.
   url: http://nfl-api.nfl-api.svc.cluster.local:8000
+# Own Redis (and therefore own Celery queue) so dev never shares prod's.
+redis:
+  name: redis-dev
 fahrtbags:
-  enabled: true
+  # Prod owns the fahrtbags.com redirect.
+  enabled: false
   hosts:
     - fahrtbags.com
     - www.fahrtbags.com
   redirectTo: https://nickknows.net/fahrtbags
 hydrowBroker:
   enabled: true
-  name: hydrow-broker
+  name: hydrow-broker-dev
   replicaCount: 1
   container:
     image: docker.io/ncging/nick-knows-hydrow-broker:2026-05-13.20.59
@@ -44,7 +46,9 @@ hydrowBroker:
   credentialsSecretName: hydrow-credentials
   hmacSecretName: hydrow-broker-hmac
   externalSecrets:
-    enabled: true
+    # Prod release in the same namespace owns the ExternalSecret/SecretStore
+    # resources; dev reuses the k8s Secrets they create.
+    enabled: false
     # Set createSecretStore: false if you already have a ClusterSecretStore
     # or a shared SecretStore in this namespace and want to reference it.
     createSecretStore: true

@@ -31,6 +31,8 @@ spec:
       - name: {{ .Values.webapp.name }}-worker
         image: {{ .Values.webapp.container.image }}
         env:
+        - name: REDIS_ENV
+          value: {{ include "nickknows.redisName" . }}
         - name: NFL_API_URL
           value: {{ .Values.nflApi.url }}
         resources:

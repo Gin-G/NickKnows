@@ -31,6 +31,8 @@ spec:
       containers:
       - name: {{ .Values.webapp.name }}
         env:
+        - name: REDIS_ENV
+          value: {{ include "nickknows.redisName" . }}
         - name: FLASK_SECRET
           value: $MY_VALUE
         - name: NFL_API_URL

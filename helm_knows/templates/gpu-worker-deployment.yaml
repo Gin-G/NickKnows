@@ -20,6 +20,9 @@ spec:
       containers:
       - name: {{ .Values.webapp.name }}-gpu-worker
         image: {{ .Values.webapp.container.image }}
+        env:
+        - name: REDIS_ENV
+          value: {{ include "nickknows.redisName" . }}
         resources:
           requests:
             cpu: 100m
