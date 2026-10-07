@@ -107,7 +107,7 @@ body.nfl-page #main-content { padding-top: 76px; }
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: var(--space-xs);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 16px 48px rgb(var(--shade-rgb) / 0.2);
     z-index: 200;
 }
 
@@ -233,7 +233,7 @@ body.nfl-page #main-content { padding-top: 76px; }
         gap: 0;
         background: var(--surface);
         border-bottom: 1px solid var(--border);
-        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 20px 48px rgb(var(--shade-rgb) / 0.2);
         max-height: calc(100vh - 124px);
         overflow-y: auto;
         padding: var(--space-xs) var(--space-md) var(--space-md);
