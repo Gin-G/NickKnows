@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Privacy Policy | Nick Knows{% endblock %}
+{% block og_title %}Nick Knows Privacy Policy{% endblock %}
+{% block canonical %}{{ url_for('privacy') }}{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+    <h1 class="page-header__title">Privacy Policy</h1>
+    <p class="page-header__subtitle">Last updated October 16, 2026</p>
+</div>
+
+<div class="content-section fade-in">
+    <p>
+        This policy covers nickknows.net and the personal projects that sign in with Google
+        through it. They are hobby projects run by one person, not a business. Nothing here
+        is sold, rented, or used for advertising.
+    </p>
+
+    <h2>Signing in with Google</h2>
+    <p>
+        Projects that let you sign in with Google receive your name, email address, and profile
+        picture. They are used only to sign you in and to show who is signed in. Nothing else
+        about your Google account is requested.
+    </p>
+
+    <h2>Gmail (read-only)</h2>
+    <p>
+        One private project, a personal finance dashboard used only by its owner, asks for
+        read-only Gmail access. It searches for bill reminder emails from specific billers
+        (for example, a utility's "upcoming bill" email) and reads the amount due and due date
+        from them. It cannot send, change, or delete email. The access token is stored
+        encrypted on a private server, and the email contents it reads are not shared with
+        anyone.
+    </p>
+
+    <h2>Google user data</h2>
+    <p>
+        Use and transfer of information received from Google APIs adheres to the
+        <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>,
+        including the Limited Use requirements. Google user data is not transferred to third
+        parties, used for advertising, or used to train AI models.
+    </p>
+
+    <h2>Removing access</h2>
+    <p>
+        You can revoke any of these projects' access to your Google account at any time from
+        <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">your Google account permissions</a>.
+        To have stored data deleted, or with any question about this policy, email
+        <a href="mailto:nickco7@gmail.com">nickco7@gmail.com</a>.
+    </p>
+</div>
+{% endblock %}

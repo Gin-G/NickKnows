@@ -67,6 +67,10 @@ def skiing():
 def values():
     return render_template('values.html')
 
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
 @app.route('/brown-banana')
 def brown_banana():
     return render_template('brown-banana.html')
