@@ -38,11 +38,11 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    # Redis (in-cluster)
+    # Redis (in-cluster, this chart's own)
     - to:
         - podSelector:
             matchLabels:
-              app: redis-dev
+              app: redis
       ports:
         - protocol: TCP
           port: 6379

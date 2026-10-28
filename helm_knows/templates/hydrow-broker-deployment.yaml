@@ -35,8 +35,11 @@ spec:
         ports:
         - containerPort: {{ .Values.hydrowBroker.container.port }}
         env:
+        # The prod Redis in this chart. It pointed at redis-dev, which the dev
+        # broker uses too, and Hydrow invalidates the whole refresh-token chain
+        # when a token is reused: two brokers on one chain is how it was lost.
         - name: REDIS_ENV
-          value: redis-dev
+          value: redis
         - name: HYDROW_BROKER_HMAC_SECRET
           valueFrom:
             secretKeyRef:
