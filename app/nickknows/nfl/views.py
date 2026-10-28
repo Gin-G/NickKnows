@@ -1,47 +1,8 @@
 from flask import render_template, url_for, redirect, flash, request, session
 from nickknows import app
-from ..celery_setup.tasks import (
-    update_full_season_data,
-    update_single_team_full,
-    update_core_data_only,
-    update_opportunities_only,
-    update_snap_counts_only,
-    system_health_check,
-    update_all_teams_snap_counts,
-    
-    get_snap_count_summary,
-    update_pbp_data,
-    update_roster_data,
-    update_schedule_data,
-    update_snap_count_data,
-    update_team_schedule,
-    update_player_stats_data,
-    calculate_all_stat_leaders,
-    update_all_team_fpa,
-    calculate_opportunity_data,
-
-    update_PBP_data,
-    update_sched_data,
-    update_week_data,
-    update_weekly_team_data,
-    update_qb_yards_top10,
-    update_qb_tds_top10,
-    update_rb_yards_top10,
-    update_rb_tds_top10,
-    update_rec_yds_top10,
-    update_rec_tds_top10,
-    update_fpa_data,
-    process_team_data,
-    update_snap_count_data,
-    update_opportunity_data,
-    
-    get_available_years,
-    get_selected_year,
-    format_nfl_season
-)
 from .plotting_functions import create_team_opportunity_plots, create_team_opportunity_plots_by_stat
 from . import nfl_api_client
-from celery import chain, chord
+from . import api_frames
 import nflreadpy as nfl
 import pandas as pd
 import numpy as np
@@ -51,9 +12,9 @@ import os
 import json
 import time
 from pathlib import Path
-from celery.utils.log import get_task_logger
+import logging
 from datetime import datetime
-logger = get_task_logger(__name__)
+logger = logging.getLogger(__name__)
 pd.options.mode.chained_assignment = None
 
 def _current_nfl_season():
@@ -121,107 +82,39 @@ def set_nfl_year(year):
 
 @app.route('/NFL')
 def NFL():
-    """
-    Updated NFL home route with new task structure
-    """
+    """NFL home: the season's leaderboards, computed from NFL-API weekly stats."""
     available_years = get_available_years()
     selected_year = get_selected_year()
-    current_season = max(available_years)
-    base_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year)
-    
-    # Check if data needs updating (only current season)
-    update_needed = False
-    if selected_year == current_season:
-        core_files = [
-            f'{base_path}_pbp_data.csv',
-            f'{base_path}_rosters.csv', 
-            f'{base_path}_schedule.csv',
-            f'{base_path}_weekly_data.csv'
-        ]
-        
-        week_threshold = 7 * 24 * 60 * 60  # 7 days
-        current_time = time.time()
-        
-        for file_path in core_files:
-            if not os.path.exists(file_path):
-                update_needed = True
-                break
-            elif (current_time - os.path.getmtime(file_path)) > week_threshold:
-                update_needed = True
-                break
-    
-    if update_needed:
-        # NEW: Single orchestrated update instead of multiple task calls
-        update_full_season_data.delay(selected_year)
-        flash(f'Data for {selected_year} season is updating. Refresh in a few minutes.')
-        return render_template('nfl-home.html', 
-                             years=available_years, 
+    tables = api_frames.leaders(selected_year)
+    if tables is None:
+        flash(f'Stats for {selected_year} are not available from the NFL-API right now.')
+        return render_template('nfl-home.html',
+                             years=available_years,
                              selected_year=selected_year)
-    
-    # Load and display data (unchanged)
-    try:
-        files = {
-            'pass_agg': f'{base_path}_qb_yards_top10_data.csv',
-            'pass_td_agg': f'{base_path}_qb_tds_top10_data.csv',
-            'rush_yds_agg': f'{base_path}_rb_yds_top10_data.csv',
-            'rush_td_agg': f'{base_path}_rb_tds_top10_data.csv',
-            'rec_yds_agg': f'{base_path}_rec_yds_top10_data.csv',
-            'rec_td_agg': f'{base_path}_rec_tds_top10_data.csv'
-        }
-        
-        data = {}
-        for name, path in files.items():
-            if os.path.exists(path):
-                df = pd.read_csv(path, index_col=0)
-                data[name] = df.style.hide(axis="index").format(precision=0)
-            else:
-                raise FileNotFoundError(f"Missing file: {path}")
-        
-        return render_template(
-            'nfl-home.html',
-            pass_yards_data=data['pass_agg'].to_html(classes="table"),
-            pass_td_data=data['pass_td_agg'].to_html(),
-            rush_yards_data=data['rush_yds_agg'].to_html(),
-            rush_td_data=data['rush_td_agg'].to_html(),
-            rec_yards_data=data['rec_yds_agg'].to_html(),
-            rec_td_data=data['rec_td_agg'].to_html(),
-            years=available_years,
-            selected_year=selected_year
-        )
-    
-    except Exception as e:
-        flash('Error loading data. Updates scheduled.')
-        return render_template('nfl-home.html', 
-                             years=available_years, 
-                             selected_year=selected_year)
-      
+    data = {k: v.style.hide(axis="index").format(precision=0) for k, v in tables.items()}
+    return render_template(
+        'nfl-home.html',
+        pass_yards_data=data['pass_agg'].to_html(classes="table"),
+        pass_td_data=data['pass_td_agg'].to_html(),
+        rush_yards_data=data['rush_yds_agg'].to_html(),
+        rush_td_data=data['rush_td_agg'].to_html(),
+        rec_yards_data=data['rec_yds_agg'].to_html(),
+        rec_td_data=data['rec_td_agg'].to_html(),
+        years=available_years,
+        selected_year=selected_year
+    )
+
+# The NFL pages read the NFL-API, which refreshes itself; there is no
+# background job left to trigger. Kept so old links land somewhere useful.
 @app.route('/NFL/update')
 def NFLupdate():
-    selected_year = get_selected_year()
-    update_full_season_data.delay(selected_year)  # One call does it all
+    flash('NFL data now comes from the NFL-API and stays current on its own.')
     return redirect(url_for('NFL'))
 
 @app.route('/NFL/FPA/update')
 def FPAupdate():
-    selected_year = get_selected_year()
-    teams = ['ARI','ATL','BAL','BUF','CAR','CHI','CIN','CLE','DAL','DEN','DET','GB','HOU','IND','JAX','KC','LA','LAC','LV','MIA','MIN','NE','NO','NYG','NYJ','PHI','PIT','SEA','SF','TB','TEN','WAS']
-    
-    # Create chains for each team that include graph generation with year
-    team_chains = []
-    for team in teams:
-        team_chains.append(
-            chain(
-                update_team_schedule.si(team, selected_year),
-                update_weekly_team_data.si(team, selected_year),
-                process_team_data.si(team, selected_year)
-            )
-        )
-    
-    # Execute all chains in parallel and collect results
-    chord(team_chains)(update_fpa_data.s(selected_year))
-    
-    flash('All team data is updating in the background. Changes should be reflected on the pages shortly')
-    return redirect(url_for('NFL', year=selected_year))
+    flash('NFL data now comes from the NFL-API and stays current on its own.')
+    return redirect(url_for('fpa'))
 
 # Columns the schedule table needs, display + hidden. NFL-API responses are
 # reindexed to this set so a payload missing a column (e.g. still backed by
@@ -995,8 +888,9 @@ def player_stats(name):
     selected_year = get_selected_year()
     available_years = get_available_years()
     try:
-        file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_weekly_data.csv'
-        weekly_data = pd.read_csv(file_path, index_col=0)
+        weekly_data = api_frames.weekly_stats(selected_year)
+        if weekly_data is None:
+            raise IndexError(name)
         player_data = weekly_data.loc[weekly_data['player_display_name'] == name]
         headshot = '<img src="' + player_data['headshot_url'] + '" width="360" >'
         headshot = headshot.unique()
@@ -1015,9 +909,9 @@ def player_stats(name):
                              selected_year=selected_year)
     except IndexError:
         try:
-            file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
-            weekly_data = pd.read_csv(file_path, index_col=0)
-            player_data = weekly_data.loc[weekly_data['player_name'] == name]
+            weekly_data = api_frames._frame('/players/rosters', season=selected_year)
+            player_data = weekly_data.loc[(weekly_data['player_name'] == name)
+                                          | (weekly_data['player_display_name'] == name)]
             headshot = '<img src="' + player_data['headshot_url'] + '" width="360" >'
             headshot = headshot.unique()
             position = player_data['position'].unique()
@@ -1036,9 +930,10 @@ def player_stats(name):
 def fpa():
     selected_year = get_selected_year()
     available_years = get_available_years()
-    fpa_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_FPA.csv'
     try:
-        fpa_data = pd.read_csv(fpa_path, index_col=0)
+        fpa_data = api_frames.fpa_summary(selected_year)
+        if fpa_data is None:
+            raise ValueError('no FPA from the NFL-API')
         fpa_data.sort_values(by=['Team Name'], inplace=True)
         
         # Create plots
@@ -1070,15 +965,11 @@ def team_schedule(team, fullname):
     try:
         selected_year = get_selected_year()
         available_years = get_available_years()
-        team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
-        file_path = team_dir + str(selected_year) + '_' + team + '_schedule.csv'
-        
-        if not os.path.exists(file_path):
-            update_team_schedule.delay(team, selected_year)
-            flash(f'Team schedule for {fullname} ({selected_year}) is updating. Please refresh in a moment.')
+        team_schedule_data = api_frames.team_schedule(team, selected_year,
+                                                      site='https://www.nickknows.net')
+        if team_schedule_data is None:
+            flash(f'Team schedule for {fullname} ({selected_year}) is not available right now.')
             return redirect(url_for('NFL', year=selected_year))
-        
-        team_schedule_data = pd.read_csv(file_path, index_col=0)
         team_schedule_data = team_schedule_data.style.hide(axis="index")
         
         return render_template('team-schedule.html', 
@@ -1095,15 +986,10 @@ def team_results(team, fullname):
     try:
         selected_year = get_selected_year()
         available_years = get_available_years()
-        team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
-        file_path = team_dir + str(selected_year) + '_' + team + '_data.csv'
-        
-        if not os.path.exists(file_path):
-            update_weekly_team_data.delay(team, selected_year)
-            flash(f'Team results for {fullname} ({selected_year}) are updating. Please refresh in a moment.')
+        team_data = api_frames.points_allowed(team, selected_year)
+        if team_data is None:
+            flash(f'Team results for {fullname} ({selected_year}) are not available right now.')
             return redirect(url_for('NFL', year=selected_year))
-        
-        team_data = pd.read_csv(file_path, index_col=0)
         team_data = team_data.style.hide(axis="index")
         
         return render_template('team-results.html', 
@@ -1120,15 +1006,11 @@ def team_fpa(team, fullname):
     try:
         selected_year = get_selected_year()
         available_years = get_available_years()
-        team_dir = os.getcwd() + '/nickknows/nfl/data/' + team + '/'
-        file_path = team_dir + str(selected_year) + '_' + team + '_data.csv'
-        
-        if not os.path.exists(file_path):
-            process_team_data.delay(team, selected_year)
-            flash(f'Team FPA data for {fullname} ({selected_year}) is updating. Please refresh in a moment.')
+        team_data = api_frames.points_allowed(team, selected_year)
+        if team_data is None:
+            flash(f'Team FPA data for {fullname} ({selected_year}) is not available right now.')
             return redirect(url_for('NFL', year=selected_year))
-        
-        team_data = pd.read_csv(file_path, index_col=0)
+        _team_fpa_plots(team, team_data, selected_year)
         
         # Calculate position aggregates with error handling
         pass_agg = team_data[team_data['position'] == 'QB']['fantasy_points_ppr'].mean() if len(team_data[team_data['position'] == 'QB']) > 0 else 0
@@ -1267,91 +1149,52 @@ def team_page(team):
                     'logo_espn': None
                 }
 
-        # Load team data files
-        team_dir = os.getcwd() + f'/nickknows/nfl/data/{team}/'
-        
-        # Schedule data
-        schedule_file = team_dir + str(selected_year) + '_' + team + '_schedule.csv'
+        # Schedule and record. The API's results carry is_home, which the
+        # worker's schedule file never had — the record used to fail here.
         schedule_data = None
-        if os.path.exists(schedule_file):
+        schedule_df = api_frames.team_schedule(team, selected_year,
+                                               site='https://www.nickknows.net')
+        if schedule_df is not None and len(schedule_df):
             try:
-                schedule_df = pd.read_csv(schedule_file, index_col=0)
-                schedule_df = schedule_df.dropna(subset=['away_score'])  # Only completed games
-                
-                # Calculate record
+                schedule_df['result'] = pd.to_numeric(schedule_df['result'], errors='coerce')
                 home_wins = len(schedule_df[(schedule_df['is_home'] == True) & (schedule_df['result'] > 0)])
                 away_wins = len(schedule_df[(schedule_df['is_home'] == False) & (schedule_df['result'] < 0)])
                 total_wins = home_wins + away_wins
                 total_games = len(schedule_df)
-                total_losses = total_games - total_wins
-                
-                team_info['record'] = f"{total_wins}-{total_losses}"
+                team_info['record'] = f"{total_wins}-{total_games - total_wins}"
                 team_info['games_played'] = total_games
-                
-                # Format schedule for display
                 schedule_display = schedule_df[['week', 'game_id', 'away_score', 'home_score', 'result']].copy()
-                schedule_display = schedule_display.sort_values('week', ascending=False).head(5)  # Last 5 games
+                schedule_display = schedule_display.sort_values('week', ascending=False).head(5)
                 schedule_data = schedule_display.to_html(classes="table table-sm", index=False, escape=False)
             except Exception as e:
-                logger.error(f"Error loading schedule: {str(e)}")
+                logger.error(f"Error building schedule: {str(e)}")
         else:
             team_info['record'] = "N/A"
             team_info['games_played'] = 0
-        
-        # FPA data
-        fpa_file = team_dir + str(selected_year) + '_' + team + '_data.csv'
+
+        # FPA
         fpa_summary = None
-        if os.path.exists(fpa_file):
-            try:
-                fpa_df = pd.read_csv(fpa_file, index_col=0)
-                
-                # Calculate position aggregates
-                pass_agg = fpa_df[fpa_df['position'] == 'QB']['fantasy_points_ppr'].mean() if len(fpa_df[fpa_df['position'] == 'QB']) > 0 else 0
-                rush_agg = fpa_df[fpa_df['position'] == 'RB']['fantasy_points_ppr'].mean() if len(fpa_df[fpa_df['position'] == 'RB']) > 0 else 0
-                rec_agg = fpa_df[fpa_df['position'] == 'WR']['fantasy_points_ppr'].mean() if len(fpa_df[fpa_df['position'] == 'WR']) > 0 else 0
-                te_agg = fpa_df[fpa_df['position'] == 'TE']['fantasy_points_ppr'].mean() if len(fpa_df[fpa_df['position'] == 'TE']) > 0 else 0
-                
-                fpa_summary = {
-                    'QB': round(pass_agg, 2),
-                    'RB': round(rush_agg, 2),
-                    'WR': round(rec_agg, 2),
-                    'TE': round(te_agg, 2)
-                }
-            except Exception as e:
-                logger.error(f"Error loading FPA data: {str(e)}")
-        
-        # Roster data
-        roster_file = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_rosters.csv'
+        fpa_df = api_frames.points_allowed(team, selected_year)
+        if fpa_df is not None:
+            fpa_summary = {pos: round(fpa_df[fpa_df['position'] == pos]['fantasy_points_ppr'].mean(), 2)
+                           if len(fpa_df[fpa_df['position'] == pos]) else 0
+                           for pos in ('QB', 'RB', 'WR', 'TE')}
+
+        # Roster
         roster_summary = None
-        if os.path.exists(roster_file):
-            try:
-                roster_df = pd.read_csv(roster_file, index_col=0)
-                team_roster = roster_df[roster_df['team'] == team]
-                
-                # Get position counts
-                position_counts = team_roster['position'].value_counts().to_dict()
-                roster_summary = {
-                    'total_players': len(team_roster),
-                    'positions': position_counts,
-                    'active_players': len(team_roster[team_roster['status'] == 'ACT'])
-                }
-            except Exception as e:
-                logger.error(f"Error loading roster: {str(e)}")
-        
-        # Snap counts availability
-        snap_file = team_dir + str(selected_year) + '_' + team + '_snap_counts.csv'
-        has_snap_counts = os.path.exists(snap_file)
-        
-        # Opportunity data availability
-        opp_file = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_data.csv'
-        has_opportunity_data = False
-        if os.path.exists(opp_file):
-            try:
-                opp_df = pd.read_csv(opp_file)
-                has_opportunity_data = len(opp_df[opp_df['team'] == team]) > 0
-            except:
-                pass
-        
+        team_roster = _fetch_roster_df(selected_year, team)
+        if team_roster is not None:
+            roster_summary = {
+                'total_players': len(team_roster),
+                'positions': team_roster['position'].value_counts().to_dict(),
+                'active_players': len(team_roster[team_roster['status'] == 'ACT'])
+            }
+
+        snaps = api_frames.snap_counts(team, selected_year)
+        has_snap_counts = snaps is not None and len(snaps) > 0
+        opp_df = api_frames.opportunities(selected_year)
+        has_opportunity_data = opp_df is not None and len(opp_df[opp_df['team'] == team]) > 0
+
         return render_template('team-page.html',
                              team=team,
                              team_info=team_info,
@@ -1495,32 +1338,12 @@ def team_snap_counts(team, fullname):
         available_years = get_available_years()
         selected_year = get_selected_year()
         
-        # Ensure team directory exists
-        team_dir = os.getcwd() + f'/nickknows/nfl/data/{team}/'
-        if not os.path.exists(team_dir):
-            os.makedirs(team_dir)
-        
-        # Try to load cached snap count data
-        snap_file_path = os.path.join(team_dir, f'{selected_year}_{team}_snap_counts.csv')
-        
-        if not os.path.exists(snap_file_path):
-            # Trigger data update
-            update_snap_count_data.delay(team, selected_year)
-            flash(f'Snap count data for {fullname} is being updated. Please refresh in a moment.')
-            return render_template('snap-counts-team.html',
-                                 team=team,
-                                 fullname=fullname,
-                                 years=available_years,
-                                 selected_year=selected_year,
-                                 position_groups=None,
-                                 loading=True)
-        
         # Load and process snap count data
         try:
-            snap_data = pd.read_csv(snap_file_path)
-            
+            snap_data = api_frames.snap_counts(team, selected_year)
+
             # Check if the DataFrame is empty
-            if snap_data.empty:
+            if snap_data is None or snap_data.empty:
                 flash(f'No snap count data available for {fullname} in {selected_year}')
                 return render_template('snap-counts-team.html',
                                      team=team,
@@ -1706,8 +1529,8 @@ def team_snap_counts(team, fullname):
                                  loading=False)
                                  
         except Exception as csv_error:
-            logger.error(f"Error reading CSV file {snap_file_path}: {str(csv_error)}")
-            flash(f'Error reading snap count data for {fullname}. Data may be corrupted.')
+            logger.error(f"Error building snap counts for {team}: {str(csv_error)}")
+            flash(f'Error reading snap count data for {fullname}.')
             return render_template('snap-counts-team.html',
                                  team=team,
                                  fullname=fullname,
@@ -1729,30 +1552,22 @@ def team_snap_counts(team, fullname):
          
 @app.route('/NFL/SnapCounts/update/<team>')
 def update_team_snap_counts(team):
-    """Trigger snap count data update for a specific team"""
-    selected_year = get_selected_year()
-    update_snap_count_data.delay(team, selected_year)
-    flash(f'Snap count data for {team} is updating in the background.')
+    """Nothing to trigger: snap counts come from the NFL-API, which keeps them current."""
     return redirect(url_for('team_snap_counts', team=team, fullname=get_team_fullname(team)))
 
 @app.route('/NFL/SnapCounts/api/<team>')
 def snap_counts_api(team):
-    """API endpoint for snap count data"""
-    try:
-        selected_year = get_selected_year()
-        position_filter = request.args.get('positions', '').split(',') if request.args.get('positions') else None
-        
-        # Get formatted data
-        result = get_snap_count_summary.delay(team, selected_year, position_filter).get(timeout=30)
-        
-        return json.dumps(result), 200, {'Content-Type': 'application/json'}
-        
-    except Exception as e:
-        return json.dumps({
-            'success': False,
-            'error': str(e),
-            'team': team
-        }), 500, {'Content-Type': 'application/json'}
+    """Snap count rows for one team as JSON, optionally filtered by position."""
+    selected_year = get_selected_year()
+    positions = request.args.get('positions', '').split(',') if request.args.get('positions') else None
+    snaps = api_frames.snap_counts(team, selected_year)
+    if snaps is None:
+        return json.dumps({'success': False, 'error': 'no snap counts from the NFL-API',
+                           'team': team}), 503, {'Content-Type': 'application/json'}
+    if positions:
+        snaps = snaps[snaps['position'].isin(positions)]
+    return json.dumps({'success': True, 'team': team, 'season': selected_year,
+                       'rows': json.loads(snaps.to_json(orient='records'))}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/NFL/SnapCounts/player/<team>/<player_name>')
 def player_snap_history(team, player_name):
@@ -1761,15 +1576,10 @@ def player_snap_history(team, player_name):
         available_years = get_available_years()
         selected_year = get_selected_year()
         
-        # Load player's snap count history
-        snap_file_path = os.getcwd() + f'/nickknows/nfl/data/{team}/{selected_year}_{team}_snap_counts.csv'
-        
-        if not os.path.exists(snap_file_path):
-            update_snap_count_data.delay(team, selected_year)
-            flash(f'Snap count data is being updated. Please refresh in a moment.')
+        snap_data = api_frames.snap_counts(team, selected_year)
+        if snap_data is None:
+            flash('Snap count data is not available right now.')
             return redirect(url_for('team_snap_counts', team=team, fullname=get_team_fullname(team)))
-        
-        snap_data = pd.read_csv(snap_file_path, index_col=0)
         player_data = snap_data[snap_data['player'] == player_name]
         
         if player_data.empty:
@@ -1818,11 +1628,8 @@ def player_snap_history(team, player_name):
 
 @app.route('/NFL/SnapCounts/update_all')
 def update_all_snap_counts():
-    """Trigger snap count data update for all teams"""
-    selected_year = get_selected_year()
-    update_all_teams_snap_counts.delay(selected_year)
-    flash(f'Snap count data for all teams is updating in the background for {selected_year} season.')
-    return redirect(url_for('snap_counts_home', year=selected_year))
+    """Nothing to trigger: snap counts come from the NFL-API."""
+    return redirect(url_for('snap_counts_home', year=get_selected_year()))
 
 
 @app.route('/NFL/Opportunities')
@@ -1834,19 +1641,10 @@ def opportunities_home():
         
         logger.info(f"Loading opportunity home for {selected_year}")
         
-        # Load trend data
-        trend_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_trends.csv'
-        
-        if not os.path.exists(trend_file_path):
-            update_opportunity_data.delay(selected_year)
-            flash(f'Opportunity data for {selected_year} is updating. Please refresh in a moment.')
-            return render_template('opportunities-home.html',
-                                 years=available_years,
-                                 selected_year=selected_year,
-                                 loading=True)
-        
         try:
-            trend_data = pd.read_csv(trend_file_path)
+            trend_data = api_frames.opportunity_trends(selected_year)
+            if trend_data is None:
+                raise ValueError('no opportunity trends from the NFL-API')
             logger.info(f"Loaded trend data: {len(trend_data)} records")
         except Exception as e:
             logger.error(f"Error loading trend data: {str(e)}")
@@ -2130,24 +1928,17 @@ def team_opportunities(team):
             logger.warning(f"Could not load team info: {e}")
             team_info = None
         
-        # Load opportunity data
-        opp_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_data.csv'
-        trend_file_path = os.getcwd() + '/nickknows/nfl/data/' + str(selected_year) + '_opportunity_trends.csv'
-        
-        if not os.path.exists(opp_file_path) or not os.path.exists(trend_file_path):
-            update_opportunity_data.delay(selected_year)
-            flash(f'Opportunity data for {fullname} is updating. Please refresh in a moment.')
+        opportunity_data = api_frames.opportunities(selected_year)
+        trend_data = api_frames.opportunity_trends(selected_year)
+        if opportunity_data is None or trend_data is None:
+            flash(f'Opportunity data for {fullname} is not available right now.')
             return render_template('team-opportunities.html',
                                  team=team,
                                  fullname=fullname,
                                  team_info=team_info,
                                  years=available_years,
                                  selected_year=selected_year,
-                                 loading=True)
-        
-        # Load data
-        opportunity_data = pd.read_csv(opp_file_path)
-        trend_data = pd.read_csv(trend_file_path)
+                                 loading=False)
         
         logger.info(f"Loaded opportunity data: {len(opportunity_data)} records")
         logger.info(f"Loaded trend data: {len(trend_data)} records")
@@ -2298,10 +2089,7 @@ def team_opportunities(team):
 
 @app.route('/NFL/Opportunities/update')
 def update_opportunities():
-    """Trigger opportunity data update"""
-    selected_year = get_selected_year()
-    update_opportunity_data.delay(selected_year)
-    flash(f'Opportunity data for {selected_year} is updating in the background.')
+    """Nothing to trigger: opportunity data comes from the NFL-API."""
     return redirect(url_for('opportunities_home'))
 
 def get_trending_players_view(trend_data, metric, direction='up', min_trend=20, min_avg=1):
@@ -2480,6 +2268,38 @@ def get_team_fullname(team_code):
         'TEN': 'Tennessee Titans', 'WAS': 'Washington Commanders'
     }
     return team_names.get(team_code, team_code)
+
+def _team_fpa_plots(team, team_data, year):
+    """The four per-position charts on the team FPA page.
+
+    Drawn here rather than by a background job, and only when missing or more
+    than an hour old. The worker wrote ``{team}_{pos}_FPA_{year}.png`` while the
+    template asked for ``{team}_{pos}_FPA.png``, so these charts had not shown
+    since the year was added to the name; the template now asks for the year.
+    """
+    plots_dir = os.path.join(os.getcwd(), 'nickknows', 'static', 'images', team)
+    os.makedirs(plots_dir, exist_ok=True)
+    for pos in ('QB', 'RB', 'WR', 'TE'):
+        path = os.path.join(plots_dir, f'{team}_{pos}_FPA_{year}.png')
+        if os.path.exists(path) and time.time() - os.path.getmtime(path) < 3600:
+            continue
+        data = team_data[team_data['position'] == pos]
+        if len(data) == 0:
+            continue
+        n = len(data)
+        fig, ax = plt.subplots(figsize=(10, max(4, min(12, n * 0.8))))
+        data.plot.barh(x='player_display_name', y='fantasy_points_ppr', ylabel='', ax=ax)
+        plt.title(f'{team} vs {pos}s Fantasy Points ({year})')
+        plt.yticks(fontsize=8)
+        plt.margins(y=0.6 / (2 * n))
+        plt.subplots_adjust(left=0.3)
+        ax.set_ylim(-0.5, n - 0.5)
+        for bar in ax.containers[0]:
+            bar.set_height(0.6)
+        plt.grid(axis='x', linestyle='--', alpha=0.7)
+        plt.savefig(path, bbox_inches='tight', dpi=100)
+        plt.close(fig)
+
 
 def get_all_teams():
     """Get list of all NFL teams"""

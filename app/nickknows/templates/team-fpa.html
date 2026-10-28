@@ -31,10 +31,10 @@
     </div>
 
     <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-2xl);">
-        <img src="{{ url_for('static', filename='images/{}/{}_QB_FPA.png'.format(team, team)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-        <img src="{{ url_for('static', filename='images/{}/{}_RB_FPA.png'.format(team, team)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-        <img src="{{ url_for('static', filename='images/{}/{}_WR_FPA.png'.format(team, team)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-        <img src="{{ url_for('static', filename='images/{}/{}_TE_FPA.png'.format(team, team)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <img src="{{ url_for('static', filename='images/{}/{}_QB_FPA_{}.png'.format(team, team, selected_year)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <img src="{{ url_for('static', filename='images/{}/{}_RB_FPA_{}.png'.format(team, team, selected_year)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <img src="{{ url_for('static', filename='images/{}/{}_WR_FPA_{}.png'.format(team, team, selected_year)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <img src="{{ url_for('static', filename='images/{}/{}_TE_FPA_{}.png'.format(team, team, selected_year)) }}" style="max-width: 300px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
     </div>
 
     <h2 style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-md);">Results</h2>

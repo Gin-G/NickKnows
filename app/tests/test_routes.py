@@ -1,7 +1,7 @@
 """
 Route endpoint tests for NickKnows Flask app.
 Tests that all registered routes return non-500 responses.
-Celery task .delay() calls are mocked to avoid requiring a running Redis/Celery instance.
+With no NFL-API reachable, the NFL pages must degrade to a message, not a 500.
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -11,37 +11,14 @@ import os
 # Ensure the app package is importable
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-# Patch where the names are actually used (imported into nfl.views), not where defined.
-TASK_PATCHES = [
-    'nickknows.nfl.views.update_full_season_data',
-    'nickknows.nfl.views.update_opportunity_data',
-    'nickknows.nfl.views.update_all_teams_snap_counts',
-    'nickknows.nfl.views.update_single_team_full',
-    'nickknows.nfl.views.calculate_all_stat_leaders',
-    'nickknows.nfl.views.calculate_opportunity_data',
-    'nickknows.nfl.views.update_all_team_fpa',
-    'nickknows.nfl.views.process_team_data',
-    'nickknows.nfl.views.update_snap_count_data',
-]
-
-
 @pytest.fixture(scope='module')
 def client():
-    patches = [patch(p) for p in TASK_PATCHES]
-    mocks = [p.start() for p in patches]
-    for m in mocks:
-        m.delay = MagicMock(return_value=MagicMock(id='test-task-id'))
-        m.s = MagicMock(return_value=MagicMock())
-
     from nickknows import app as flask_app
     flask_app.config['TESTING'] = True
     flask_app.config['SECRET_KEY'] = 'test-secret-key'
 
     with flask_app.test_client() as c:
         yield c
-
-    for p in patches:
-        p.stop()
 
 
 # ---------------------------------------------------------------------------
