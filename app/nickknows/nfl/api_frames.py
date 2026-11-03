@@ -90,12 +90,54 @@ def points_allowed(team, season):
 
 
 def fpa_summary(season):
-    """Average fantasy points allowed per position, one row per team."""
+    """Average fantasy points allowed per position, one row per team.
+
+    The raw PPR series the page has always charted. `fpa_adjusted` is the one
+    to read next to it.
+    """
     df = _frame('/fpa/', season=season)
     if df is None:
         return None
     return df.rename(columns={'team': 'Team Name', 'qb': 'QB', 'rb': 'RB',
                               'wr': 'WR', 'te': 'TE'})[['Team Name', 'QB', 'RB', 'WR', 'TE']]
+
+
+def fpa_adjusted(season):
+    """Schedule-adjusted FPA -- a grade per position, and the schedule faced.
+
+    Raw FPA cannot tell a soft defence from one that drew the best players at
+    the position: both show up as a lot of points allowed. This table can.
+    `Faced` is what the players a defence lined up against were averaging
+    entering those games, so a high number there is a hard schedule rather than
+    an opening, and the grade already has it subtracted -- 50 is league average,
+    higher is softer and better to target.
+
+    Returns `(frame, note)`. The frame is None until the season has enough
+    football for a baseline (three prior games per player), and the note says
+    so in words the page can print.
+    """
+    try:
+        payload = nfl_api_client.get_cached('/fpa/', ttl=TTL, season=season)
+    except nfl_api_client.NflApiError as e:
+        logger.warning('NFL-API /fpa/ failed: %s', e)
+        return None, None
+    if nfl_api_client.is_no_data(payload) or not payload.get('data'):
+        return None, None
+    if not payload.get('adjusted'):
+        return None, payload.get('adjusted_note')
+
+    renames = {'team': 'Team Name'}
+    keep = ['Team Name']
+    for pos in ('qb', 'rb', 'wr', 'te'):
+        renames[f'{pos}_grade'] = f'{pos.upper()} Grade'
+        renames[f'{pos}_faced'] = f'{pos.upper()} Faced'
+        keep += [f'{pos.upper()} Grade', f'{pos.upper()} Faced']
+    df = pd.DataFrame(payload['data']).rename(columns=renames)
+    missing = [c for c in keep if c not in df.columns]
+    if missing:
+        logger.warning('NFL-API /fpa/ is missing %s', missing)
+        return None, None
+    return df[keep], payload.get('adjusted_note')
 
 
 def snap_counts(team, season):

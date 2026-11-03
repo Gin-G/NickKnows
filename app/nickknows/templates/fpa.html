@@ -14,4 +14,24 @@
         {{ fpa_data | safe }}
     </div>
 </div>
+
+<div class="content-section">
+    <h2>Adjusted for the schedule faced</h2>
+    <p>
+        Points allowed on its own cannot tell a soft defense from one that drew the
+        best players at the position. <strong>Faced</strong> is what the players a
+        defense lined up against were averaging going into those games, so a high
+        number there is a hard schedule rather than an opening. The grade already
+        has it subtracted: <strong>50 is league average, higher is softer</strong>,
+        and red is a defense worth attacking. Scored FanDuel (half&nbsp;PPR), and a
+        single extreme week is capped so one blowout cannot carry a season.
+    </p>
+    {% if adjusted_data %}
+    <div class="table-wrapper" style="margin-top: var(--space-xl);">
+        {{ adjusted_data | safe }}
+    </div>
+    {% else %}
+    <p><em>{{ adjusted_note or 'Not available for this season yet.' }}</em></p>
+    {% endif %}
+</div>
 {% endblock %}

@@ -952,13 +952,41 @@ def fpa():
             .background_gradient(subset=['WR'], cmap='RdYlGn_r')\
             .background_gradient(subset=['TE'], cmap='RdYlGn_r')
         
+        adjusted_data, adjusted_note = _fpa_adjusted_table(selected_year)
+
         return render_template('fpa.html', 
                              fpa_data=fpa_data.to_html(classes='table'),
+                             adjusted_data=adjusted_data,
+                             adjusted_note=adjusted_note,
                              years=available_years,
                              selected_year=selected_year)
     except Exception as e:
         flash(f'FPA data for {selected_year} not found. Please update team data.')
         return redirect(url_for('NFL', year=selected_year))
+
+
+def _fpa_adjusted_table(selected_year):
+    """The schedule-adjusted table as HTML, or (None, note) explaining itself.
+
+    Its own try/except: the raw series is the page, and a problem in the
+    adjustment must not cost the chart above it. Grades keep the raw table's
+    colour language -- red is a defence to attack -- because a high grade means
+    soft, which is the same direction as a lot of points allowed.
+    """
+    try:
+        frame, note = api_frames.fpa_adjusted(selected_year)
+        if frame is None:
+            return None, note
+        frame = frame.sort_values(by=['Team Name'])
+        grades = [c for c in frame.columns if c.endswith('Grade')]
+        styled = frame.style\
+            .hide(axis="index")\
+            .format(precision=1, na_rep='--')\
+            .background_gradient(subset=grades, cmap='RdYlGn_r')
+        return styled.to_html(classes='table'), note
+    except Exception as e:
+        logger.warning('Adjusted FPA table unavailable for %s: %s', selected_year, e)
+        return None, None
 
 @app.route('/NFL/Team/Schedule/<team>/<fullname>')
 def team_schedule(team, fullname):
