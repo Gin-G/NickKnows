@@ -154,6 +154,51 @@ def test_nfl_team_opportunities(client):
     assert r.status_code in (200, 302)
 
 
+def test_nfl_opportunity_charts_degrade_without_the_api(client):
+    r = client.get('/NFL/Opportunities/Trends')
+    assert r.status_code == 200
+    assert b'not available' in r.data
+
+
+_WEEKLY = {
+    'status': 'success', 'season': 2026, 'weeks': [1, 2, 3, 4, 5, 6],
+    'metrics': ['opportunities', 'targets', 'carries'],
+    'trend_rule': {'recent_games': 3, 'min_games': 5,
+                   'min_change': {'opportunities': 2.0, 'targets': 1.5, 'carries': 1.5},
+                   'note': ''},
+    'data': [{
+        'player_id': '00-1', 'player_name': "Ja'Marr <b>Chase</b>", 'position': 'WR',
+        'team': 'CIN', 'games': 5, 'latest_week': 6,
+        'metrics': {m: {'values': [5.0, 6.0, None, 5.0, 10.0, 11.0], 'games': 5,
+                        'per_game': 7.4, 'recent': 8.67, 'earlier': 5.5,
+                        'change': 3.17, 'noise': 2.0, 'direction': 'up'}
+                    for m in ('opportunities', 'targets', 'carries')},
+    }],
+}
+
+
+def test_nfl_opportunity_charts_render_the_payload(client):
+    with patch('nickknows.nfl.views.api_frames.opportunity_weekly',
+               return_value=_WEEKLY):
+        r = client.get('/NFL/Opportunities/Trends?metric=targets&direction=up&team=cin')
+    assert r.status_code == 200
+    body = r.data.decode()
+    assert 'id="opp-data"' in body
+    # The page opens on what the link asked for.
+    assert '"metric": "targets"' in body and '"team": "CIN"' in body
+    # A player name is data: it must reach the page escaped, never as markup.
+    assert '<b>Chase</b>' not in body
+
+
+def test_nfl_opportunity_charts_ignore_a_bad_metric(client):
+    with patch('nickknows.nfl.views.api_frames.opportunity_weekly',
+               return_value=_WEEKLY):
+        r = client.get('/NFL/Opportunities/Trends?metric=drop%20table&direction=sideways')
+    assert r.status_code == 200
+    body = r.data.decode()
+    assert '"metric": "opportunities"' in body and '"direction": "all"' in body
+
+
 # ---------------------------------------------------------------------------
 # Navbar partials (loaded via jQuery .load())
 # ---------------------------------------------------------------------------

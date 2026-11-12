@@ -177,6 +177,26 @@ def opportunity_trends(season):
     return _frame('/opportunities/trends/', season=season)
 
 
+def opportunity_weekly(season):
+    """Week-by-week series per player with a direction call, as the API sends it.
+
+    Not a frame: the page draws it, so the payload goes through untouched and
+    the trend arithmetic stays in the NFL-API where the tables also read it.
+    None when the API fails or has nothing yet.
+    """
+    try:
+        # Longer than the default: the first request of a quarter-hour makes
+        # the API walk a season of play-by-play.
+        payload = nfl_api_client.get_cached(
+            '/opportunities/weekly/', ttl=TTL, timeout=30, season=season)
+    except nfl_api_client.NflApiError as e:
+        logger.warning("NFL-API /opportunities/weekly/ failed: %s", e)
+        return None
+    if nfl_api_client.is_no_data(payload) or not isinstance(payload, dict):
+        return None
+    return payload if payload.get('data') else None
+
+
 LEADERS = {
     'pass_agg': ('passing_yards', 'Total Passing Yards'),
     'pass_td_agg': ('passing_tds', "Total Passing TD's"),

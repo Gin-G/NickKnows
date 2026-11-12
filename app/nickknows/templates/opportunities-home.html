@@ -37,6 +37,14 @@
         </a>
     </div>
 
+    <div class="opportunity-section">
+        <h2>Weekly charts</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">Every player's opportunities, targets and rush attempts week by week, with who is trending up and down.</p>
+        <a href="{{ url_for('opportunity_charts') }}" class="btn btn--ghost">All players</a>
+        <a href="{{ url_for('opportunity_charts', direction='up') }}" class="btn btn--ghost">Trending up</a>
+        <a href="{{ url_for('opportunity_charts', direction='down') }}" class="btn btn--ghost">Trending down</a>
+    </div>
+
     {% if insights %}
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--space-xl); margin-bottom: var(--space-2xl);">
         {% if insights.trending_up_targets %}

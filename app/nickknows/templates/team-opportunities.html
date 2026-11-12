@@ -85,6 +85,10 @@
     <div id="target_share-tab" class="tab-content"><div class="table-wrapper">{{ leaderboards.target_share | safe }}</div></div>
     {% endif %}
 
+    <div style="margin-top: var(--space-xl);">
+        <a href="{{ url_for('opportunity_charts', team=team) }}" class="btn btn--ghost">Weekly charts for {{ fullname }}</a>
+    </div>
+
     {% if weekly_data and available_weeks %}
     <div style="margin-top: var(--space-2xl);">
         <h2 style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-lg);">Weekly Opportunity Trends — Top Players</h2>

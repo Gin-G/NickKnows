@@ -1926,6 +1926,47 @@ def get_opportunity_leaders_view(trend_data, metric, min_weeks=2):
     # This is just a wrapper around get_leaderboard_view for backward compatibility
     return get_leaderboard_view(trend_data, metric, top_n=15, min_weeks=min_weeks)
 
+OPPORTUNITY_CHART_METRICS = ('opportunities', 'targets', 'carries')
+OPPORTUNITY_CHART_DIRECTIONS = ('all', 'up', 'down', 'steady')
+
+
+@app.route('/NFL/Opportunities/Trends')
+def opportunity_charts():
+    """A weekly chart per player: opportunities, targets or rush attempts.
+
+    Everything drawn here, including which way a player is trending, comes from
+    NFL-API GET /opportunities/weekly/. This view only chooses what the page
+    opens on, so a link can point at one team or one direction.
+    """
+    available_years = get_available_years()
+    selected_year = get_selected_year()
+
+    metric = (request.args.get('metric') or 'opportunities').lower()
+    if metric not in OPPORTUNITY_CHART_METRICS:
+        metric = 'opportunities'
+    direction = (request.args.get('direction') or 'all').lower()
+    if direction not in OPPORTUNITY_CHART_DIRECTIONS:
+        direction = 'all'
+    position = (request.args.get('position') or 'ALL').upper()
+    if position not in ('ALL', 'QB', 'RB', 'WR', 'TE'):
+        position = 'ALL'
+    team = (request.args.get('team') or 'ALL').upper()
+
+    payload = api_frames.opportunity_weekly(selected_year)
+    error = None
+    if payload is None:
+        error = (f'Weekly opportunity data for {selected_year} is not available '
+                 'right now. Please try again shortly.')
+
+    return render_template('opportunity-charts.html',
+                           payload=payload,
+                           error=error,
+                           initial={'metric': metric, 'direction': direction,
+                                    'position': position, 'team': team},
+                           years=available_years,
+                           selected_year=selected_year)
+
+
 @app.route('/NFL/Opportunities/<team>')
 def team_opportunities(team):
     """Team-specific opportunity analysis with comprehensive stat tracking"""
