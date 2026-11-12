@@ -2,6 +2,7 @@
 {% block title %}NFL Opportunity Tracker | Nick Knows NFL{% endblock %}
 
 {% block nfl_extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/opportunity-charts.css') }}">
 <style>
     .tab-bar { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-bottom: var(--space-xl); border-bottom: 1px solid var(--border); padding-bottom: var(--space-md); }
     .tab-btn { padding: 6px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); font-size: 12px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
@@ -45,30 +46,28 @@
         <a href="{{ url_for('opportunity_charts', direction='down') }}" class="btn btn--ghost">Trending down</a>
     </div>
 
-    {% if insights %}
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--space-xl); margin-bottom: var(--space-2xl);">
-        {% if insights.trending_up_targets %}
+    {% from 'components/opportunity-movers.html' import movers_table %}
+    {% if movers %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: var(--space-xl); margin-bottom: var(--space-2xl);">
         <div class="opportunity-section">
-            <h2>Trending Up — Targets</h2>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">Players with increasing target opportunities (&gt;20% increase)</p>
-            <div class="table-wrapper">{{ insights.trending_up_targets | safe }}</div>
+            <h2>Trending up — opportunities</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">Last 3 games against the games before them, in looks a game. Only moves bigger than the player's own week-to-week swings are listed.</p>
+            {{ movers_table(movers.opportunities_up, 'opportunities', 'Nobody has a clear rise right now.') }}
         </div>
-        {% endif %}
-        {% if insights.trending_up_carries %}
         <div class="opportunity-section">
-            <h2>Trending Up — Carries</h2>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">Players with increasing rushing opportunities (&gt;20% increase)</p>
-            <div class="table-wrapper">{{ insights.trending_up_carries | safe }}</div>
+            <h2>Trending down — opportunities</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">Same rule, the other direction.</p>
+            {{ movers_table(movers.opportunities_down, 'opportunities', 'Nobody has a clear drop right now.') }}
         </div>
-        {% endif %}
+        <div class="opportunity-section">
+            <h2>Trending up — targets</h2>
+            {{ movers_table(movers.targets_up, 'targets', 'Nobody has a clear rise in targets right now.') }}
+        </div>
+        <div class="opportunity-section">
+            <h2>Trending up — rush attempts</h2>
+            {{ movers_table(movers.carries_up, 'rush attempts', 'Nobody has a clear rise in rush attempts right now.') }}
+        </div>
     </div>
-    {% if insights.declining_opportunities %}
-    <div class="opportunity-section" style="margin-bottom: var(--space-2xl);">
-        <h2>Declining Opportunities</h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: var(--space-md);">Players losing touches (&gt;20% decrease)</p>
-        <div class="table-wrapper">{{ insights.declining_opportunities | safe }}</div>
-    </div>
-    {% endif %}
     {% endif %}
 
     {% if leaderboards %}

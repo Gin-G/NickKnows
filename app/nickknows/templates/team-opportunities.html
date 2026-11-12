@@ -2,6 +2,7 @@
 {% block title %}{{ fullname }} Opportunities | Nick Knows NFL{% endblock %}
 
 {% block nfl_extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/opportunity-charts.css') }}">
 <style>
     .team-banner {
         {% if team_info %}
@@ -89,6 +90,20 @@
         <a href="{{ url_for('opportunity_charts', team=team) }}" class="btn btn--ghost">Weekly charts for {{ fullname }}</a>
     </div>
 
+    {% from 'components/opportunity-movers.html' import movers_table %}
+    {% if movers %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: var(--space-xl); margin-top: var(--space-xl);">
+        <div>
+            <h2 style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-sm);">Trending up — opportunities</h2>
+            {{ movers_table(movers.opportunities_up, 'opportunities', 'Nobody here has a clear rise right now.') }}
+        </div>
+        <div>
+            <h2 style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-sm);">Trending down — opportunities</h2>
+            {{ movers_table(movers.opportunities_down, 'opportunities', 'Nobody here has a clear drop right now.') }}
+        </div>
+    </div>
+    {% endif %}
+
     {% if weekly_data and available_weeks %}
     <div style="margin-top: var(--space-2xl);">
         <h2 style="font-size: 16px; font-weight: 600; margin-bottom: var(--space-lg);">Weekly Opportunity Trends — Top Players</h2>
@@ -135,7 +150,7 @@
     </div>
     {% endif %}
 
-    {% if not leaderboards and not insights and not weekly_data %}
+    {% if not leaderboards and not movers and not weekly_data %}
     <div class="no-data-section">
         <p style="color: var(--text-muted);">No opportunity data found for {{ fullname }} in {{ selected_year }}.</p>
     </div>

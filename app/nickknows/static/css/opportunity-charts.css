@@ -1,0 +1,64 @@
+/* Weekly opportunity charts: shared by /NFL/Opportunities/Trends and the
+   player page.
+
+   Chart roles: two steps of one blue, validated against this site's card
+   surfaces (light #f4e4da, dark #261d19) with the dataviz palette validator.
+   The games that count as "lately" take the strong step, the games before
+   them the quiet one. */
+.opp-viz {
+    --bar-earlier: #5598e7;
+    --bar-recent: #184f95;
+    --avg-line: var(--text);
+    --grid: color-mix(in srgb, var(--text-muted) 22%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .opp-viz { --bar-earlier: #184f95; --bar-recent: #3987e5; }
+}
+:root[data-theme="dark"] .opp-viz { --bar-earlier: #184f95; --bar-recent: #3987e5; }
+
+.opp-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-md); margin-bottom: var(--space-md); }
+.opp-seg { display: inline-flex; flex-wrap: wrap; gap: var(--space-xs); }
+.opp-seg button { padding: 6px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); font: inherit; font-size: 12px; font-weight: 500; color: var(--text-muted); cursor: pointer; }
+.opp-seg button:hover { color: var(--text); }
+.opp-seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.opp-seg button .n { font-variant-numeric: tabular-nums; opacity: 0.8; margin-left: 4px; }
+.opp-filters label { font-size: 12px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; }
+.opp-filters select { font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
+
+.opp-legend { display: flex; flex-wrap: wrap; gap: var(--space-sm) var(--space-lg); font-size: 12px; color: var(--text-muted); margin: var(--space-md) 0; }
+.opp-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.opp-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px 3px 0 0; }
+.opp-legend i.line { height: 2px; width: 18px; border-radius: 1px; background: var(--avg-line); }
+.opp-legend i.gap { height: 2px; width: 8px; border-radius: 1px; background: var(--text-muted); opacity: 0.6; }
+
+.opp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: var(--space-md); }
+.opp-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 14px 8px; min-width: 0; }
+.opp-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-sm); }
+.opp-card__name { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.opp-card__name a { color: inherit; }
+.opp-card__meta { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.opp-card__trend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 6px 0 4px; font-size: 12px; color: var(--text-muted); }
+.opp-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border: 1px solid var(--border); border-radius: var(--radius-pill); font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
+.opp-badge--quiet { font-weight: 500; color: var(--text-muted); }
+.opp-card svg { display: block; width: 100%; height: auto; overflow: visible; }
+.opp-card svg text { font-family: inherit; font-size: 10px; fill: var(--text-muted); font-variant-numeric: tabular-nums; }
+.opp-card svg .hit { fill: transparent; }
+.opp-card svg .hit:hover + .bar { filter: brightness(1.18); }
+
+.opp-tip { position: fixed; z-index: 50; pointer-events: none; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 10px; font-size: 12px; line-height: 1.45; box-shadow: 0 4px 16px rgb(0 0 0 / 0.18); display: none; }
+.opp-tip strong { font-size: 14px; font-variant-numeric: tabular-nums; }
+.opp-tip .sub { color: var(--text-muted); }
+
+.opp-note, .opp-viz p.opp-note { font-size: 12px; color: var(--text-muted); max-width: 78ch; line-height: 1.55; }
+.opp-more { margin: var(--space-lg) 0; }
+.opp-empty { padding: var(--space-xl); text-align: center; color: var(--text-muted); }
+details.opp-table { margin-top: var(--space-xl); }
+details.opp-table summary { cursor: pointer; font-size: 13px; color: var(--text-muted); }
+details.opp-table td.num, details.opp-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* The trend tables on the opportunities home and team pages. */
+.opp-trend-table td.num, .opp-trend-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.opp-trend-table th, .opp-trend-table td { padding: 8px 10px; }
+.opp-trend-table td:nth-child(2) { white-space: nowrap; color: var(--text-muted); }
+.opp-player-section { margin-top: var(--space-xl); }
+.opp-player-section h2 { font-size: 16px; font-weight: 600; margin-bottom: var(--space-xs); }

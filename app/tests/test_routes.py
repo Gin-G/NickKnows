@@ -190,6 +190,115 @@ def test_nfl_opportunity_charts_render_the_payload(client):
     assert '<b>Chase</b>' not in body
 
 
+def _weekly_with(*players):
+    payload = dict(_WEEKLY)
+    payload['data'] = list(players)
+    return payload
+
+
+def _player(name, team, position, direction, change, metric='opportunities'):
+    metrics = {m: {'values': [5.0] * 6, 'games': 6, 'per_game': 5.0, 'recent': 5.0,
+                   'earlier': 5.0, 'change': 0.0, 'noise': 1.0, 'direction': 'steady'}
+               for m in ('opportunities', 'targets', 'carries', 'pass_attempts')}
+    metrics[metric] = dict(metrics[metric], direction=direction, change=change,
+                           earlier=10.0, recent=10.0 + change)
+    return {'player_id': name, 'player_name': name, 'position': position, 'team': team,
+            'games': 6, 'latest_week': 6, 'metrics': metrics}
+
+
+def test_movers_follow_the_api_call_not_a_percent():
+    from nickknows.nfl.views import _weekly_movers
+    payload = _weekly_with(
+        _player('Big Mover', 'CIN', 'RB', 'up', 6.0),
+        _player('Small Mover', 'CIN', 'WR', 'up', 2.5),
+        # A huge percent change the API judged to be noise stays off the list.
+        _player('Noisy Backup', 'CIN', 'RB', 'steady', 0.0),
+        _player('Faller', 'BUF', 'RB', 'down', -7.0),
+    )
+    up = _weekly_movers(payload, 'opportunities', 'up')
+    assert [r['player_name'] for r in up] == ['Big Mover', 'Small Mover']
+    assert [r['player_name'] for r in _weekly_movers(payload, 'opportunities', 'down')] == ['Faller']
+    assert _weekly_movers(payload, 'opportunities', 'up', team='BUF') == []
+    # Quarterbacks are charted, not listed: their attempts swamp a shared table.
+    qb = _weekly_with(_player('Big Arm', 'CIN', 'QB', 'up', 20.0))
+    assert _weekly_movers(qb, 'opportunities', 'up') == []
+
+
+def test_the_opportunities_home_lists_the_movers(client):
+    payload = _weekly_with(_player('Big Mover', 'CIN', 'RB', 'up', 6.0))
+    with patch('nickknows.nfl.views.api_frames.opportunity_weekly', return_value=payload), \
+         patch('nickknows.nfl.views.api_frames.opportunity_trends', return_value=None):
+        r = client.get('/NFL/Opportunities')
+    assert r.status_code == 200
+    # The leaderboards' endpoint is down here; the movers come from another.
+    assert b'Big Mover' in r.data
+
+
+_STAT_COLUMNS = [
+    'passing_yards', 'interceptions', 'sacks', 'sack_yards', 'passing_air_yards',
+    'passing_yards_after_catch', 'passing_first_downs', 'rushing_yards', 'sack_fumbles_lost',
+    'rushing_fumbles', 'rushing_fumbles_lost', 'rushing_first_downs', 'receiving_yards',
+    'receiving_fumbles', 'receiving_fumbles_lost', 'receiving_air_yards',
+    'receiving_yards_after_catch', 'receiving_first_downs', 'special_teams_tds',
+    'passing_epa', 'pacr', 'rushing_epa', 'receiving_epa', 'fantasy_points',
+    'fantasy_points_ppr', 'racr', 'wopr']
+
+
+def _stat_row(**fields):
+    """One weekly-stats row with every column the player page formats."""
+    import pandas as pd
+    row = {c: 0.0 for c in _STAT_COLUMNS}
+    row.update(fields)
+    return pd.DataFrame([row])
+
+
+def test_the_player_page_draws_his_chart(client):
+    weekly = _stat_row(
+        player_display_name="Ja'Marr Chase", player_name='J.Chase', player_id='00-1',
+        headshot_url='x.png', position='WR', position_group='WR', season=2026,
+        season_type='REG', week=1, recent_team='CIN', target_share=0.3,
+        air_yards_share=0.4, dakota=None)
+    payload = _weekly_with(_player("Ja'Marr Chase", 'CIN', 'WR', 'up', 3.0, 'targets'))
+    with patch('nickknows.nfl.views.api_frames.weekly_stats', return_value=weekly), \
+         patch('nickknows.nfl.views.api_frames.opportunity_weekly', return_value=payload):
+        r = client.get("/NFL/Player/Ja'Marr Chase")
+    assert r.status_code == 200
+    body = r.data.decode()
+    assert 'data-opp-charts="player"' in body
+    assert 'opportunity-charts.js' in body
+
+
+def test_a_player_with_no_series_gets_no_chart_section(client):
+    weekly = _stat_row(
+        player_display_name='Some Kicker', player_name='S.Kicker', player_id='00-2',
+        headshot_url='x.png', position='K', position_group='SPEC', season=2026,
+        season_type='REG', week=1, recent_team='CIN', target_share=0.0,
+        air_yards_share=0.0, dakota=None)
+    with patch('nickknows.nfl.views.api_frames.weekly_stats', return_value=weekly), \
+         patch('nickknows.nfl.views.api_frames.opportunity_weekly', return_value=_WEEKLY):
+        r = client.get('/NFL/Player/Some Kicker')
+    assert r.status_code == 200
+    assert b'data-opp-charts' not in r.data
+
+
+def test_player_names_match_through_punctuation_and_suffixes():
+    from nickknows.nfl.views import _weekly_player
+    payload = _weekly_with(_player('Omar Cooper Jr.', 'NYJ', 'WR', 'steady', 0.0))
+    assert _weekly_player(payload, 'Omar Cooper Jr.')['data'][0]['team'] == 'NYJ'
+    assert _weekly_player(payload, 'Omar Cooper') is not None
+    assert _weekly_player(payload, 'Omar Coopers') is None
+    assert _weekly_player(None, 'Anyone') is None
+
+
+def test_nfl_opportunity_charts_open_on_pass_attempts(client):
+    with patch('nickknows.nfl.views.api_frames.opportunity_weekly',
+               return_value=_WEEKLY):
+        r = client.get('/NFL/Opportunities/Trends?metric=pass_attempts&position=QB')
+    body = r.data.decode()
+    assert '"metric": "pass_attempts"' in body and '"position": "QB"' in body
+    assert 'opportunity-charts.js' in body
+
+
 def test_nfl_opportunity_charts_ignore_a_bad_metric(client):
     with patch('nickknows.nfl.views.api_frames.opportunity_weekly',
                return_value=_WEEKLY):

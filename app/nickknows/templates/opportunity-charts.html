@@ -2,60 +2,7 @@
 {% block title %}Weekly Opportunity Charts | Nick Knows NFL{% endblock %}
 
 {% block nfl_extra_css %}
-<style>
-    /* Chart roles. Two steps of one blue: the games that count as "lately" are
-       the strong step, the games before them the quiet one. Both pairs were run
-       through the palette validator against this site's own card surfaces. */
-    .opp-viz {
-        --bar-earlier: #5598e7;
-        --bar-recent: #184f95;
-        --avg-line: var(--text);
-        --grid: color-mix(in srgb, var(--text-muted) 22%, transparent);
-    }
-    @media (prefers-color-scheme: dark) {
-        :root:not([data-theme="light"]) .opp-viz { --bar-earlier: #184f95; --bar-recent: #3987e5; }
-    }
-    :root[data-theme="dark"] .opp-viz { --bar-earlier: #184f95; --bar-recent: #3987e5; }
-
-    .opp-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-md); margin-bottom: var(--space-md); }
-    .opp-seg { display: inline-flex; flex-wrap: wrap; gap: var(--space-xs); }
-    .opp-seg button { padding: 6px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); font: inherit; font-size: 12px; font-weight: 500; color: var(--text-muted); cursor: pointer; }
-    .opp-seg button:hover { color: var(--text); }
-    .opp-seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-    .opp-seg button .n { font-variant-numeric: tabular-nums; opacity: 0.8; margin-left: 4px; }
-    .opp-filters label { font-size: 12px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; }
-    .opp-filters select { font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
-
-    .opp-legend { display: flex; flex-wrap: wrap; gap: var(--space-sm) var(--space-lg); font-size: 12px; color: var(--text-muted); margin: var(--space-md) 0; }
-    .opp-legend span { display: inline-flex; align-items: center; gap: 6px; }
-    .opp-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px 3px 0 0; }
-    .opp-legend i.line { height: 2px; width: 18px; border-radius: 1px; background: var(--avg-line); }
-    .opp-legend i.gap { height: 2px; width: 8px; border-radius: 1px; background: var(--text-muted); opacity: 0.6; }
-
-    .opp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: var(--space-md); }
-    .opp-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 14px 8px; min-width: 0; }
-    .opp-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-sm); }
-    .opp-card__name { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .opp-card__meta { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
-    .opp-card__trend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 6px 0 4px; font-size: 12px; color: var(--text-muted); }
-    .opp-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border: 1px solid var(--border); border-radius: var(--radius-pill); font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
-    .opp-badge--quiet { font-weight: 500; color: var(--text-muted); }
-    .opp-card svg { display: block; width: 100%; height: auto; overflow: visible; }
-    .opp-card svg text { font-family: inherit; font-size: 10px; fill: var(--text-muted); font-variant-numeric: tabular-nums; }
-    .opp-card svg .hit { fill: transparent; }
-    .opp-card svg .hit:hover + .bar, .opp-card svg .bar.is-hover { filter: brightness(1.18); }
-
-    .opp-tip { position: fixed; z-index: 50; pointer-events: none; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 10px; font-size: 12px; line-height: 1.45; box-shadow: 0 4px 16px rgb(0 0 0 / 0.18); display: none; }
-    .opp-tip strong { font-size: 14px; font-variant-numeric: tabular-nums; }
-    .opp-tip .sub { color: var(--text-muted); }
-
-    .opp-note { font-size: 12px; color: var(--text-muted); max-width: 78ch; line-height: 1.55; }
-    .opp-more { margin: var(--space-lg) 0; }
-    .opp-empty { padding: var(--space-xl); text-align: center; color: var(--text-muted); }
-    details.opp-table { margin-top: var(--space-xl); }
-    details.opp-table summary { cursor: pointer; font-size: 13px; color: var(--text-muted); }
-    details.opp-table td.num, details.opp-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/opportunity-charts.css') }}">
 {% endblock %}
 
 {% block nfl_content %}
@@ -64,7 +11,8 @@
     <p class="page-header__subtitle">{{ selected_year }} Season — who is getting the ball, week by week, and which way it is heading</p>
 </div>
 
-<div class="content-section opp-viz">
+<div class="content-section opp-viz" data-opp-charts="explorer"
+     data-player-url="{{ url_for('player_stats', name='__NAME__') }}">
     {% if error %}
     <div class="opp-empty">{{ error }}</div>
     {% else %}
@@ -73,12 +21,13 @@
             <button type="button" data-value="opportunities">Opportunities</button>
             <button type="button" data-value="targets">Targets</button>
             <button type="button" data-value="carries">Rush attempts</button>
+            <button type="button" data-value="pass_attempts">Pass attempts</button>
         </div>
         <label>Position
             <select id="opp-position">
-                <option value="ALL">RB, WR, TE</option>
-                <option value="RB">RB</option><option value="WR">WR</option>
-                <option value="TE">TE</option><option value="QB">QB</option>
+                <option value="ALL">All positions</option>
+                <option value="QB">QB</option><option value="RB">RB</option>
+                <option value="WR">WR</option><option value="TE">TE</option>
             </select>
         </label>
         <label>Team <select id="opp-team"><option value="ALL">All teams</option></select></label>
@@ -117,7 +66,6 @@
         <div class="table-wrapper"><table id="opp-table"></table></div>
     </details>
 
-    <div class="opp-tip" id="opp-tip" role="status"></div>
     <script type="application/json" id="opp-data">{{ payload | tojson }}</script>
     <script type="application/json" id="opp-initial">{{ initial | tojson }}</script>
     {% endif %}
@@ -126,297 +74,6 @@
 
 {% block nfl_extra_js %}
 {% if not error %}
-<script>
-(function () {
-    'use strict';
-    var payload = JSON.parse(document.getElementById('opp-data').textContent);
-    var state = JSON.parse(document.getElementById('opp-initial').textContent);
-    state.sort = 'movers';
-    state.shown = 48;
-
-    var WEEKS = payload.weeks || [];
-    var PLAYERS = payload.data || [];
-    var RULE = payload.trend_rule || {};
-    var NOUN = { opportunities: 'opportunities', targets: 'targets', carries: 'rush attempts' };
-    var SVG = 'http://www.w3.org/2000/svg';
-    // A player seeing less than one a game of the charted thing has no chart
-    // worth drawing: a receiver's rush attempts are a row of zeros.
-    var MIN_PER_GAME = 1;
-
-    var grid = document.getElementById('opp-grid');
-    var tip = document.getElementById('opp-tip');
-
-    function el(tag, attrs, text) {
-        var node = document.createElement(tag);
-        for (var k in attrs || {}) node.setAttribute(k, attrs[k]);
-        if (text != null) node.textContent = text;   // names are data, never markup
-        return node;
-    }
-    function svg(tag, attrs) {
-        var node = document.createElementNS(SVG, tag);
-        for (var k in attrs || {}) node.setAttribute(k, attrs[k]);
-        return node;
-    }
-    function fmt(v) { return v == null ? '–' : (Math.round(v * 10) / 10).toString(); }
-    function signed(v) { return (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v)); }
-
-    function niceMax(v) {
-        var steps = [4, 6, 8, 10, 12, 16, 20, 24, 28, 32, 36, 40, 50, 60, 80];
-        for (var i = 0; i < steps.length; i++) if (v <= steps[i]) return steps[i];
-        return Math.ceil(v / 20) * 20;
-    }
-
-    // ── filtering ────────────────────────────────────────────────────────────
-    function inScope(p) {
-        var m = p.metrics[state.metric];
-        if (!m || (m.per_game || 0) < MIN_PER_GAME) return false;
-        if (state.position === 'ALL') { if (['RB', 'WR', 'TE'].indexOf(p.position) < 0) return false; }
-        else if (p.position !== state.position) return false;
-        if (state.team !== 'ALL' && p.team !== state.team) return false;
-        return true;
-    }
-    function ordered(list) {
-        var m = state.metric;
-        var out = list.slice();
-        if (state.sort === 'name') {
-            out.sort(function (a, b) { return a.player_name.localeCompare(b.player_name); });
-        } else if (state.sort === 'volume') {
-            out.sort(function (a, b) { return b.metrics[m].per_game - a.metrics[m].per_game; });
-        } else {
-            // Called movers first, by the size of the move; everyone else by volume.
-            out.sort(function (a, b) {
-                var da = a.metrics[m], db = b.metrics[m];
-                var ca = (da.direction === 'up' || da.direction === 'down') ? Math.abs(da.change) : -1;
-                var cb = (db.direction === 'up' || db.direction === 'down') ? Math.abs(db.change) : -1;
-                if (ca !== cb) return cb - ca;
-                return db.per_game - da.per_game;
-            });
-        }
-        return out;
-    }
-
-    // ── one card ─────────────────────────────────────────────────────────────
-    var W = 300, H = 132, L = 24, R = 6, T = 8, B = 18;
-
-    function badge(m) {
-        if (m.direction === 'up') return el('span', { 'class': 'opp-badge' }, '▲ Up ' + fmt(m.change) + ' a game');
-        if (m.direction === 'down') return el('span', { 'class': 'opp-badge' }, '▼ Down ' + fmt(Math.abs(m.change)) + ' a game');
-        if (m.direction === 'steady') return el('span', { 'class': 'opp-badge opp-badge--quiet' }, 'Steady');
-        if (m.direction === 'interrupted') return el('span', { 'class': 'opp-badge opp-badge--quiet' }, 'Back from absence');
-        return el('span', { 'class': 'opp-badge opp-badge--quiet' }, 'Too few games');
-    }
-
-    function chart(p, m, yMax) {
-        var root = svg('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img' });
-        var label = p.player_name + ', ' + NOUN[state.metric] + ' by week: ' +
-            WEEKS.map(function (w, i) { return 'week ' + w + ' ' + (m.values[i] == null ? 'none' : fmt(m.values[i])); }).join(', ');
-        root.setAttribute('aria-label', label);
-
-        var plotW = W - L - R, plotH = H - T - B;
-        var band = plotW / Math.max(WEEKS.length, 1);
-        var barW = Math.min(24, band - 2);
-        function y(v) { return T + plotH - (v / yMax) * plotH; }
-
-        [0, yMax / 2, yMax].forEach(function (tick) {
-            root.appendChild(svg('line', { x1: L, x2: W - R, y1: y(tick), y2: y(tick), stroke: 'var(--grid)', 'stroke-width': 1 }));
-            var t = svg('text', { x: L - 5, y: y(tick) + 3, 'text-anchor': 'end' });
-            t.textContent = fmt(tick);
-            root.appendChild(t);
-        });
-
-        // Which week indexes are games, and which of those are the recent three.
-        var played = [];
-        m.values.forEach(function (v, i) { if (v != null) played.push(i); });
-        var recentN = RULE.recent_games || 3;
-        // Windows are only drawn where a direction could be called from them.
-        var hasWindows = m.recent != null && m.direction !== 'interrupted';
-        var recentIdx = hasWindows ? played.slice(-recentN) : [];
-        var earlierIdx = hasWindows ? played.slice(0, -recentN) : [];
-
-        WEEKS.forEach(function (w, i) {
-            var cx = L + band * i + band / 2;
-            var wk = svg('text', { x: cx, y: H - 5, 'text-anchor': 'middle' });
-            wk.textContent = w;
-            root.appendChild(wk);
-
-            var v = m.values[i];
-            var hit = svg('rect', { 'class': 'hit', x: L + band * i, y: T, width: band, height: plotH + 2 });
-            hit.addEventListener('pointermove', function (ev) { showTip(ev, p, w, i); });
-            hit.addEventListener('pointerleave', hideTip);
-            root.appendChild(hit);
-
-            if (v == null) {
-                root.appendChild(svg('line', { x1: cx - 4, x2: cx + 4, y1: y(0) - 3, y2: y(0) - 3,
-                    stroke: 'var(--text-muted)', 'stroke-width': 2, 'stroke-linecap': 'round', opacity: 0.6, 'pointer-events': 'none' }));
-                return;
-            }
-            var top = y(v), base = y(0), x0 = cx - barW / 2, h = base - top;
-            var r = Math.min(4, h, barW / 2);
-            // Rounded at the data end, square on the baseline.
-            var d = 'M' + x0 + ' ' + base + ' V' + (top + r) + ' Q' + x0 + ' ' + top + ' ' + (x0 + r) + ' ' + top +
-                ' H' + (x0 + barW - r) + ' Q' + (x0 + barW) + ' ' + top + ' ' + (x0 + barW) + ' ' + (top + r) + ' V' + base + ' Z';
-            var recent = recentIdx.indexOf(i) >= 0;
-            root.appendChild(svg('path', { 'class': 'bar', d: d, 'pointer-events': 'none',
-                fill: recent ? 'var(--bar-recent)' : 'var(--bar-earlier)' }));
-        });
-
-        function avgLine(idx, value) {
-            if (!idx.length) return;
-            var x1 = L + band * idx[0] + 1, x2 = L + band * (idx[idx.length - 1] + 1) - 1;
-            // A surface-coloured underlay keeps the line readable across the bars.
-            root.appendChild(svg('line', { x1: x1, x2: x2, y1: y(value), y2: y(value), stroke: 'var(--surface)', 'stroke-width': 5, 'stroke-linecap': 'round', 'pointer-events': 'none' }));
-            root.appendChild(svg('line', { x1: x1, x2: x2, y1: y(value), y2: y(value), stroke: 'var(--avg-line)', 'stroke-width': 2, 'stroke-linecap': 'round', 'pointer-events': 'none' }));
-        }
-        if (hasWindows) { avgLine(earlierIdx, m.earlier); avgLine(recentIdx, m.recent); }
-        return root;
-    }
-
-    function card(p, yMax) {
-        var m = p.metrics[state.metric];
-        var node = el('article', { 'class': 'opp-card' });
-        var head = el('div', { 'class': 'opp-card__head' });
-        head.appendChild(el('span', { 'class': 'opp-card__name', title: p.player_name }, p.player_name));
-        head.appendChild(el('span', { 'class': 'opp-card__meta' }, [p.position, p.team].filter(Boolean).join(' · ')));
-        node.appendChild(head);
-
-        var trend = el('div', { 'class': 'opp-card__trend' });
-        trend.appendChild(badge(m));
-        trend.appendChild(el('span', {}, m.recent != null && m.direction !== 'interrupted'
-            ? fmt(m.earlier) + ' → ' + fmt(m.recent) + ' a game'
-            : fmt(m.per_game) + ' a game over ' + m.games + (m.games === 1 ? ' game' : ' games')));
-        // A direction called on games from weeks ago is a fact about then, and
-        // the card has to say so: he may be hurt, benched or simply on a bye.
-        var lastWeek = WEEKS[WEEKS.length - 1];
-        if (p.latest_week != null && p.latest_week < lastWeek) {
-            trend.appendChild(el('span', {}, '· last played week ' + p.latest_week));
-        }
-        node.appendChild(trend);
-        node.appendChild(chart(p, m, yMax));
-        return node;
-    }
-
-    // ── tooltip ──────────────────────────────────────────────────────────────
-    function showTip(ev, p, week, i) {
-        tip.textContent = '';
-        var v = p.metrics[state.metric].values[i];
-        if (v == null) {
-            tip.appendChild(el('strong', {}, 'Week ' + week));
-            tip.appendChild(el('div', { 'class': 'sub' }, 'Did not play, or no look'));
-        } else {
-            tip.appendChild(el('strong', {}, fmt(v) + ' ' + NOUN[state.metric]));
-            var t = p.metrics.targets.values[i], c = p.metrics.carries.values[i];
-            tip.appendChild(el('div', { 'class': 'sub' }, 'Week ' + week + ' · ' + p.player_name));
-            tip.appendChild(el('div', { 'class': 'sub' }, fmt(t) + ' targets, ' + fmt(c) + ' rush attempts'));
-        }
-        tip.style.display = 'block';
-        var box = tip.getBoundingClientRect();
-        var x = Math.min(ev.clientX + 14, window.innerWidth - box.width - 8);
-        var yy = ev.clientY - box.height - 12;
-        tip.style.left = Math.max(8, x) + 'px';
-        tip.style.top = (yy < 8 ? ev.clientY + 16 : yy) + 'px';
-    }
-    function hideTip() { tip.style.display = 'none'; }
-
-    // ── table view ───────────────────────────────────────────────────────────
-    function table(list) {
-        var t = document.getElementById('opp-table');
-        t.textContent = '';
-        var head = el('tr');
-        ['Player', 'Pos', 'Team', 'Games', 'Per game', 'Earlier', 'Last 3', 'Change', 'Trend']
-            .concat(WEEKS.map(function (w) { return 'Wk ' + w; }))
-            .forEach(function (h, i) { head.appendChild(el('th', i > 2 && i !== 8 ? { 'class': 'num' } : {}, h)); });
-        var thead = el('thead'); thead.appendChild(head); t.appendChild(thead);
-        var body = el('tbody');
-        var words = { up: 'Up', down: 'Down', steady: 'Steady', too_few_games: 'Too few games', interrupted: 'Back from absence' };
-        list.forEach(function (p) {
-            var m = p.metrics[state.metric], tr = el('tr');
-            tr.appendChild(el('td', {}, p.player_name));
-            tr.appendChild(el('td', {}, p.position));
-            tr.appendChild(el('td', {}, p.team || ''));
-            [m.games, fmt(m.per_game), fmt(m.earlier), fmt(m.recent), m.change == null ? '–' : signed(m.change)]
-                .forEach(function (v) { tr.appendChild(el('td', { 'class': 'num' }, v)); });
-            tr.appendChild(el('td', {}, words[m.direction] || m.direction));
-            m.values.forEach(function (v) { tr.appendChild(el('td', { 'class': 'num' }, fmt(v))); });
-            body.appendChild(tr);
-        });
-        t.appendChild(body);
-    }
-
-    // ── render ───────────────────────────────────────────────────────────────
-    function render() {
-        var scoped = PLAYERS.filter(inScope);
-        var counts = { all: scoped.length, up: 0, down: 0, steady: 0 };
-        scoped.forEach(function (p) {
-            var d = p.metrics[state.metric].direction;
-            if (d in counts) counts[d] += 1;
-        });
-        document.querySelectorAll('#opp-direction button').forEach(function (b) {
-            b.setAttribute('aria-pressed', b.dataset.value === state.direction ? 'true' : 'false');
-            b.querySelector('.n').textContent = counts[b.dataset.value];
-        });
-        document.querySelectorAll('#opp-metric button').forEach(function (b) {
-            b.setAttribute('aria-pressed', b.dataset.value === state.metric ? 'true' : 'false');
-        });
-
-        var list = ordered(scoped.filter(function (p) {
-            return state.direction === 'all' || p.metrics[state.metric].direction === state.direction;
-        }));
-
-        // One scale per position, so two backs can be compared by eye and a
-        // tight end is not flattened by a workhorse's thirty touches.
-        var maxByPos = {};
-        list.forEach(function (p) {
-            var top = Math.max.apply(null, p.metrics[state.metric].values.map(function (v) { return v || 0; }));
-            maxByPos[p.position] = Math.max(maxByPos[p.position] || 0, top);
-        });
-
-        grid.textContent = '';
-        list.slice(0, state.shown).forEach(function (p) {
-            grid.appendChild(card(p, niceMax(maxByPos[p.position] || 1)));
-        });
-        document.getElementById('opp-empty').hidden = list.length > 0;
-        var more = document.getElementById('opp-more');
-        more.hidden = list.length <= state.shown;
-        more.textContent = 'Show all ' + list.length + ' players';
-        table(list);
-    }
-
-    // ── controls ─────────────────────────────────────────────────────────────
-    var teamSelect = document.getElementById('opp-team');
-    var teams = {};
-    PLAYERS.forEach(function (p) { if (p.team) teams[p.team] = true; });
-    Object.keys(teams).sort().forEach(function (t) { teamSelect.appendChild(el('option', { value: t }, t)); });
-    if (state.team !== 'ALL' && !teams[state.team]) state.team = 'ALL';
-    teamSelect.value = state.team;
-    document.getElementById('opp-position').value = state.position;
-
-    function bindSeg(id, key) {
-        document.querySelectorAll('#' + id + ' button').forEach(function (b) {
-            b.addEventListener('click', function () { state[key] = b.dataset.value; state.shown = 48; render(); });
-        });
-    }
-    bindSeg('opp-metric', 'metric');
-    bindSeg('opp-direction', 'direction');
-    [['opp-position', 'position'], ['opp-team', 'team'], ['opp-sort', 'sort']].forEach(function (pair) {
-        document.getElementById(pair[0]).addEventListener('change', function (ev) {
-            state[pair[1]] = ev.target.value; state.shown = 48; render();
-        });
-    });
-    document.getElementById('opp-more').addEventListener('click', function () { state.shown = Infinity; render(); });
-
-    var mc = RULE.min_change || {};
-    document.getElementById('opp-rule').textContent =
-        'How the trend is called: a player’s last ' + (RULE.recent_games || 3) + ' games against the games before them. ' +
-        'Up or down needs a change of at least ' + fmt(mc.opportunities) + ' opportunities a game (' + fmt(mc.targets) +
-        ' for targets or rush attempts) that is also bigger than his own week-to-week swings; anything less is Steady, and under ' +
-        (RULE.min_games || 5) + ' games there is no call. Weeks he did not play are skipped, not counted as zero, and if his last ' +
-        (RULE.recent_games || 3) + ' games reach back more than ' + (RULE.recent_span_weeks || 5) + ' weeks he is marked back from an absence instead of given a direction. ' +
-        'Opportunities are targets plus rush attempts. Charts for the same position share a scale. ' +
-        'This describes what has happened — it is not a projection. Measured on 2026 weeks 1–9, the game after a call kept ' +
-        'roughly half of the change in opportunities and targets and about three quarters in rush attempts.';
-
-    render();
-})();
-</script>
+<script src="{{ url_for('static', filename='js/opportunity-charts.js') }}"></script>
 {% endif %}
 {% endblock %}

@@ -1,14 +1,39 @@
 {% extends 'nfl-base.html' %}
 {% block title %}{{ name }} Stats | Nick Knows NFL{% endblock %}
 
+{% block nfl_extra_css %}
+{% if opportunity %}<link rel="stylesheet" href="{{ url_for('static', filename='css/opportunity-charts.css') }}">{% endif %}
+{% endblock %}
+
 {% block nfl_content %}
 <div class="page-header">
     <h1 class="page-header__title">{{ position }} — {{ name }}</h1>
 </div>
 <div class="content-section">
     {{ headshot | safe }}
+    {% if opportunity %}
+    <section class="opp-viz opp-player-section" data-opp-charts="player">
+        <h2>Opportunities by week</h2>
+        <div class="opp-legend" aria-hidden="true">
+            <span><i style="background: var(--bar-earlier)"></i>Earlier games</span>
+            <span><i style="background: var(--bar-recent)"></i>Last 3 games</span>
+            <span><i class="line"></i>Average over those games</span>
+            <span><i class="gap"></i>Did not play, or no look</span>
+        </div>
+        <div class="opp-grid" id="opp-grid"></div>
+        <p class="opp-note" style="margin-top: var(--space-md);">
+            <a href="{{ url_for('opportunity_charts', team=opportunity.data[0].team) }}">Compare with the rest of {{ opportunity.data[0].team }}</a>
+        </p>
+        <p class="opp-note" id="opp-rule"></p>
+        <script type="application/json" id="opp-data">{{ opportunity | tojson }}</script>
+    </section>
+    {% endif %}
     <div class="table-wrapper" style="margin-top: var(--space-xl);">
         {{ player_stats | safe }}
     </div>
 </div>
+{% endblock %}
+
+{% block nfl_extra_js %}
+{% if opportunity %}<script src="{{ url_for('static', filename='js/opportunity-charts.js') }}"></script>{% endif %}
 {% endblock %}
