@@ -35,6 +35,56 @@ def test_nickco7(client):
     assert r.status_code == 200
 
 
+def test_ai_dev_falls_back_to_the_static_list(client):
+    from nickknows.main import ideabrd_client
+    from nickknows.main.ai_projects import PROJECTS
+    with patch.object(ideabrd_client, 'public_projects',
+                      side_effect=ideabrd_client.IdeaBrdError('down')):
+        r = client.get('/ai-dev')
+    assert r.status_code == 200
+    body = r.get_data(as_text=True)
+    for p in PROJECTS:
+        assert p['name'] in body
+    assert 'Live from my' not in body
+
+
+def test_ai_dev_renders_ideabrd_public_ideas(client):
+    from nickknows.main import ideabrd_client
+    idea = {'slug': 'x', 'title': 'Board Thing', 'status': 'active', 'progress': 40,
+            'summary': 'From the board.', 'site_url': 'https://x.example',
+            'repo_url': None, 'todos_done': 1, 'todos_total': 3}
+    with patch.object(ideabrd_client, 'public_projects',
+                      return_value=[ideabrd_client._as_project(idea)]):
+        r = client.get('/ai-dev')
+    body = r.get_data(as_text=True)
+    assert r.status_code == 200
+    assert 'Board Thing' in body and 'From the board.' in body
+    assert 'https://x.example' in body and '1/3 to-dos' in body
+    assert 'Foreal Ski' not in body  # the fallback list is not mixed in
+    assert 'Live from my' in body
+
+
+def test_ideabrd_client_remembers_a_failure_briefly():
+    from nickknows.main import ideabrd_client
+    ideabrd_client.clear_cache()
+    with patch.object(ideabrd_client.requests, 'get',
+                      side_effect=ideabrd_client.requests.ConnectionError('no')) as get:
+        for _ in range(3):
+            with pytest.raises(ideabrd_client.IdeaBrdError):
+                ideabrd_client.public_projects()
+    assert get.call_count == 1
+    ideabrd_client.clear_cache()
+
+
+def test_ai_dev_projects_well_formed():
+    from nickknows.main.ai_projects import PROJECTS, CATEGORIES
+    keys = {c[0] for c in CATEGORIES}
+    for p in PROJECTS:
+        assert p['category'] in keys, p['name']
+        assert p['status'] in {'idea', 'active', 'paused', 'deployed', 'done'}, p['name']
+        assert p['progress'] is None or 0 <= p['progress'] <= 100, p['name']
+
+
 def test_arcade(client):
     r = client.get('/arcade')
     assert r.status_code == 200

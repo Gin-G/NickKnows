@@ -2,6 +2,9 @@ from flask import redirect, url_for, render_template, request
 import json
 import os
 from nickknows import app
+import logging
+from nickknows.main.ai_projects import grouped_projects, PROJECTS
+from nickknows.main import ideabrd_client
 
 @app.route('/')
 def home():
@@ -46,6 +49,26 @@ def nick_navbar():
 @app.route('/nickco7')
 def nickco7_projects():
     return render_template('nickco7_projects.html')
+
+@app.route('/ai-dev')
+def ai_dev():
+    # IdeaBRD's public page is the source; the hand-kept list in ai_projects is
+    # the fallback while IdeaBRD is unreachable or nothing is flagged public yet.
+    try:
+        projects = ideabrd_client.public_projects()
+    except ideabrd_client.IdeaBrdError as e:
+        logging.getLogger(__name__).warning("AI Dev falling back to static list: %s", e)
+        projects = []
+    if projects:
+        groups = [('all', 'Projects', '', projects)]
+        source = 'ideabrd'
+    else:
+        projects = PROJECTS
+        groups = grouped_projects()
+        source = 'static'
+    return render_template('ai-dev.html', groups=groups, source=source,
+                           total=len(projects),
+                           live_count=sum(1 for p in projects if p.get('live')))
 
 @app.route('/arcade')
 def arcade():

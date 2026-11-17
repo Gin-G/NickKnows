@@ -30,6 +30,14 @@ default is to add or extend an NFL-API endpoint and have the client read it,
 rather than growing the pandas code here. `api_frames.py` is the adapter layer
 for that.
 
+## Where the AI Dev page comes from
+
+`/ai-dev` reads IdeaBRD's public page (`main/ideabrd_client.py`) over the
+in-cluster Service `ideabrd-backend.ideabrd.svc.cluster.local:8000`, for the
+same Cloudflare reason as NFL-API. To add a project, flag the idea public in
+IdeaBRD, not here. `main/ai_projects.py` is only the fallback, shown while
+IdeaBRD is unreachable or has nothing flagged.
+
 ## Running the tests
 
 ```bash
@@ -38,7 +46,7 @@ NP=/home/gin-g/miniforge3/pkgs/numpy-1.26.4-py310hb13e2d6_0/lib/python3.10/site-
 PYTHONPATH=.:$NP /home/gin-g/miniforge3/bin/python -m pytest tests/ -q
 ```
 
-30 tests, ~7 s. The same interpreter constraint as the sibling repos: the system Python's
+43 tests, ~5 s. The same interpreter constraint as the sibling repos: the system Python's
 sklearn/numpy pairing is broken and there is no network for pip, so `$NP` is a
 numpy 1.26 shim that has to sit ahead of it on the path.
 
